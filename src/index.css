@@ -1467,3 +1467,23 @@ html, body {
   inherits: false;
   initial-value: 1;
 }
+
+/* === Animations dégradé solaire === */
+
+@keyframes solar-cloud {
+  from { opacity: 0.3; }
+  to   { opacity: 1;   }
+}
+
+@keyframes solar-sparkle {
+  from { opacity: 0.93; }
+  to   { opacity: 1;    }
+}
+
+.solar-cloud-layer {
+  animation: solar-cloud 5s ease-in-out alternate infinite;
+}
+
+.solar-sparkle-layer {
+  animation: solar-sparkle 0.75s ease-in-out alternate infinite;
+}

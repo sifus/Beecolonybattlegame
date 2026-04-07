@@ -73,7 +73,7 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   
   // Tester différentes tailles de cellules (40px à 80px)
   // On veut MAXIMISER le nombre de cellules
-  const MIN_CELL_SIZE = 40;
+  const MIN_CELL_SIZE = 80;
   const MAX_CELL_SIZE = 80;
   const MIN_GAME_CELLS = 6; // Minimum 6x6 pour la zone de jeu
   
@@ -167,7 +167,36 @@ export default function App() {
     });
   });
   const [scale, setScale] = useState(1);
-  
+
+  // Étoiles scintillantes — positions absolues dans la zone du soleil
+  interface Sparkle {
+    id: number; x: number; y: number; size: number;
+    opacity: number; rising: boolean; dormant: boolean; dormantTicks: number;
+  }
+  const makeSparkle = (id: number, gp: ReturnType<typeof calculateGridParams>, sunPct = { x: 15, y: 15 }): Sparkle => {
+    const gw = gp.cols * gp.cellSize;
+    const gh = gp.rows * gp.cellSize;
+    const cx = (sunPct.x / 100) * gw;
+    const cy = (sunPct.y / 100) * gh;
+    const spread = 0.35 * Math.min(gw, gh);
+    return {
+      id,
+      x: Math.max(gp.gameStartCol * gp.cellSize, Math.min((gp.gameEndCol + 1) * gp.cellSize, cx + (Math.random() - 0.5) * 2 * spread)),
+      y: Math.max(gp.gameStartRow * gp.cellSize, Math.min((gp.gameEndRow + 1) * gp.cellSize, cy + (Math.random() - 0.5) * 2 * spread)),
+      size: 12 + Math.random() * 12,
+      opacity: 0,
+      rising: false,
+      dormant: true,
+      dormantTicks: Math.floor(Math.random() * 6),
+    };
+  };
+  const [sparkles, setSparkles] = useState<Sparkle[]>(() =>
+    Array.from({ length: 7 }, (_, i) => makeSparkle(i, calculateGridParams()))
+  );
+  const [sunIntensity, setSunIntensity] = useState(0);
+  const [sunPosition, setSunPosition] = useState({ x: 15, y: 15 }); // %
+  const sunPosRef = useRef({ x: 15, y: 15 });
+
   // État du mode histoire - Charger depuis localStorage
   const [levelProgress, setLevelProgress] = useState<LevelProgress>(() => loadLevelProgress());
   const [showLevelComplete, setShowLevelComplete] = useState(false);
@@ -391,6 +420,70 @@ export default function App() {
   // NE PAS recharger le niveau pendant une partie - cela causerait une réinitialisation
   // Le niveau est uniquement chargé via handleStartLevel() et non lors des changements de gridParams
   // Cela permet de préserver l'état du jeu lors des changements de taille de fenêtre ou d'orientation
+
+  // Suivi de l'intensité solaire (réplique solar-cloud: 5s ease-in-out alternate)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const t = (Date.now() % 10000) / 10000; // 0→1 sur 10s (aller-retour)
+      const progress = t < 0.5 ? t * 2 : 2 - t * 2; // triangle 0→1→0
+      const eased = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2; // ease-in-out
+      setSunIntensity(eased);
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Déplacement aléatoire du soleil toutes les 5-8 secondes
+  useEffect(() => {
+    const delay = 5000 + Math.random() * 3000;
+    const t = setTimeout(() => {
+      const newPos = { x: 10 + Math.random() * 80, y: 10 + Math.random() * 80 };
+      setSunPosition(newPos);
+      sunPosRef.current = newPos;
+    }, delay);
+    return () => clearTimeout(t);
+  }, [sunPosition]);
+
+  // Animation des étoiles scintillantes (800ms)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSparkles(prev => prev.map(s => {
+        if (s.dormant) {
+          if (s.dormantTicks + 1 >= 2) {
+            {
+              const gw = gridParams.cols * gridParams.cellSize;
+              const gh = gridParams.rows * gridParams.cellSize;
+              const sp = sunPosRef.current;
+              const cx = (sp.x / 100) * gw;
+              const cy = (sp.y / 100) * gh;
+              const spread = 0.35 * Math.min(gw, gh);
+              return {
+                ...s,
+                x: Math.max(gridParams.gameStartCol * gridParams.cellSize, Math.min((gridParams.gameEndCol + 1) * gridParams.cellSize, cx + (Math.random() - 0.5) * 2 * spread)),
+                y: Math.max(gridParams.gameStartRow * gridParams.cellSize, Math.min((gridParams.gameEndRow + 1) * gridParams.cellSize, cy + (Math.random() - 0.5) * 2 * spread)),
+                size: 12 + Math.random() * 12,
+                opacity: 0,
+                rising: true,
+                dormant: false,
+                dormantTicks: 0,
+              };
+            }
+          }
+          return { ...s, dormantTicks: s.dormantTicks + 1 };
+        }
+        if (s.rising) {
+          const newOpacity = Math.min(s.opacity + 0.5, 1);
+          if (newOpacity >= 1 && Math.random() < 0.35) return { ...s, opacity: 1, rising: false };
+          return { ...s, opacity: newOpacity };
+        }
+        const newOpacity = Math.max(s.opacity - 0.5, 0);
+        if (newOpacity <= 0) return { ...s, opacity: 0, dormant: true, dormantTicks: 0 };
+        return { ...s, opacity: newOpacity };
+      }));
+    }, 800);
+    return () => clearInterval(interval);
+  }, [gridParams]);
 
   // Game loop
   useEffect(() => {
@@ -2798,128 +2891,70 @@ export default function App() {
           viewBox={`0 0 ${gameWidth} ${gameHeight}`}
           preserveAspectRatio="none"
         >
-          {/* Définir le filtre de grain de texture */}
+          {/* Dégradé solaire + filtre glow étoiles */}
           <defs>
-            <filter id="grain-texture">
-              <feTurbulence 
-                type="fractalNoise" 
-                baseFrequency="0.9" 
-                numOctaves="4" 
-                result="noise"
-              />
-              <feColorMatrix
-                in="noise"
-                type="matrix"
-                values="0 0 0 0 0
-                        0 0 0 0 0
-                        0 0 0 0 0
-                        0 0 0 0.03 0"
-              />
-              <feBlend mode="overlay" in2="SourceGraphic" />
+            <radialGradient id="top-left-light" cx="50%" cy="50%" r="28%">
+              <stop offset="0%" stopColor="rgba(255,255,200,0.65)" />
+              <stop offset="100%" stopColor="rgba(255,255,200,0)" />
+            </radialGradient>
+            <filter id="sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
           </defs>
 
-          {/* Grass patchwork pattern with random dark borders */}
+          {/* Grass patchwork pattern */}
           {mapData.grassGrid.map((grass, idx) => (
-            <g key={`grass-${idx}`}>
-              <rect
-                x={grass.x}
-                y={grass.y}
-                width={gridParams.cellSize}
-                height={gridParams.cellSize}
-                fill={grass.color}
-              />
-              <rect
-                x={grass.x + grass.borderOffset}
-                y={grass.y + grass.borderOffset}
-                width={gridParams.cellSize - grass.borderOffset * 2}
-                height={gridParams.cellSize - grass.borderOffset * 2}
-                fill="none"
-                stroke="#6B7A3D"
-                strokeWidth={1}
-                opacity={0.15}
-              />
-            </g>
+            <rect
+              key={`grass-${idx}`}
+              x={grass.x}
+              y={grass.y}
+              width={gridParams.cellSize}
+              height={gridParams.cellSize}
+              fill={grass.color}
+            />
           ))}
-          
-          {/* Couche de grain de texture sur tout le damier */}
-          <rect
-            x={0}
-            y={0}
-            width={gameWidth}
-            height={gameHeight}
-            fill="transparent"
-            filter="url(#grain-texture)"
-            pointerEvents="none"
-          />
 
-          {/* DEBUG : Visualisation de la bordure décorative */}
-          {/* Bordure GAUCHE */}
-          <rect
-            x={0}
-            y={0}
-            width={gridParams.cellSize}
-            height={gameHeight}
-            fill="rgba(255, 0, 0, 0.1)"
-            stroke="rgba(255, 0, 0, 0.3)"
-            strokeWidth={2}
-            strokeDasharray="5,5"
-            pointerEvents="none"
-          />
-          {/* Bordure DROITE */}
-          <rect
-            x={(gridParams.cols - 1) * gridParams.cellSize}
-            y={0}
-            width={gridParams.cellSize}
-            height={gameHeight}
-            fill="rgba(255, 0, 0, 0.1)"
-            stroke="rgba(255, 0, 0, 0.3)"
-            strokeWidth={2}
-            strokeDasharray="5,5"
-            pointerEvents="none"
-          />
-          {/* Bordure HAUT */}
-          <rect
-            x={0}
-            y={0}
-            width={gameWidth}
-            height={gridParams.cellSize}
-            fill="rgba(255, 0, 0, 0.1)"
-            stroke="rgba(255, 0, 0, 0.3)"
-            strokeWidth={2}
-            strokeDasharray="5,5"
-            pointerEvents="none"
-          />
-          {/* Bordure BAS */}
-          <rect
-            x={0}
-            y={(gridParams.rows - 1) * gridParams.cellSize}
-            width={gameWidth}
-            height={gridParams.cellSize}
-            fill="rgba(255, 0, 0, 0.1)"
-            stroke="rgba(255, 0, 0, 0.3)"
-            strokeWidth={2}
-            strokeDasharray="5,5"
-            pointerEvents="none"
-          />
-          {/* Zone de jeu - contour VERT */}
-          <rect
-            x={gridParams.cellSize}
-            y={gridParams.cellSize}
-            width={(gridParams.cols - 2) * gridParams.cellSize}
-            height={(gridParams.rows - 2) * gridParams.cellSize}
-            fill="none"
-            stroke="rgba(0, 255, 0, 0.5)"
-            strokeWidth={3}
-            pointerEvents="none"
-          />
-          {/* Légende en haut à gauche */}
-          <g>
-            <rect x={10} y={10} width={200} height={70} fill="rgba(255,255,255,0.9)" rx={5} />
-            <text x={20} y={30} fill="#ff0000" fontSize={14} fontWeight="bold">🔴 Bordure décorative</text>
-            <text x={20} y={50} fill="#00ff00" fontSize={14} fontWeight="bold">🟢 Zone de jeu</text>
-            <text x={20} y={70} fill="#000" fontSize={12}>{gridParams.cols}×{gridParams.rows} ({gridParams.cellSize}px)</text>
+          {/* Lumière solaire mobile au-dessus du damier */}
+          <g
+            className="solar-cloud-layer"
+            style={{
+              transform: `translate(${(sunPosition.x / 100) * gameWidth}px, ${(sunPosition.y / 100) * gameHeight}px)`,
+              transition: 'transform 3.5s ease-in-out',
+            }}
+          >
+            <rect
+              className="solar-sparkle-layer"
+              x={-gameWidth * 1.5}
+              y={-gameHeight * 1.5}
+              width={gameWidth * 3}
+              height={gameHeight * 3}
+              fill="url(#top-left-light)"
+              pointerEvents="none"
+            />
           </g>
+
+          {/* Étoiles scintillantes à 4 branches */}
+          {sparkles.map(s => {
+            if (s.opacity <= 0) return null;
+            const h = s.size / 2;
+            const t = s.size / 10;
+            const d = `M 0,${-h} L ${t},${-t} L ${h},0 L ${t},${t} L 0,${h} L ${-t},${t} L ${-h},0 L ${-t},${-t} Z`;
+            return (
+              <g
+                key={s.id}
+                transform={`translate(${s.x}, ${s.y})`}
+                opacity={sunIntensity < 0.3 ? 0 : s.opacity * Math.min((sunIntensity - 0.3) / 0.4, 1)}
+                filter="url(#sparkle-glow)"
+                pointerEvents="none"
+              >
+                <path d={d} fill="rgba(255,255,230,0.9)" />
+              </g>
+            );
+          })}
 
           {/* Night overlay - voile sombre avec lumière de lune bleutée */}
           {globalTimeOfDay === 'night' && (

@@ -31,19 +31,8 @@ export function generateRandomMap(
   const gameEndCol = options?.gameEndCol ?? gridCols - 1;
   
   const grassColors = [
-    'rgb(225, 228, 70)',   // Plus vif et saturé
-    'rgb(205, 202, 65)',
-    'rgb(222, 218, 72)',
-    'rgb(200, 207, 68)',
-    'rgb(204, 200, 64)',
-    'rgb(202, 209, 68)',
-    'rgb(225, 232, 75)',
-    'rgb(216, 221, 72)',
-    'rgb(203, 221, 68)',
-    'rgb(223, 234, 78)',
-    'rgb(206, 218, 64)',
-    'rgb(202, 198, 68)',
-    'rgb(195, 196, 67)'
+    '#cdd94a',
+    '#c2d040',
   ];
   const cols = gridCols;  // Nombre de colonnes dynamique
   const rows = gridRows;  // Nombre de lignes dynamique
