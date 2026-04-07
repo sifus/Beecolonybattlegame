@@ -1,5 +1,6 @@
 import { Tree } from '../types/game';
 import { SubLevelType } from '../types/levels';
+import { generateGrassGrid } from './grassGenerator';
 
 interface LevelConfig {
   trees: Omit<Tree, 'id'>[];
@@ -32,64 +33,7 @@ export function generateStoryLevel(
   const gameEndCol = options?.gameEndCol ?? cols - 1;
   const gameRows = gameEndRow - gameStartRow + 1;
   const gameCols = gameEndCol - gameStartCol + 1;
-  // Générer la grille d'herbe (identique au générateur de carte aléatoire)
-  const grassColors = [
-    'rgb(225, 228, 70)',
-    'rgb(205, 202, 65)',
-    'rgb(222, 218, 72)',
-    'rgb(200, 207, 68)',
-    'rgb(204, 200, 64)',
-    'rgb(202, 209, 68)',
-    'rgb(225, 232, 75)',
-    'rgb(216, 221, 72)',
-    'rgb(203, 221, 68)',
-    'rgb(223, 234, 78)',
-    'rgb(206, 218, 64)',
-    'rgb(202, 198, 68)',
-    'rgb(195, 196, 67)'
-  ];
-
-  const grassGrid: Array<{ x: number; y: number; color: string; borderOpacity: number; borderOffset: number }> = [];
-  const colorGrid: string[][] = Array(rows).fill(null).map(() => Array(cols).fill(''));
-  
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      const x = j * cellSize;
-      const y = i * cellSize;
-      
-      const adjacentColors = new Set<string>();
-      if (i > 0 && colorGrid[i - 1][j]) adjacentColors.add(colorGrid[i - 1][j]);
-      if (j > 0 && colorGrid[i][j - 1]) adjacentColors.add(colorGrid[i][j - 1]);
-      
-      const diagonalColorCount: { [color: string]: number } = {};
-      const diagonals = [[i - 1, j - 1], [i - 1, j + 1]];
-      
-      for (const [di, dj] of diagonals) {
-        if (di >= 0 && di < rows && dj >= 0 && dj < cols && colorGrid[di][dj]) {
-          const color = colorGrid[di][dj];
-          diagonalColorCount[color] = (diagonalColorCount[color] || 0) + 1;
-        }
-      }
-      
-      let availableColors = grassColors.filter(c => !adjacentColors.has(c));
-      availableColors = availableColors.filter(c => (diagonalColorCount[c] || 0) < 2);
-      
-      if (availableColors.length === 0) {
-        availableColors = grassColors.filter(c => !adjacentColors.has(c));
-      }
-      if (availableColors.length === 0) {
-        availableColors = grassColors;
-      }
-      
-      const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-      colorGrid[i][j] = color;
-      
-      const borderOpacity = Math.random() < 0.3 ? 0.2 : 0;
-      const borderOffset = Math.random() < 0.5 ? 0 : cellSize * 0.5;
-      
-      grassGrid.push({ x, y, color, borderOpacity, borderOffset });
-    }
-  }
+  const grassGrid = generateGrassGrid(rows, cols, cellSize);
 
   const config: LevelConfig = {
     trees: [],

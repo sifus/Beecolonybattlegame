@@ -1,21 +1,7 @@
 import { Tree } from '../types/game';
 import { PondShape } from './mapGenerator';
+import { generateGrassGrid } from './grassGenerator';
 
-const grassColors = [
-  'rgb(225, 228, 70)',   // Plus vif et saturé
-  'rgb(205, 202, 65)',
-  'rgb(222, 218, 72)',
-  'rgb(200, 207, 68)',
-  'rgb(204, 200, 64)',
-  'rgb(202, 209, 68)',
-  'rgb(225, 232, 75)',
-  'rgb(216, 221, 72)',
-  'rgb(203, 221, 68)',
-  'rgb(223, 234, 78)',
-  'rgb(206, 218, 64)',
-  'rgb(202, 198, 68)',
-  'rgb(195, 196, 67)'
-];
 
 export interface LevelData {
   trees: Tree[];
@@ -31,66 +17,7 @@ export function generateLevel1(cellSize: number): LevelData {
   const mapWidth = cols * cellSize;
   const mapHeight = rows * cellSize;
 
-  // Generate grass grid
-  const grassGrid: Array<{ x: number; y: number; color: string }> = [];
-  const colorGrid: string[][] = Array(rows).fill(null).map(() => Array(cols).fill(''));
-  
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      const x = j * cellSize;
-      const y = i * cellSize;
-      
-      // Get adjacent colors (edge-to-edge) - MUST be different
-      // Only check already-defined cells (top and left)
-      const adjacentColors = new Set<string>();
-      if (i > 0 && colorGrid[i - 1][j]) adjacentColors.add(colorGrid[i - 1][j]); // top
-      if (j > 0 && colorGrid[i][j - 1]) adjacentColors.add(colorGrid[i][j - 1]); // left
-      
-      // Count diagonal occurrences (corner-to-corner) - max 2 of the same color
-      // Only check already-defined diagonals
-      const diagonalColorCount: { [color: string]: number } = {};
-      const diagonals = [
-        [i - 1, j - 1], // top-left
-        [i - 1, j + 1], // top-right
-      ];
-      
-      for (const [di, dj] of diagonals) {
-        if (di >= 0 && di < rows && dj >= 0 && dj < cols && colorGrid[di][dj]) {
-          const dColor = colorGrid[di][dj];
-          diagonalColorCount[dColor] = (diagonalColorCount[dColor] || 0) + 1;
-        }
-      }
-      
-      // Filter out colors that appear 2+ times diagonally
-      const tooManyDiagonals = new Set<string>(
-        Object.entries(diagonalColorCount)
-          .filter(([_, count]) => count >= 2)
-          .map(([color]) => color)
-      );
-      
-      // Pick a color that's not adjacent AND doesn't appear 2+ times diagonally
-      let availableColors = grassColors.filter(
-        c => !adjacentColors.has(c) && !tooManyDiagonals.has(c)
-      );
-      if (availableColors.length === 0) {
-        // Fallback: at least avoid edge adjacency
-        availableColors = grassColors.filter(c => !adjacentColors.has(c));
-      }
-      if (availableColors.length === 0) {
-        // Last resort: use all colors
-        availableColors = grassColors;
-      }
-      
-      const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-      colorGrid[i][j] = color;
-      
-      // Random border opacity (30-70%) and offset (-0.5 to 0.5 pixels)
-      const borderOpacity = 0.3 + Math.random() * 0.4;
-      const borderOffset = (Math.random() - 0.5);
-      
-      grassGrid.push({ x, y, color, borderOpacity, borderOffset });
-    }
-  }
+  const grassGrid = generateGrassGrid(rows, cols, cellSize);
 
   // NIVEAU 1 : Carte symétrique, pas d'étangs pour simplifier
   const ponds: PondShape[] = [];
