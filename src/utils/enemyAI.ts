@@ -1,11 +1,7 @@
 import { GameState, Tree, Bee, Lumberjack } from '../types/game';
 import { MapData } from './mapGenerator';
 
-// ========== RÈGLES DU JEU (IDENTIQUES POUR JOUEUR ET IA) ==========
-const BUILD_HIVE_COST = 5;      // Coût pour construire une ruche niveau 1
-const UPGRADE_HIVE_COST = 20;   // Coût pour upgrader niveau 1 -> niveau 2
-const HIVE_L1_HP = 7;           // HP d'une ruche niveau 1
-const HIVE_L2_HP = 35;          // HP d'une ruche niveau 2
+import { BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP } from '../constants/gameRules';
 
 const GRID_COLS = 16;
 const CELL_SIZE = 100;

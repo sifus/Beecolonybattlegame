@@ -39,16 +39,7 @@ const toast = {
  * Version: 5.7 - Mode jour/nuit avec lucioles et ambiance sonore
  */
 
-// Coûts de construction et amélioration
-const BUILD_HIVE_COST = 5;      // Abeilles nécessaires pour construire une ruche niveau 1
-const UPGRADE_HIVE_COST = 20;   // Abeilles nécessaires pour améliorer niveau 1 → niveau 2
-
-// Points de vie des ruches
-const HIVE_L1_HP = 7;           // HP ruche niveau 1
-const HIVE_L2_HP = 35;          // HP ruche niveau 2
-
-// Limite de performance - arrête la production à ce nombre pour éviter saturation mémoire
-const MAX_BEES = 250;           // Nombre maximum d'abeilles sur la carte
+import { BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP, MAX_BEES } from './constants/gameRules';
 
 type Screen = 'menu' | 'options' | 'game' | 'levelmap' | 'story';
 
