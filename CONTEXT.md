@@ -15,7 +15,7 @@
 | SVG natif | Rendu du jeu (grille, entités, effets) |
 | localStorage | Sauvegarde de progression |
 
-Le jeu est rendu entièrement en SVG dans `src/App.tsx` (~3 400 lignes, fichier encore monolithique en cours de découpage).
+Le jeu est rendu entièrement en SVG. App.tsx est passé de ~3 400 à ~1 850 lignes grâce au découpage en hooks et composants.
 
 ---
 
@@ -70,16 +70,22 @@ Le jeu est rendu entièrement en SVG dans `src/App.tsx` (~3 400 lignes, fichier 
 | `054633a` | refactor: centralisation des constantes dans `constants/gameRules.ts` |
 | `54c473b` | refactor: extraction de `generateGrassGrid()` — −180 lignes dupliquées |
 | `c812db0` | refactor: extraction des useEffects localStorage → hook `useStorage` |
+| `2e8fcbf` | refactor: extraction du système solaire → hook `useSolarSystem` |
+| `9a734b9` | refactor: extraction de la game loop → hook `useGameLoop` |
+| `2876642` | refactor: extraction du rendu SVG → composant `GameBoard` |
 
 ### Fichiers créés
 - `src/constants/gameRules.ts` — constantes partagées joueur/IA (`BUILD_HIVE_COST`, `UPGRADE_HIVE_COST`, `HIVE_L1_HP`, `HIVE_L2_HP`, `MAX_BEES`)
 - `src/utils/grassGenerator.ts` — fonction `generateGrassGrid(rows, cols, cellSize)` extraite des 3 générateurs
 - `src/hooks/useStorage.ts` — hook `useStorage(levelProgress, soundEnabled, globalTimeOfDay)` pour la persistance automatique
+- `src/hooks/useSolarSystem.ts` — hook `useSolarSystem(gridParams)` → `{ sunIntensity, sunPosition, sparkles }`
+- `src/hooks/useGameLoop.ts` — hook `useGameLoop({ gameState, setGameState, gridParams, mapData, ... })` — 7 effets (60 FPS, production, lucioles, IA, timer, etc.)
+- `src/components/GameBoard.tsx` — composant `<GameBoard>` — rendu SVG complet (damier, arbres, abeilles, étangs, effets)
 - `CONTEXT.md` (ce fichier)
 - `docs/` — dossier contenant les 58 fichiers `.md` déplacés hors de `src/`
 
 ### Fichiers modifiés
-- `src/App.tsx` — suppression overlays debug, refonte damier, système solaire, imports nettoyés
+- `src/App.tsx` — réduit de ~3 400 à ~1 850 lignes : overlays debug supprimés, damier refait, hooks extraits, GameBoard utilisé
 - `src/utils/mapGenerator.ts` — palette 2 couleurs, utilise `generateGrassGrid()`
 - `src/utils/levelGenerator.ts` — suppression palette obsolète, utilise `generateGrassGrid()`
 - `src/utils/storyLevelGenerator.ts` — idem
@@ -97,21 +103,24 @@ Le jeu est rendu entièrement en SVG dans `src/App.tsx` (~3 400 lignes, fichier 
 
 ```
 src/
-├── App.tsx                    (~3 400 lignes — à découper)
+├── App.tsx                    (~1 850 lignes — orchestration, state, navigation)
 ├── main.tsx
 ├── index.css
 ├── constants/
-│   └── gameRules.ts           ← NOUVEAU
+│   └── gameRules.ts           ← extrait session 1
 ├── hooks/
-│   └── useStorage.ts          ← NOUVEAU
+│   ├── useStorage.ts          ← extrait session 1
+│   ├── useSolarSystem.ts      ← extrait session 2 (étape 2)
+│   └── useGameLoop.ts         ← extrait session 2 (étape 3)
 ├── utils/
-│   ├── grassGenerator.ts      ← NOUVEAU
+│   ├── grassGenerator.ts      ← extrait session 1
 │   ├── mapGenerator.ts
 │   ├── levelGenerator.ts
 │   ├── storyLevelGenerator.ts
 │   ├── enemyAI.ts
 │   └── storage.ts
 ├── components/
+│   ├── GameBoard.tsx          ← extrait session 2 (étape 4) — rendu SVG complet
 │   ├── Tree.tsx
 │   ├── Bee.tsx
 │   ├── GameUI.tsx
@@ -129,12 +138,10 @@ src/
 
 ---
 
-## Prochaines étapes — Découpage App.tsx (étapes 2 à 4)
+## Découpage App.tsx — Bilan
 
-App.tsx contient encore ~3 400 lignes. Le plan de découpage convenu :
-
-### Étape 2 — Hook `useSolarSystem`
-Extraire vers `src/hooks/useSolarSystem.ts` :
+### ✅ Étape 2 — Hook `useSolarSystem` (commit `2e8fcbf`)
+Extrait vers `src/hooks/useSolarSystem.ts` :
 - State `sunIntensity` + useEffect 100ms (cycle solaire)
 - State `sunPosition` + useEffect déplacement 5–8s
 - State `sparkles` + useEffect 800ms (cycle étoiles)
@@ -143,16 +150,39 @@ Extraire vers `src/hooks/useSolarSystem.ts` :
 - Fonction `makeSparkle`
 - Retourne : `{ sunIntensity, sunPosition, sparkles }`
 
-### Étape 3 — Hook `useGameLoop`
-Extraire vers `src/hooks/useGameLoop.ts` :
-- useEffect principal de la boucle de jeu (~80 lignes) : déplacements abeilles, production, combat, IA
-- useEffect lucioles (nuit, 30 FPS)
-- Dépend de : `gameState`, `gridParams`, `mapData`
-- Retourne : setter `setGameState`
+### ✅ Étape 3 — Hook `useGameLoop` (commit `9a734b9`)
+Extrait vers `src/hooks/useGameLoop.ts` :
+- useEffect 60 FPS : déplacements abeilles, combat, construction/réparation/amélioration ruches
+- useEffect production 1 FPS : spawn abeilles depuis les ruches
+- useEffect lucioles 30 FPS (mode nuit)
+- useEffect lumberjacks (réservé futur, no-op)
+- useEffect timer : incrémente `gameTime` chaque seconde
+- useEffect IA ennemie : toutes les 3s (6s pour premier combat)
+- Reçoit : `{ gameState, setGameState, gridParams, mapData, globalTimeOfDay, currentScreen, levelProgress, beeConsumedByPondRef, setWaterSplashes, setFlashEffect }`
 
-### Étape 4 — Composant `<GameBoard>`
-Extraire vers `src/components/GameBoard.tsx` :
-- Le rendu SVG complet (~1 000 lignes) : damier, arbres, abeilles, étangs, overlays nuit, étoiles, sélection, etc.
-- Reçoit via props : `gameState`, `gridParams`, `mapData`, `sunIntensity`, `sunPosition`, `sparkles`, handlers de clic/touch
+### ✅ Étape 4 — Composant `<GameBoard>` (commit `2876642`)
+Extrait vers `src/components/GameBoard.tsx` :
+- SVG de fond : damier herbe, lumière solaire animée, étoiles scintillantes, overlay nuit, étangs
+- SVG interactif : arbres (2 couches), sélection cercle, flash, halos, splashes eau, abeilles
+- Reçoit via props : `gameState`, `gridParams`, `mapData`, `sunIntensity`, `sunPosition`, `sparkles`, `globalTimeOfDay`, états de sélection, `flashEffect`, `waterSplashes`, `svgRef`, tous les handlers souris/touch/arbre
 
-**Objectif final** : App.tsx réduit à ~800 lignes (state, navigation, orchestration).
+---
+
+## Prochaines étapes — Visuels
+
+### Étape 5 — Style des arbres selon les maquettes
+- Refonte visuelle du composant `src/components/Tree.tsx`
+- Aligner le rendu sur les maquettes graphiques (formes, couleurs, détails trunk/feuillage)
+- Adapter les indicateurs de ruche et compteurs
+
+### Étape 6 — Étang organique
+- Remplacer le rectangle `rx={8}` par une forme SVG organique (path ou clipPath)
+- Ondulations animées, reflets plus naturels
+
+### Étape 7 — Nuages décoratifs
+- Ajouter des nuages SVG animés traversant lentement la carte
+- Synchroniser éventuellement avec `sunIntensity` pour l'ombrage
+
+### Étape 8 — Responsive
+- Tester et ajuster sur différentes tailles d'écran (mobile portrait, tablette, desktop)
+- Vérifier le recalcul de `gridParams` et l'adaptation de `GameBoard`
