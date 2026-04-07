@@ -14,16 +14,13 @@ import { generateRandomMap } from './utils/mapGenerator';
 import { generateLevel } from './utils/levelGenerator';
 import { generateStoryLevel } from './utils/storyLevelGenerator';
 import { enemyAITick } from './utils/enemyAI';
-import { 
-  loadLevelProgress, 
-  saveLevelProgress, 
+import {
+  loadLevelProgress,
   resetLevelProgress,
   loadSoundPreference,
-  saveSoundPreference,
   loadTimeOfDayPreference,
-  saveTimeOfDayPreference,
-  isStorageAvailable 
 } from './utils/storage';
+import { useStorage } from './hooks/useStorage';
 import { motion } from 'motion/react';
 
 // Désactiver les toasts
@@ -311,26 +308,8 @@ export default function App() {
     }
   }, []);
   
-  // 🔄 Sauvegarde automatique de la progression
-  useEffect(() => {
-    if (isStorageAvailable()) {
-      saveLevelProgress(levelProgress);
-    }
-  }, [levelProgress]);
-  
-  // 🔄 Sauvegarde automatique des préférences audio
-  useEffect(() => {
-    if (isStorageAvailable()) {
-      saveSoundPreference(soundEnabled);
-    }
-  }, [soundEnabled]);
-  
-  // 🔄 Sauvegarde automatique de la préférence jour/nuit
-  useEffect(() => {
-    if (isStorageAvailable()) {
-      saveTimeOfDayPreference(globalTimeOfDay);
-    }
-  }, [globalTimeOfDay]);
+  // 🔄 Sauvegarde automatique (progression + préférences)
+  useStorage(levelProgress, soundEnabled, globalTimeOfDay);
   
   // Détecter les changements de taille d'écran pour recalculer la grille
   // NE PAS recalculer pendant une partie active pour éviter la réinitialisation
