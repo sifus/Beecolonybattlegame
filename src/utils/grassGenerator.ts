@@ -6,7 +6,17 @@ export type GrassCell = {
   borderOffset: number;
 };
 
-const DEFAULT_GRASS_COLORS = ['#cdd94a', '#c2d040'];
+const DEFAULT_GRASS_COLORS = [
+  '#DADC57',
+  '#CAD551',
+  '#D9D255',
+  '#CDC950',
+  '#CFCF51',
+  '#D1DA56',
+  '#E1E159',
+  '#DBDE67',
+  '#C8C250',
+];
 
 /**
  * Génère une grille de cases d'herbe avec alternance de couleurs contrainte :

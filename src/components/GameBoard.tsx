@@ -109,9 +109,10 @@ export function GameBoard({
       >
         {/* Dégradé solaire + filtre glow étoiles */}
         <defs>
-          <radialGradient id="top-left-light" cx="50%" cy="50%" r="28%">
-            <stop offset="0%" stopColor="rgba(255,255,200,0.65)" />
-            <stop offset="100%" stopColor="rgba(255,255,200,0)" />
+          <radialGradient id="sun-beam" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stopColor="rgba(255,255,180)" stopOpacity={0.55} />
+            <stop offset="50%"  stopColor="rgba(255,255,180)" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="rgba(255,255,180)" stopOpacity={0} />
           </radialGradient>
           <filter id="sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="2.5" result="blur" />
@@ -126,11 +127,12 @@ export function GameBoard({
         {mapData.grassGrid.map((grass, idx) => (
           <rect
             key={`grass-${idx}`}
-            x={grass.x}
-            y={grass.y}
-            width={gridParams.cellSize}
-            height={gridParams.cellSize}
+            x={grass.x - 0.5}
+            y={grass.y - 0.5}
+            width={gridParams.cellSize + 1}
+            height={gridParams.cellSize + 1}
             fill={grass.color}
+            shapeRendering="crispEdges"
           />
         ))}
 
@@ -142,13 +144,12 @@ export function GameBoard({
             transition: 'transform 3.5s ease-in-out',
           }}
         >
-          <rect
-            className="solar-sparkle-layer"
-            x={-gameWidth * 1.5}
-            y={-gameHeight * 1.5}
-            width={gameWidth * 3}
-            height={gameHeight * 3}
-            fill="url(#top-left-light)"
+          <ellipse
+            cx={0} cy={0}
+            rx={160} ry={60}
+            fill="url(#sun-beam)"
+            transform="rotate(45, 0, 0)"
+            opacity={sunIntensity}
             pointerEvents="none"
           />
         </g>
