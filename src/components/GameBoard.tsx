@@ -47,6 +47,32 @@ interface GameBoardProps {
   onTreeDragStart: (e: React.PointerEvent) => void;
 }
 
+function organicPondPath(x: number, y: number, w: number, h: number, seed: number): string {
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const rx = (w / 2) * 0.90;
+  const ry = (h / 2) * 0.80;
+  const kx = 0.5523 * rx;
+  const ky = 0.5523 * ry;
+
+  // Légère déformation organique seeded
+  const d = (n: number) => Math.sin(seed * n * 1.618) * 0.09;
+
+  const top    = { x: cx + d(1) * rx,       y: cy - ry + d(2) * ry };
+  const right  = { x: cx + rx + d(3) * rx,  y: cy + d(4) * ry };
+  const bottom = { x: cx + d(5) * rx,       y: cy + ry + d(6) * ry };
+  const left   = { x: cx - rx + d(7) * rx,  y: cy + d(8) * ry };
+
+  return [
+    `M ${top.x} ${top.y}`,
+    `C ${top.x + kx} ${top.y} ${right.x} ${right.y - ky} ${right.x} ${right.y}`,
+    `C ${right.x} ${right.y + ky} ${bottom.x + kx} ${bottom.y} ${bottom.x} ${bottom.y}`,
+    `C ${bottom.x - kx} ${bottom.y} ${left.x} ${left.y + ky} ${left.x} ${left.y}`,
+    `C ${left.x} ${left.y - ky} ${top.x - kx} ${top.y} ${top.x} ${top.y}`,
+    `Z`,
+  ].join(' ');
+}
+
 export function GameBoard({
   gameState,
   gridParams,
@@ -206,45 +232,77 @@ export function GameBoard({
           </>
         )}
 
-        {/* Ponds with top edge and reflection */}
-        {mapData.ponds.map((pond, idx) => (
-          <g key={`pond-${idx}`}>
-            {/* Pond base */}
-            <rect
-              x={pond.x}
-              y={pond.y}
-              width={pond.width * gridParams.cellSize}
-              height={pond.height * gridParams.cellSize}
-              fill={globalTimeOfDay === 'night' ? 'rgb(20, 60, 100)' : 'rgb(55, 173, 238)'}
-              rx={8}
-            />
+        {/* Ponds — forme organique + ripples */}
+        {mapData.ponds.map((pond, idx) => {
+          const pondW = pond.width * gridParams.cellSize;
+          const pondH = pond.height * gridParams.cellSize;
+          const cx = pond.x + pondW / 2;
+          const cy = pond.y + pondH / 2;
+          const seed = pond.x * 3 + pond.y * 7;
+          const path = organicPondPath(pond.x, pond.y, pondW, pondH, seed);
+          const isNight = globalTimeOfDay === 'night';
+          const waterColor = isNight ? 'rgb(20, 60, 100)' : 'rgb(55, 173, 238)';
+          const clipId = `pond-clip-${idx}`;
+          const rippleColor = isNight ? 'rgba(100, 180, 230, 0.35)' : 'rgba(255, 255, 255, 0.3)';
+          const rippleRBase = Math.min(pondW, pondH) * 0.18;
 
-            {/* Rebord sur le haut */}
-            <rect
-              x={pond.x}
-              y={pond.y}
-              width={pond.width * gridParams.cellSize}
-              height={3}
-              fill="#000"
-              opacity={globalTimeOfDay === 'night' ? 0.4 : 0.2}
-              rx={8}
-              pointerEvents="none"
-            />
+          return (
+            <g key={`pond-${idx}`}>
+              <defs>
+                <clipPath id={clipId}>
+                  <path d={path} />
+                </clipPath>
+              </defs>
 
-            {/* Petit reflet lumineux */}
-            <ellipse
-              cx={globalTimeOfDay === 'night'
-                ? pond.x + (pond.width * gridParams.cellSize) * 0.75
-                : pond.x + (pond.width * gridParams.cellSize) * 0.25}
-              cy={pond.y + (pond.height * gridParams.cellSize) * 0.2}
-              rx={(pond.width * gridParams.cellSize) * 0.2}
-              ry={(pond.height * gridParams.cellSize) * 0.15}
-              fill={globalTimeOfDay === 'night' ? '#a8c5dd' : '#fff'}
-              opacity={globalTimeOfDay === 'night' ? 0.25 : 0.4}
-              pointerEvents="none"
-            />
-          </g>
-        ))}
+              {/* Forme organique de base */}
+              <path d={path} fill={waterColor} />
+
+              {/* Effets clippés à l'intérieur du blob */}
+              <g clipPath={`url(#${clipId})`} pointerEvents="none">
+                {/* Ripples concentriques animées */}
+                {[0, 1, 2].map((i) => (
+                  <motion.circle
+                    key={i}
+                    cx={cx + (i - 1) * pondW * 0.22}
+                    cy={cy + pondH * 0.05}
+                    r={rippleRBase}
+                    stroke={rippleColor}
+                    fill="none"
+                    strokeWidth={1.2}
+                    initial={{ scale: 0.6, opacity: 0.6 }}
+                    animate={{ scale: 2.8, opacity: 0 }}
+                    transition={{
+                      duration: 3.2,
+                      repeat: Infinity,
+                      delay: idx * 0.7 + i * 1.1,
+                      ease: 'easeOut',
+                    }}
+                  />
+                ))}
+
+                {/* Reflet lumineux */}
+                <ellipse
+                  cx={isNight ? cx + pondW * 0.28 : cx - pondW * 0.18}
+                  cy={pond.y + pondH * 0.28}
+                  rx={pondW * 0.18}
+                  ry={pondH * 0.13}
+                  fill={isNight ? '#a8c5dd' : '#fff'}
+                  opacity={isNight ? 0.2 : 0.38}
+                />
+              </g>
+
+              {/* Contour organique — rebord sombre */}
+              <path
+                d={path}
+                fill="none"
+                stroke="#000"
+                strokeWidth={2.5}
+                opacity={isNight ? 0.35 : 0.15}
+                pointerEvents="none"
+              />
+            </g>
+          );
+        })}
       </svg>
 
       {/* Game SVG - Interactive layer */}
