@@ -1,791 +1,326 @@
 import { Tree as TreeType } from '../types/game';
 import { motion } from 'motion/react';
 
-// Version 3.6: Permet de commencer un cercle de sélection sur un arbre
 interface TreeProps {
   tree: TreeType;
   onClick: (e: React.MouseEvent) => void;
-  onDragStart?: (e: React.PointerEvent) => void; // Nouveau: pour détecter le début du drag
+  onDragStart?: (e: React.PointerEvent) => void;
   playerBeesCount?: number;
   cellSize: number;
-  renderLayer?: 'base' | 'top'; // Nouvelle prop pour séparer les couches de rendu
-  isNightMode?: boolean; // Mode nuit pour changer les couleurs
+  renderLayer?: 'base' | 'top';
+  isNightMode?: boolean;
 }
 
-export function Tree({ tree, onClick, onDragStart, playerBeesCount = 0, cellSize, renderLayer = 'base', isNightMode = false }: TreeProps) {
-  // Tree dimensions based on cell size - proportionnel à la cellSize agrandie
-  const treeScale = cellSize / 60; // Proportionnel à la nouvelle cellSize
-  const trunkWidth = 30 * treeScale;
-  const trunkHeight = 25 * treeScale;
-  const foliageRadius = 30 * treeScale;
-  const topFoliageRadius = 25 * treeScale;
-  const clickRadius = cellSize * 1.1; // Zone de touch agrandie pour mobile (couvre tout l'arbre + marge)
+export function Tree({
+  tree,
+  onClick,
+  onDragStart,
+  playerBeesCount = 0,
+  cellSize,
+  renderLayer = 'base',
+  isNightMode = false,
+}: TreeProps) {
+  const s = cellSize / 80;
+  const treeIsColonized = tree.hiveCount > 0;
+  const trunkBottomY = tree.y + cellSize * 0.5;
+  const trunkTopY    = trunkBottomY - 20 * s;
 
-  const getTreeColor = () => {
-    // Tous les arbres sont verts (vivants)
-    // Plus sombres en mode nuit
-    return isNightMode ? '#6B9440' : '#8BC34A';
-  };
+  const foliageDark = treeIsColonized ? '#5ba832' : '#9aad3a';
+  const foliageLight = treeIsColonized ? '#6dc23c' : '#a8bc40';
 
-  const getHiveColor = () => {
-    // En mode nuit, les cocons ont des couleurs sombres différentes selon le joueur
-    if (isNightMode) {
-      if (tree.owner === 'player') return '#6B4423'; // Marron chocolat foncé pour le joueur
-      if (tree.owner === 'enemy') return '#4A3728'; // Marron très foncé pour l'ennemi
-      return '#6B4423'; // Neutre = marron chocolat
-    }
-    // En mode jour, couleurs normales
-    if (tree.owner === 'player') return '#FDD835';
-    if (tree.owner === 'enemy') return '#D32F2F';
-    return '#FDD835';
-  };
+  const hiveColors =
+    tree.owner === 'enemy'
+      ? { fill: '#e03030', border: '#c01010' }
+      : { fill: '#e8a020', border: '#c4780a' };
 
-  const handleClick = (e: React.MouseEvent) => {
-    // Ne pas bloquer la propagation ici - c'est géré dans App.tsx
-    onClick(e);
-  };
-
+  const handleClick = (e: React.MouseEvent) => onClick(e);
   const handlePointerDown = (e: React.PointerEvent) => {
-    // Laisser passer l'événement pour permettre le cercle de sélection
-    // App.tsx va gérer la logique clic vs drag
-    if (onDragStart) {
-      onDragStart(e);
-    }
+    if (onDragStart) onDragStart(e);
   };
 
-  // Rendu en deux passes pour garantir que les ruches sont toujours au-dessus
+  const renderHive = (index: number, cx: number, cy: number, r: number) => {
+    if (index >= tree.hiveHealth.length) return null;
+    const health = tree.hiveHealth[index];
+    const level = tree.hiveLevel[index] || 1;
+    const maxHealth = level === 2 ? 35 : 7;
+    const healthPercent = health / maxHealth;
+    const hiveIsHealthy = health === maxHealth;
+    const clipId = `hive-clip-${tree.id}-${index}`;
+
+    return (
+      <g key={`hive-${index}`}>
+        {/* Empty background */}
+        <circle cx={cx} cy={cy} r={r} fill="#D7CCC8" opacity={0.3} />
+
+        {/* Health fill */}
+        <defs>
+          <clipPath id={clipId}>
+            <rect
+              x={cx - r}
+              y={cy - r + 2 * r * (1 - healthPercent)}
+              width={2 * r}
+              height={2 * r * healthPercent}
+            />
+          </clipPath>
+        </defs>
+        <circle cx={cx} cy={cy} r={r} fill={hiveColors.fill} clipPath={`url(#${clipId})`} />
+
+        {/* Border */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={hiveColors.border} strokeWidth={1.5 * s} />
+
+        {/* Texture lines */}
+        <path
+          d={`M ${cx - r * 0.7} ${cy - r * 0.4} Q ${cx} ${cy - r * 0.5} ${cx + r * 0.7} ${cy - r * 0.4}`}
+          fill="none" stroke={hiveColors.border} strokeWidth={0.8 * s} opacity={0.5}
+        />
+        <path
+          d={`M ${cx - r * 0.8} ${cy} Q ${cx} ${cy + r * 0.1} ${cx + r * 0.8} ${cy}`}
+          fill="none" stroke={hiveColors.border} strokeWidth={0.8 * s} opacity={0.5}
+        />
+        <path
+          d={`M ${cx - r * 0.7} ${cy + r * 0.4} Q ${cx} ${cy + r * 0.5} ${cx + r * 0.7} ${cy + r * 0.4}`}
+          fill="none" stroke={hiveColors.border} strokeWidth={0.8 * s} opacity={0.5}
+        />
+
+        {/* Brown hole */}
+        <circle cx={cx} cy={cy} r={2.5 * s} fill="#5a3010" />
+
+        {/* Highlight */}
+        <ellipse
+          cx={cx - r * 0.35} cy={cy - r * 0.35}
+          rx={r * 0.3} ry={r * 0.25}
+          fill="white" opacity={0.35}
+        />
+
+        {/* Health counter — only when damaged */}
+        {!hiveIsHealthy && (
+          <text
+            x={cx}
+            y={cy + r + 10 * s}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#fff"
+            stroke="#000"
+            strokeWidth={3 * s}
+            paintOrder="stroke"
+            fontSize={14 * s}
+            fontWeight="bold"
+          >
+            {health}/{maxHealth}
+          </text>
+        )}
+      </g>
+    );
+  };
+
+  // ─── BASE LAYER: shadow + trunks + foliage ───────────────────────────────
   if (renderLayer === 'base') {
     return (
       <g>
-        {/* Clickable area - invisible but covers the whole tree */}
+        {/* Click area */}
         <circle
           cx={tree.x}
-          cy={tree.y - foliageRadius * 0.2}
-          r={clickRadius}
+          cy={tree.y}
+          r={cellSize * 1.1}
           fill="transparent"
           onClick={handleClick}
           onPointerDown={handlePointerDown}
-          style={{ 
-            cursor: tree.isCut ? 'default' : 'pointer',
-            touchAction: 'none',
-          }}
+          style={{ cursor: tree.isCut ? 'default' : 'pointer', touchAction: 'none' }}
           pointerEvents="all"
         />
-        
+
         <motion.g whileHover={{ scale: 1.05 }} style={{ pointerEvents: 'none' }}>
           {tree.isCut ? (
             <>
-              {/* Cut tree stump */}
+              {/* Stump */}
               <rect
-                x={tree.x - trunkWidth / 2}
-                y={tree.y + 20 * treeScale}
-                width={trunkWidth}
-                height={15 * treeScale}
+                x={tree.x - 10 * s}
+                y={trunkBottomY - 15 * s}
+                width={20 * s}
+                height={15 * s}
                 fill="#6D4C41"
-                rx={3 * treeScale}
+                rx={3 * s}
               />
-              {/* Stump top */}
-              <ellipse
-                cx={tree.x}
-                cy={tree.y + 20 * treeScale}
-                rx={trunkWidth / 2}
-                ry={8 * treeScale}
-                fill="#8D6E63"
-              />
-              {/* Tree rings */}
-              <ellipse
-                cx={tree.x}
-                cy={tree.y + 20 * treeScale}
-                rx={trunkWidth / 3}
-                ry={5 * treeScale}
-                fill="none"
-                stroke="#5D4037"
-                strokeWidth={1 * treeScale}
-              />
-              <ellipse
-                cx={tree.x}
-                cy={tree.y + 20 * treeScale}
-                rx={trunkWidth / 6}
-                ry={3 * treeScale}
-                fill="none"
-                stroke="#5D4037"
-                strokeWidth={1 * treeScale}
-              />
+              <ellipse cx={tree.x} cy={trunkBottomY - 15 * s} rx={10 * s} ry={6 * s} fill="#8D6E63" />
+              <ellipse cx={tree.x} cy={trunkBottomY - 15 * s} rx={6.5 * s} ry={4 * s} fill="none" stroke="#5D4037" strokeWidth={s} />
+              <ellipse cx={tree.x} cy={trunkBottomY - 15 * s} rx={3.5 * s} ry={2 * s} fill="none" stroke="#5D4037" strokeWidth={s} />
             </>
           ) : (
             <>
-              {/* Groupe d'arbres EN ARRIERE PLAN pour les arbres maxHives === 2 */}
-              {tree.maxHives === 2 && (
+              {/* Shadow — diffuse, offset right (light from top-left) */}
+              <defs>
+                <radialGradient id={`shadow-grad-${tree.id}`} cx="20%" cy="30%" r="80%">
+                  <stop offset="0%"   stopColor="#000" stopOpacity={0.18} />
+                  <stop offset="60%"  stopColor="#000" stopOpacity={0.07} />
+                  <stop offset="100%" stopColor="#000" stopOpacity={0} />
+                </radialGradient>
+              </defs>
+              <ellipse
+                cx={tree.x + 55 * s}
+                cy={tree.y + cellSize * 0.5 - 4 * s}
+                rx={55 * s}
+                ry={16 * s}
+                fill={`url(#shadow-grad-${tree.id})`}
+              />
+
+              {tree.maxHives === 2 ? (
                 <>
-                  {/* Arbre arrière gauche (plus petit, plus transparent) */}
-                  <g opacity={0.6}>
-                    {/* Ombre */}
-                    <ellipse
-                      cx={tree.x - foliageRadius * 1.1 + 6 * treeScale}
-                      cy={tree.y + foliageRadius * 1.1}
-                      rx={foliageRadius * 0.5}
-                      ry={foliageRadius * 0.2}
-                      fill="#000"
-                      opacity={0.2}
-                    />
-                    {/* Tronc */}
+                  {/* Small back-right tree (rendered first) */}
+                  <g opacity={0.82}>
                     <rect
-                      x={tree.x - foliageRadius * 1.1 - trunkWidth / 3}
-                      y={tree.y + foliageRadius * 0.3}
-                      width={trunkWidth * 0.65}
-                      height={trunkHeight * 0.7}
-                      fill="#8D6E63"
-                      rx={2 * treeScale}
+                      x={tree.x + 18 * s}
+                      y={trunkBottomY - 4 * s - 14 * s}
+                      width={8 * s}
+                      height={14 * s}
+                      fill="#7a5c3a"
+                      rx={2 * s}
                     />
-                    {/* Feuillage */}
-                    <circle
-                      cx={tree.x - foliageRadius * 1.1}
-                      cy={tree.y - foliageRadius * 0.3}
-                      r={foliageRadius * 0.65}
-                      fill={getTreeColor()}
-                    />
-                    <circle
-                      cx={tree.x - foliageRadius * 1.35}
-                      cy={tree.y - foliageRadius * 0.2}
-                      r={foliageRadius * 0.55}
-                      fill={getTreeColor()}
-                    />
+                    <circle cx={tree.x + 14 * s} cy={trunkTopY - 46 * s} r={14 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 32 * s} cy={trunkTopY - 43 * s} r={13 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 22 * s} cy={trunkTopY - 60 * s} r={16 * s} fill={foliageLight} />
                   </g>
-                  
-                  {/* Arbre arrière droite (plus petit, plus transparent) */}
-                  <g opacity={0.6}>
-                    {/* Ombre */}
-                    <ellipse
-                      cx={tree.x + foliageRadius * 1.1 + 6 * treeScale}
-                      cy={tree.y + foliageRadius * 1.2}
-                      rx={foliageRadius * 0.45}
-                      ry={foliageRadius * 0.18}
-                      fill="#000"
-                      opacity={0.2}
-                    />
-                    {/* Tronc */}
-                    <rect
-                      x={tree.x + foliageRadius * 1.1 - trunkWidth / 3.5}
-                      y={tree.y + foliageRadius * 0.4}
-                      width={trunkWidth * 0.55}
-                      height={trunkHeight * 0.6}
-                      fill="#8D6E63"
-                      rx={2 * treeScale}
-                    />
-                    {/* Feuillage */}
-                    <circle
-                      cx={tree.x + foliageRadius * 1.1}
-                      cy={tree.y - foliageRadius * 0.15}
-                      r={foliageRadius * 0.55}
-                      fill={getTreeColor()}
-                    />
-                    <circle
-                      cx={tree.x + foliageRadius * 1.3}
-                      cy={tree.y - foliageRadius * 0.05}
-                      r={foliageRadius * 0.45}
-                      fill={getTreeColor()}
-                    />
-                  </g>
+
+                  {/* Large front-left tree (rendered second, on top) */}
+                  <rect
+                    x={tree.x - 14.5 * s}
+                    y={trunkBottomY - 22 * s}
+                    width={13 * s}
+                    height={22 * s}
+                    fill="#7a5c3a"
+                    rx={3 * s}
+                  />
+                  <circle cx={tree.x - 20 * s} cy={trunkTopY - 38 * s} r={22 * s} fill={foliageDark} />
+                  <circle cx={tree.x + 4 * s}  cy={trunkTopY - 34 * s} r={19 * s} fill={foliageDark} />
+                  <circle cx={tree.x - 8 * s}  cy={trunkTopY - 54 * s} r={28 * s} fill={foliageLight} />
+                  <ellipse
+                    cx={tree.x - 18 * s} cy={trunkTopY - 48 * s}
+                    rx={12 * s} ry={10 * s}
+                    fill="white" opacity={0.18}
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Solo tree */}
+                  <rect
+                    x={tree.x - 5 * s}
+                    y={trunkBottomY - 20 * s}
+                    width={10 * s}
+                    height={20 * s}
+                    fill="#7a5c3a"
+                    rx={2.5 * s}
+                  />
+                  <circle cx={tree.x - 9 * s} cy={trunkTopY - 18 * s} r={26 * s} fill={foliageDark} />
+                  <circle cx={tree.x + 11 * s} cy={trunkTopY - 14 * s} r={22 * s} fill={foliageDark} />
+                  <circle cx={tree.x}          cy={trunkTopY - 28 * s} r={22 * s} fill={foliageLight} />
+                  <ellipse
+                    cx={tree.x - 14 * s} cy={trunkTopY - 30 * s}
+                    rx={9 * s} ry={7 * s}
+                    fill="white" opacity={0.18}
+                  />
                 </>
               )}
-              
-              {/* Ombre de l'arbre principal (lumière vient du haut-gauche, donc ombre vers bas-droite) */}
-              <ellipse
-                cx={tree.x + 8 * treeScale}
-                cy={tree.y + foliageRadius * 1.3}
-                rx={foliageRadius * 0.9}
-                ry={foliageRadius * 0.35}
-                fill="#000"
-                opacity={0.25}
-              />
-              
-              {/* Tree trunk - Tous les arbres sont identiques (pas d'étoile sur arbres de départ) */}
-              <rect
-                x={tree.x - trunkWidth / 2}
-                y={tree.y + foliageRadius * 0.67}
-                width={trunkWidth}
-                height={trunkHeight}
-                fill="#8D6E63"
-                rx={3 * treeScale}
-              />
-              
-              {/* Reflet lumineux sur le tronc (haut-gauche) */}
-              <rect
-                x={tree.x - trunkWidth / 2 + 3 * treeScale}
-                y={tree.y + foliageRadius * 0.67 + 2 * treeScale}
-                width={6 * treeScale}
-                height={8 * treeScale}
-                fill="#fff"
-                opacity={0.15}
-                rx={2 * treeScale}
-              />
-              
-              {/* Tree foliage */}
-              <circle
-                cx={tree.x - foliageRadius / 3}
-                cy={tree.y}
-                r={foliageRadius}
-                fill={getTreeColor()}
-                opacity={0.9}
-              />
-              <circle
-                cx={tree.x + foliageRadius / 3}
-                cy={tree.y}
-                r={foliageRadius}
-                fill={getTreeColor()}
-                opacity={0.9}
-              />
-              <circle
-                cx={tree.x}
-                cy={tree.y - foliageRadius / 2}
-                r={topFoliageRadius}
-                fill={getTreeColor()}
-                opacity={0.9}
-              />
-              
-              {/* Reflet lumineux sur feuillage (haut-gauche jour, haut-droite nuit) */}
-              <ellipse
-                cx={isNightMode ? tree.x + foliageRadius / 2 : tree.x - foliageRadius / 2}
-                cy={tree.y - foliageRadius / 2.5}
-                rx={foliageRadius * 0.3}
-                ry={foliageRadius * 0.25}
-                fill={isNightMode ? "#a8c5dd" : "#fff"}
-                opacity={isNightMode ? 0.2 : 0.25}
-              />
             </>
           )}
         </motion.g>
       </g>
     );
   }
-  
-  // renderLayer === 'top'
+
+  // ─── TOP LAYER: hives + bee badge + indicators ───────────────────────────
+  const hiveCx = tree.maxHives === 1 ? tree.x + 32 * s : tree.x + 38 * s;
+  const badgeCy = tree.y - cellSize * 0.5 + 14 * s;
+
   return (
     <g>
-      {/* Hives, hourglass, and bee count - ALWAYS ON TOP */}
       <g style={{ pointerEvents: 'none' }}>
         {/* Hives */}
-        {tree.hiveHealth.map((health, i) => {
-          const hiveY = tree.y - 10 * treeScale;
-          // Ruche niveau 1 = 7 HP max, Ruche niveau 2 = 35 HP max
-          const level = tree.hiveLevel[i] || 1;
-          const maxHealth = level === 2 ? 35 : 7;
-          const isHealthy = health === maxHealth;
-          const healthPercent = health / maxHealth;
-          
-          // Niveau 1 : petite ruche (augmenté de 20%)
-          const hive1Rx = 14 * treeScale;
-          const hive1Ry = 18 * treeScale;
-          const hole1Radius = 5 * treeScale; // Trou agrandi
-          
-          // Niveau 2 : deux ruches côte à côte (nouvelle version)
-          const hive2Rx = 15 * treeScale; // Un peu plus ronde que niveau 1
-          const hive2Ry = 19 * treeScale;
-          const hole2Radius = 5 * treeScale;
-          const hive2Spacing = 18 * treeScale; // Espacement entre les deux ruches
-          
-          return (
-            <g key={`hive-top-${i}`}>
-              {level === 1 ? (
-                // ===== RUCHE NIVEAU 1 =====
-                <>
-                  {/* Ellipse de remplissage (fond) */}
-                  <ellipse
-                    cx={tree.x}
-                    cy={hiveY}
-                    rx={hive1Rx}
-                    ry={hive1Ry}
-                    fill="#D7CCC8"
-                    opacity={0.3}
-                  />
-                  
-                  {/* Ellipse remplie selon HP (clipPath) */}
-                  <defs>
-                    <clipPath id={`hive-clip-${tree.id}-${i}`}>
-                      <rect
-                        x={tree.x - hive1Rx}
-                        y={hiveY - hive1Ry + (hive1Ry * 2 * (1 - healthPercent))}
-                        width={hive1Rx * 2}
-                        height={hive1Ry * 2 * healthPercent}
-                      />
-                    </clipPath>
-                  </defs>
-                  
-                  <ellipse
-                    cx={tree.x}
-                    cy={hiveY}
-                    rx={hive1Rx}
-                    ry={hive1Ry}
-                    fill={getHiveColor()}
-                    clipPath={`url(#hive-clip-${tree.id}-${i})`}
-                  />
-                  
-                  {/* Bordure de la ruche */}
-                  <ellipse
-                    cx={tree.x}
-                    cy={hiveY}
-                    rx={hive1Rx}
-                    ry={hive1Ry}
-                    fill="none"
-                    stroke={isNightMode ? "#654321" : "#8D6E63"}
-                    strokeWidth={2 * treeScale}
-                  />
-                  
-                  {/* Reflet lumineux (haut-gauche) */}
-                  <ellipse
-                    cx={tree.x - hive1Rx * 0.4}
-                    cy={hiveY - hive1Ry * 0.4}
-                    rx={hive1Rx * 0.35}
-                    ry={hive1Ry * 0.3}
-                    fill="#fff"
-                    opacity={isNightMode ? 0.1 : 0.3}
-                  />
-                  
-                  {/* Lignes de texture - bandes pour cocon en mode nuit */}
-                  {isHealthy && (
-                    <>
-                      {isNightMode ? (
-                        // Bandes horizontales pour effet cocon
-                        <>
-                          <path
-                            d={`M ${tree.x - 10 * treeScale} ${hiveY - 8 * treeScale} Q ${tree.x} ${hiveY - 8 * treeScale} ${tree.x + 10 * treeScale} ${hiveY - 8 * treeScale}`}
-                            fill="none"
-                            stroke="#654321"
-                            strokeWidth={1.5 * treeScale}
-                            opacity={0.4}
-                          />
-                          <path
-                            d={`M ${tree.x - 11 * treeScale} ${hiveY - 3 * treeScale} Q ${tree.x} ${hiveY - 3 * treeScale} ${tree.x + 11 * treeScale} ${hiveY - 3 * treeScale}`}
-                            fill="none"
-                            stroke="#654321"
-                            strokeWidth={1.5 * treeScale}
-                            opacity={0.4}
-                          />
-                          <path
-                            d={`M ${tree.x - 11 * treeScale} ${hiveY + 2 * treeScale} Q ${tree.x} ${hiveY + 2 * treeScale} ${tree.x + 11 * treeScale} ${hiveY + 2 * treeScale}`}
-                            fill="none"
-                            stroke="#654321"
-                            strokeWidth={1.5 * treeScale}
-                            opacity={0.4}
-                          />
-                          <path
-                            d={`M ${tree.x - 10 * treeScale} ${hiveY + 7 * treeScale} Q ${tree.x} ${hiveY + 7 * treeScale} ${tree.x + 10 * treeScale} ${hiveY + 7 * treeScale}`}
-                            fill="none"
-                            stroke="#654321"
-                            strokeWidth={1.5 * treeScale}
-                            opacity={0.4}
-                          />
-                        </>
-                      ) : (
-                        // Texture normale ruche jour
-                        <>
-                          <path
-                            d={`M ${tree.x - 8 * treeScale} ${hiveY - 5 * treeScale} Q ${tree.x} ${hiveY - 3 * treeScale} ${tree.x + 8 * treeScale} ${hiveY - 5 * treeScale}`}
-                            fill="none"
-                            stroke="#A1887F"
-                            strokeWidth={1 * treeScale}
-                            opacity={0.5}
-                          />
-                          <path
-                            d={`M ${tree.x - 8 * treeScale} ${hiveY + 5 * treeScale} Q ${tree.x} ${hiveY + 7 * treeScale} ${tree.x + 8 * treeScale} ${hiveY + 5 * treeScale}`}
-                            fill="none"
-                            stroke="#A1887F"
-                            strokeWidth={1 * treeScale}
-                            opacity={0.5}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-                </>
-              ) : (
-                // ===== RUCHE NIVEAU 2 =====
-                <>
-                  {/* Ruche gauche */}
-                  <ellipse
-                    cx={tree.x - hive2Spacing / 2}
-                    cy={hiveY}
-                    rx={hive2Rx}
-                    ry={hive2Ry}
-                    fill="#D7CCC8"
-                    opacity={0.3}
-                  />
-                  
-                  <defs>
-                    <clipPath id={`hive-clip-left-${tree.id}-${i}`}>
-                      <rect
-                        x={tree.x - hive2Spacing / 2 - hive2Rx}
-                        y={hiveY - hive2Ry + (hive2Ry * 2 * (1 - healthPercent))}
-                        width={hive2Rx * 2}
-                        height={hive2Ry * 2 * healthPercent}
-                      />
-                    </clipPath>
-                  </defs>
-                  
-                  <ellipse
-                    cx={tree.x - hive2Spacing / 2}
-                    cy={hiveY}
-                    rx={hive2Rx}
-                    ry={hive2Ry}
-                    fill={getHiveColor()}
-                    clipPath={`url(#hive-clip-left-${tree.id}-${i})`}
-                  />
-                  
-                  <ellipse
-                    cx={tree.x - hive2Spacing / 2}
-                    cy={hiveY}
-                    rx={hive2Rx}
-                    ry={hive2Ry}
-                    fill="none"
-                    stroke={isNightMode ? "#654321" : "#8D6E63"}
-                    strokeWidth={2 * treeScale}
-                  />
-                  
-                  {/* Reflet lumineux ruche gauche */}
-                  <ellipse
-                    cx={tree.x - hive2Spacing / 2 - hive2Rx * 0.4}
-                    cy={hiveY - hive2Ry * 0.4}
-                    rx={hive2Rx * 0.3}
-                    ry={hive2Ry * 0.25}
-                    fill="#fff"
-                    opacity={isNightMode ? 0.1 : 0.3}
-                  />
-                  
-                  {/* Ruche droite */}
-                  <ellipse
-                    cx={tree.x + hive2Spacing / 2}
-                    cy={hiveY}
-                    rx={hive2Rx}
-                    ry={hive2Ry}
-                    fill="#D7CCC8"
-                    opacity={0.3}
-                  />
-                  
-                  <defs>
-                    <clipPath id={`hive-clip-right-${tree.id}-${i}`}>
-                      <rect
-                        x={tree.x + hive2Spacing / 2 - hive2Rx}
-                        y={hiveY - hive2Ry + (hive2Ry * 2 * (1 - healthPercent))}
-                        width={hive2Rx * 2}
-                        height={hive2Ry * 2 * healthPercent}
-                      />
-                    </clipPath>
-                  </defs>
-                  
-                  <ellipse
-                    cx={tree.x + hive2Spacing / 2}
-                    cy={hiveY}
-                    rx={hive2Rx}
-                    ry={hive2Ry}
-                    fill={getHiveColor()}
-                    clipPath={`url(#hive-clip-right-${tree.id}-${i})`}
-                  />
-                  
-                  <ellipse
-                    cx={tree.x + hive2Spacing / 2}
-                    cy={hiveY}
-                    rx={hive2Rx}
-                    ry={hive2Ry}
-                    fill="none"
-                    stroke={isNightMode ? "#654321" : "#8D6E63"}
-                    strokeWidth={2 * treeScale}
-                  />
-                  
-                  {/* Reflet lumineux ruche droite */}
-                  <ellipse
-                    cx={tree.x + hive2Spacing / 2 - hive2Rx * 0.4}
-                    cy={hiveY - hive2Ry * 0.4}
-                    rx={hive2Rx * 0.3}
-                    ry={hive2Ry * 0.25}
-                    fill="#fff"
-                    opacity={isNightMode ? 0.1 : 0.3}
-                  />
-                  
-                  {/* Textures si saines - mode nuit uniquement */}
-                  {isHealthy && isNightMode && (
-                    <>
-                      {/* Ruche gauche */}
-                      <path
-                        d={`M ${tree.x - hive2Spacing / 2 - 11 * treeScale} ${hiveY - 8 * treeScale} Q ${tree.x - hive2Spacing / 2} ${hiveY - 8 * treeScale} ${tree.x - hive2Spacing / 2 + 11 * treeScale} ${hiveY - 8 * treeScale}`}
-                        fill="none"
-                        stroke="#654321"
-                        strokeWidth={1.5 * treeScale}
-                        opacity={0.4}
-                      />
-                      <path
-                        d={`M ${tree.x - hive2Spacing / 2 - 12 * treeScale} ${hiveY} Q ${tree.x - hive2Spacing / 2} ${hiveY} ${tree.x - hive2Spacing / 2 + 12 * treeScale} ${hiveY}`}
-                        fill="none"
-                        stroke="#654321"
-                        strokeWidth={1.5 * treeScale}
-                        opacity={0.4}
-                      />
-                      <path
-                        d={`M ${tree.x - hive2Spacing / 2 - 11 * treeScale} ${hiveY + 8 * treeScale} Q ${tree.x - hive2Spacing / 2} ${hiveY + 8 * treeScale} ${tree.x - hive2Spacing / 2 + 11 * treeScale} ${hiveY + 8 * treeScale}`}
-                        fill="none"
-                        stroke="#654321"
-                        strokeWidth={1.5 * treeScale}
-                        opacity={0.4}
-                      />
-                      {/* Ruche droite */}
-                      <path
-                        d={`M ${tree.x + hive2Spacing / 2 - 11 * treeScale} ${hiveY - 8 * treeScale} Q ${tree.x + hive2Spacing / 2} ${hiveY - 8 * treeScale} ${tree.x + hive2Spacing / 2 + 11 * treeScale} ${hiveY - 8 * treeScale}`}
-                        fill="none"
-                        stroke="#654321"
-                        strokeWidth={1.5 * treeScale}
-                        opacity={0.4}
-                      />
-                      <path
-                        d={`M ${tree.x + hive2Spacing / 2 - 12 * treeScale} ${hiveY} Q ${tree.x + hive2Spacing / 2} ${hiveY} ${tree.x + hive2Spacing / 2 + 12 * treeScale} ${hiveY}`}
-                        fill="none"
-                        stroke="#654321"
-                        strokeWidth={1.5 * treeScale}
-                        opacity={0.4}
-                      />
-                      <path
-                        d={`M ${tree.x + hive2Spacing / 2 - 11 * treeScale} ${hiveY + 8 * treeScale} Q ${tree.x + hive2Spacing / 2} ${hiveY + 8 * treeScale} ${tree.x + hive2Spacing / 2 + 11 * treeScale} ${hiveY + 8 * treeScale}`}
-                        fill="none"
-                        stroke="#654321"
-                        strokeWidth={1.5 * treeScale}
-                        opacity={0.4}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-              
-              {/* Hive details - more complex for level 2 */}
-              {isHealthy && level === 1 && (
-                <>
-                  <path
-                    d={`M ${tree.x - 8 * treeScale} ${hiveY - 5 * treeScale} Q ${tree.x} ${hiveY - 3 * treeScale} ${tree.x + 8 * treeScale} ${hiveY - 5 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1 * treeScale}
-                  />
-                  <path
-                    d={`M ${tree.x - 8 * treeScale} ${hiveY} Q ${tree.x} ${hiveY + 2 * treeScale} ${tree.x + 8 * treeScale} ${hiveY}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1 * treeScale}
-                  />
-                  <path
-                    d={`M ${tree.x - 8 * treeScale} ${hiveY + 5 * treeScale} Q ${tree.x} ${hiveY + 7 * treeScale} ${tree.x + 8 * treeScale} ${hiveY + 5 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1 * treeScale}
-                  />
-                </>
-              )}
-              
-              {isHealthy && level === 2 && (
-                <>
-                  {/* More detailed patterns for level 2 */}
-                  <path
-                    d={`M ${tree.x - 12 * treeScale} ${hiveY - 8 * treeScale} Q ${tree.x} ${hiveY - 6 * treeScale} ${tree.x + 12 * treeScale} ${hiveY - 8 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1.5 * treeScale}
-                  />
-                  <path
-                    d={`M ${tree.x - 12 * treeScale} ${hiveY - 3 * treeScale} Q ${tree.x} ${hiveY - 1 * treeScale} ${tree.x + 12 * treeScale} ${hiveY - 3 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1.5 * treeScale}
-                  />
-                  <path
-                    d={`M ${tree.x - 12 * treeScale} ${hiveY + 2 * treeScale} Q ${tree.x} ${hiveY + 4 * treeScale} ${tree.x + 12 * treeScale} ${hiveY + 2 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1.5 * treeScale}
-                  />
-                  <path
-                    d={`M ${tree.x - 12 * treeScale} ${hiveY + 7 * treeScale} Q ${tree.x} ${hiveY + 9 * treeScale} ${tree.x + 12 * treeScale} ${hiveY + 7 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1.5 * treeScale}
-                  />
-                  {/* Hexagon pattern in center */}
-                  <polygon
-                    points={`${tree.x},${hiveY - 4 * treeScale} ${tree.x + 3 * treeScale},${hiveY - 2 * treeScale} ${tree.x + 3 * treeScale},${hiveY + 2 * treeScale} ${tree.x},${hiveY + 4 * treeScale} ${tree.x - 3 * treeScale},${hiveY + 2 * treeScale} ${tree.x - 3 * treeScale},${hiveY - 2 * treeScale}`}
-                    fill="none"
-                    stroke="#F57C00"
-                    strokeWidth={1 * treeScale}
-                  />
-                </>
-              )}
-              
-              {/* Health counter - ONLY if damaged or under construction */}
-              {!isHealthy && (
-                <text
-                  x={tree.x}
-                  y={hiveY + 23 * treeScale}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="#fff"
-                  stroke="#000"
-                  strokeWidth={3 * treeScale}
-                  paintOrder="stroke"
-                  fontSize={14 * treeScale}
-                  fontWeight="bold"
-                >
-                  {health}/{maxHealth}
-                </text>
-              )}
-            </g>
-          );
-        })}
-        
-        {/* Building progress indicator for hives under construction */}
-        {tree.buildingProgress && tree.buildingProgress[0] > 0 && tree.hiveCount === 0 && (
-          <g key="building-new-hive">
-            {/* Ghost hive being built */}
-            <ellipse
-              cx={tree.x}
-              cy={tree.y - 10 * treeScale}
-              rx={14 * treeScale}
-              ry={18 * treeScale}
-              fill={getHiveColor()}
-              stroke="#F57C00"
-              strokeWidth={2 * treeScale}
-              strokeDasharray={`${3 * treeScale},${3 * treeScale}`}
-              opacity={0.4}
-            />
-            
-            {/* Progress counter */}
-            <text
-              x={tree.x}
-              y={tree.y - 10 * treeScale}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#fff"
-              stroke="#000"
-              strokeWidth={3 * treeScale}
-              paintOrder="stroke"
-              fontSize={14 * treeScale}
-              fontWeight="bold"
-            >
-              {tree.buildingProgress[0]}/5
-            </text>
-          </g>
+        {!tree.isCut && (
+          tree.maxHives === 1 ? (
+            renderHive(0, tree.x + 32 * s, tree.y - 18 * s, 10 * s)
+          ) : (
+            <>
+              {renderHive(0, tree.x - 38 * s, tree.y - 20 * s, 11 * s)}
+              {renderHive(1, tree.x + 44 * s, tree.y - 14 * s, 10 * s)}
+            </>
+          )
         )}
-        
-        {/* Upgrading progress indicator for LEVEL 1 -> LEVEL 2 */}
-        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
-          <g key="upgrading-hive">
-            {/* Upgrade progress bar above hive */}
-            <rect
-              x={tree.x - 20 * treeScale}
-              y={tree.y - 35 * treeScale}
-              width={40 * treeScale}
-              height={6 * treeScale}
-              fill="#333"
-              stroke="#000"
-              strokeWidth={1 * treeScale}
-              rx={2 * treeScale}
-            />
-            <rect
-              x={tree.x - 20 * treeScale}
-              y={tree.y - 35 * treeScale}
-              width={(40 * treeScale * tree.upgradingProgress) / 20}
-              height={6 * treeScale}
-              fill="#FDD835"
-              stroke="#F57C00"
-              strokeWidth={1 * treeScale}
-              rx={2 * treeScale}
-            />
-            
-            {/* Progress counter */}
-            <text
-              x={tree.x}
-              y={tree.y - 43 * treeScale}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#fff"
-              stroke="#000"
-              strokeWidth={3 * treeScale}
-              paintOrder="stroke"
-              fontSize={12 * treeScale}
-              fontWeight="bold"
-            >
-              ⬆ {tree.upgradingProgress}/20
-            </text>
-          </g>
-        )}
-        
-        {/* Bee count indicator for trees with player bees - Haut droite de l'arbre */}
+
+        {/* Bee badge */}
         {playerBeesCount > 0 && (
           <g>
-            <circle
-              cx={tree.x + 35 * treeScale}
-              cy={tree.y - 35 * treeScale}
-              r={15 * treeScale}
-              fill={isNightMode ? '#7FFF00' : '#FDD835'}
-              opacity={0.95}
-              stroke={isNightMode ? '#9FFF00' : '#F9A825'}
-              strokeWidth={2.5 * treeScale}
-              style={isNightMode ? { filter: 'drop-shadow(0 0 4px rgba(127, 255, 0, 0.8))' } : {}}
-            />
+            <circle cx={hiveCx} cy={badgeCy} r={13 * s} fill="#2196F3" stroke="white" strokeWidth={2 * s} />
             <text
-              x={tree.x + 35 * treeScale}
-              y={tree.y - 35 * treeScale}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill={isNightMode ? '#2D5016' : '#F57C00'}
-              stroke={isNightMode ? '#000' : '#fff'}
-              strokeWidth={1.5 * treeScale}
-              paintOrder="stroke"
-              fontSize={15 * treeScale}
-              fontWeight={isNightMode ? 'normal' : 'bold'}
+              x={hiveCx} y={badgeCy}
+              textAnchor="middle" dominantBaseline="middle"
+              fill="white" fontSize={13 * s} fontWeight="bold"
             >
               {playerBeesCount}
             </text>
           </g>
         )}
-        
-        {/* Cut progress indicator - health bar that decreases */}
+
+        {/* Building progress — ghost hive */}
+        {tree.buildingProgress && tree.buildingProgress[0] > 0 && tree.hiveCount === 0 && (
+          <g>
+            <circle
+              cx={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
+              cy={tree.y - 18 * s}
+              r={10 * s}
+              fill={hiveColors.fill}
+              stroke="#F57C00"
+              strokeWidth={2 * s}
+              strokeDasharray={`${3 * s},${3 * s}`}
+              opacity={0.4}
+            />
+            <text
+              x={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
+              y={tree.y - 18 * s}
+              textAnchor="middle" dominantBaseline="middle"
+              fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
+              fontSize={14 * s} fontWeight="bold"
+            >
+              {tree.buildingProgress[0]}/5
+            </text>
+          </g>
+        )}
+
+        {/* Upgrade progress bar */}
+        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
+          <g>
+            <rect x={tree.x - 20 * s} y={tree.y - 52 * s} width={40 * s} height={6 * s} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
+            <rect
+              x={tree.x - 20 * s} y={tree.y - 52 * s}
+              width={(40 * s * tree.upgradingProgress) / 20}
+              height={6 * s}
+              fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s}
+            />
+            <text
+              x={tree.x} y={tree.y - 60 * s}
+              textAnchor="middle" dominantBaseline="middle"
+              fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
+              fontSize={12 * s} fontWeight="bold"
+            >
+              ⬆ {tree.upgradingProgress}/20
+            </text>
+          </g>
+        )}
+
+        {/* Cut progress bar */}
         {!tree.isCut && tree.cutProgress && tree.cutProgress > 0 && (() => {
           const healthRemaining = 10 - tree.cutProgress;
           const healthPercent = healthRemaining / 10;
-          // Color: green (10-7), orange (6-4), red (3-0)
-          let barColor = '#4CAF50'; // Green
-          if (healthRemaining <= 6 && healthRemaining >= 4) {
-            barColor = '#FF9800'; // Orange
-          } else if (healthRemaining < 4) {
-            barColor = '#F44336'; // Red
-          }
-          
+          let barColor = '#4CAF50';
+          if (healthRemaining <= 6 && healthRemaining >= 4) barColor = '#FF9800';
+          else if (healthRemaining < 4) barColor = '#F44336';
           return (
             <g>
-              {/* Background bar (dark) */}
-              <rect
-                x={tree.x - 20 * treeScale}
-                y={tree.y + 40 * treeScale}
-                width={40 * treeScale}
-                height={6 * treeScale}
-                fill="#000"
-                opacity={0.3}
-                rx={3 * treeScale}
-              />
-              {/* Health bar (colored based on remaining health) */}
-              <rect
-                x={tree.x - 20 * treeScale}
-                y={tree.y + 40 * treeScale}
-                width={healthPercent * 40 * treeScale}
-                height={6 * treeScale}
-                fill={barColor}
-                rx={3 * treeScale}
-              />
-              {/* Health counter */}
+              <rect x={tree.x - 20 * s} y={trunkBottomY + 5 * s} width={40 * s} height={6 * s} fill="#000" opacity={0.3} rx={3 * s} />
+              <rect x={tree.x - 20 * s} y={trunkBottomY + 5 * s} width={healthPercent * 40 * s} height={6 * s} fill={barColor} rx={3 * s} />
               <text
-                x={tree.x}
-                y={tree.y + 52 * treeScale}
+                x={tree.x} y={trunkBottomY + 17 * s}
                 textAnchor="middle"
-                fill="#fff"
-                stroke="#000"
-                strokeWidth={2 * treeScale}
-                paintOrder="stroke"
-                fontSize={8 * treeScale}
-                fontWeight="bold"
+                fill="#fff" stroke="#000" strokeWidth={2 * s} paintOrder="stroke"
+                fontSize={8 * s} fontWeight="bold"
               >
                 {healthRemaining}/10
               </text>
