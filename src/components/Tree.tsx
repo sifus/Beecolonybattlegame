@@ -23,7 +23,9 @@ export function Tree({
   const s = cellSize / 80;
   const treeIsColonized = tree.hiveCount > 0;
   const trunkBottomY = tree.y + cellSize * 0.5;
-  const trunkTopY    = trunkBottomY - 20 * s;
+  const trunkTopY      = trunkBottomY - 20 * s;
+  const trunkTopYSmall = trunkBottomY - 18 * s; // petit arbre arrière-droite (bas à -4*s, hauteur 14*s)
+  const trunkTopYLarge = trunkBottomY - 22 * s; // grand arbre avant-gauche (hauteur 22*s)
 
   const foliageDark = treeIsColonized ? '#5ba832' : '#9aad3a';
   const foliageLight = treeIsColonized ? '#6dc23c' : '#a8bc40';
@@ -175,9 +177,9 @@ export function Tree({
                       fill="#7a5c3a"
                       rx={2 * s}
                     />
-                    <circle cx={tree.x + 14 * s} cy={trunkTopY - 46 * s} r={14 * s} fill={foliageDark} />
-                    <circle cx={tree.x + 32 * s} cy={trunkTopY - 43 * s} r={13 * s} fill={foliageDark} />
-                    <circle cx={tree.x + 22 * s} cy={trunkTopY - 60 * s} r={16 * s} fill={foliageLight} />
+                    <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * s} fill={foliageLight} />
                   </g>
 
                   {/* Large front-left tree (rendered second, on top) */}
@@ -189,11 +191,11 @@ export function Tree({
                     fill="#7a5c3a"
                     rx={3 * s}
                   />
-                  <circle cx={tree.x - 20 * s} cy={trunkTopY - 38 * s} r={22 * s} fill={foliageDark} />
-                  <circle cx={tree.x + 4 * s}  cy={trunkTopY - 34 * s} r={19 * s} fill={foliageDark} />
-                  <circle cx={tree.x - 8 * s}  cy={trunkTopY - 54 * s} r={28 * s} fill={foliageLight} />
+                  <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * s} fill={foliageDark} />
+                  <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * s} fill={foliageDark} />
+                  <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * s} fill={foliageLight} />
                   <ellipse
-                    cx={tree.x - 18 * s} cy={trunkTopY - 48 * s}
+                    cx={tree.x - 18 * s} cy={trunkTopYLarge - 20 * s}
                     rx={12 * s} ry={10 * s}
                     fill="white" opacity={0.18}
                   />
@@ -287,15 +289,15 @@ export function Tree({
         {/* Upgrade progress bar */}
         {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
           <g>
-            <rect x={tree.x - 20 * s} y={tree.y - 52 * s} width={40 * s} height={6 * s} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
+            <rect x={tree.x - 20 * s} y={trunkTopY - 15 * s} width={40 * s} height={6 * s} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
             <rect
-              x={tree.x - 20 * s} y={tree.y - 52 * s}
+              x={tree.x - 20 * s} y={trunkTopY - 15 * s}
               width={(40 * s * tree.upgradingProgress) / 20}
               height={6 * s}
               fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s}
             />
             <text
-              x={tree.x} y={tree.y - 60 * s}
+              x={tree.x} y={trunkTopY - 22 * s}
               textAnchor="middle" dominantBaseline="middle"
               fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
               fontSize={12 * s} fontWeight="bold"

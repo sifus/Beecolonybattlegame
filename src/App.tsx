@@ -911,7 +911,7 @@ export default function App() {
           }),
           selectedBeeIds: new Set()
         };
-      } else if (tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && !tree.isStartingTree) {
+      } else if (tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && !tree.isStartingTree && tree.maxHives === 2) {
         // UPGRADE NIVEAU 1 -> NIVEAU 2 (seulement si pas arbre de départ)
         // Vérifier les restrictions du tutoriel (vérification supplémentaire dans la logique de jeu)
         if (currentScreen === 'story') {
@@ -951,7 +951,7 @@ export default function App() {
           }),
           selectedBeeIds: new Set()
         };
-      } else if (tree.hiveCount === 0 && tree.maxHives === 1) {
+      } else if (tree.hiveCount === 0) {
         // CONSTRUCTION NOUVELLE RUCHE NIVEAU 1
         // Vérifier les restrictions du tutoriel (vérification supplémentaire dans la logique de jeu)
         if (currentScreen === 'story') {

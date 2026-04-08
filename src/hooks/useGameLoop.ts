@@ -281,7 +281,7 @@ export function useGameLoop({
                     }
                   }
                   beesToRemove.add(bee.id);
-                } else if (targetTree.hiveCount === 1 && targetTree.hiveLevel[0] === 1 && !targetTree.isStartingTree && targetTree.owner === 'player') {
+                } else if (targetTree.hiveCount === 1 && targetTree.hiveLevel[0] === 1 && !targetTree.isStartingTree && targetTree.owner === 'player' && targetTree.maxHives === 2) {
                   // UPGRADE NIVEAU 1 -> NIVEAU 2
                   const currentHealth = targetTree.hiveHealth[0] || 0;
                   if (currentHealth < HIVE_L1_HP) {
@@ -296,8 +296,16 @@ export function useGameLoop({
                       targetTree.upgradingProgress = newProgress;
 
                       if (newProgress >= UPGRADE_HIVE_COST) {
-                        targetTree.hiveLevel[0] = 2;
-                        targetTree.hiveHealth[0] = HIVE_L2_HP;
+                        if (targetTree.maxHives === 2) {
+                          // Groupe d'arbres : on ajoute une 2ème ruche niveau 1
+                          targetTree.hiveCount = 2;
+                          targetTree.hiveHealth = [HIVE_L1_HP, HIVE_L1_HP];
+                          targetTree.hiveLevel = [1, 1];
+                        } else {
+                          // Arbre solo : on monte la ruche existante au niveau 2
+                          targetTree.hiveLevel[0] = 2;
+                          targetTree.hiveHealth[0] = HIVE_L2_HP;
+                        }
                         targetTree.upgradingProgress = 0;
 
                         const existingHalos = newState.haloEffects || [];
@@ -312,7 +320,7 @@ export function useGameLoop({
                       beesToRemove.add(bee.id);
                     }
                   }
-                } else if (targetTree.hiveCount === 0 && targetTree.maxHives === 1 && (targetTree.owner === 'player' || targetTree.owner === 'neutral')) {
+                } else if (targetTree.hiveCount === 0 && (targetTree.owner === 'player' || targetTree.owner === 'neutral')) {
                   // CONSTRUCTION NOUVELLE RUCHE NIVEAU 1
                   const buildingProgress = targetTree.buildingProgress || [];
                   const currentProgress = buildingProgress[0] || 0;

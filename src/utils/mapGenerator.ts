@@ -1,5 +1,6 @@
 import { Tree } from '../types/game';
 import { generateGrassGrid } from './grassGenerator';
+import { QUICK_PLAY_RULES } from '../constants/quickPlayRules';
 
 export interface PondShape {
   x: number;
@@ -326,6 +327,20 @@ export function generateRandomMap(
     });
   }
   
-  console.log(`✅ Carte générée: ${trees.length} arbres, ${ponds.length} étangs sur grille ${cols}x${rows}`);
+  // Assigner maxHives: 2 à certains arbres neutres (groupes d'arbres)
+  const neutralTrees = trees.filter(t => t.owner === 'neutral');
+  const targetGroups = Math.min(
+    QUICK_PLAY_RULES.MAX_GROUP_TREES,
+    Math.max(
+      QUICK_PLAY_RULES.MIN_GROUP_TREES,
+      Math.round(neutralTrees.length * QUICK_PLAY_RULES.GROUP_TREE_RATIO)
+    )
+  );
+  const shuffledNeutral = [...neutralTrees].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < Math.min(targetGroups, shuffledNeutral.length); i++) {
+    shuffledNeutral[i].maxHives = 2;
+  }
+
+  console.log(`✅ Carte générée: ${trees.length} arbres (${targetGroups} groupes), ${ponds.length} étangs sur grille ${cols}x${rows}`);
   return { trees, ponds, grassGrid };
 }
