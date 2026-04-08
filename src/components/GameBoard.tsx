@@ -199,6 +199,34 @@ export function GameBoard({
           );
         })}
 
+        {/* Nuages décoratifs — défilent de droite à gauche */}
+        {[
+          { cls: 'cloud-a', yFrac: 0.10, scale: 1.0  },
+          { cls: 'cloud-b', yFrac: 0.22, scale: 0.68 },
+          { cls: 'cloud-c', yFrac: 0.05, scale: 1.3  },
+        ].map((cloud, idx) => {
+          const s = cloud.scale;
+          const isNight = globalTimeOfDay === 'night';
+          const fill = isNight ? '#3a5a80' : 'white';
+
+          return (
+            <g
+              key={`cloud-${idx}`}
+              transform={`translate(0, ${cloud.yFrac * gameHeight})`}
+              opacity={isNight ? 0.18 : 0.55}
+              pointerEvents="none"
+            >
+              <g className={cloud.cls}>
+                <ellipse cx={0}       cy={0}        rx={50 * s} ry={22 * s} fill={fill} />
+                <ellipse cx={-18 * s} cy={-14 * s}  rx={20 * s} ry={16 * s} fill={fill} />
+                <ellipse cx={8 * s}   cy={-18 * s}  rx={24 * s} ry={18 * s} fill={fill} />
+                <ellipse cx={32 * s}  cy={-10 * s}  rx={18 * s} ry={14 * s} fill={fill} />
+                <ellipse cx={0}       cy={8 * s}     rx={48 * s} ry={12 * s} fill={fill} />
+              </g>
+            </g>
+          );
+        })}
+
         {/* Night overlay - voile sombre avec lumière de lune bleutée */}
         {globalTimeOfDay === 'night' && (
           <>

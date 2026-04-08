@@ -1487,3 +1487,19 @@ html, body {
 .solar-sparkle-layer {
   animation: solar-sparkle 0.75s ease-in-out alternate infinite;
 }
+
+/* === Nuages décoratifs === */
+
+@keyframes cloud-drift {
+  from { transform: translateX(1800px); }
+  to   { transform: translateX(-500px); }
+}
+
+/* Lent — 90s — démarre à ~30% de la carte */
+.cloud-a { animation: cloud-drift 90s linear infinite; animation-delay: -59s; }
+
+/* Moyen — 65s — démarre à ~70% de la carte */
+.cloud-b { animation: cloud-drift 65s linear infinite; animation-delay: -31s; }
+
+/* Rapide — 110s — démarre à ~90% de la carte (vient de la droite) */
+.cloud-c { animation: cloud-drift 110s linear infinite; animation-delay: -34s; }
