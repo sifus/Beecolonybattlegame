@@ -39,76 +39,85 @@ export function Tree({
   };
 
   const renderHive = (index: number, cx: number, cy: number, r: number) => {
-    if (index >= tree.hiveHealth.length) return null;
-    const health = tree.hiveHealth[index];
-    const level = tree.hiveLevel[index] || 1;
+    if (index >= tree.hiveHealth.length && !tree.buildingProgress?.[index]) return null;
+
+    const sc = r / 30;
+    const health = tree.hiveHealth[index] ?? 0;
+    const level = tree.hiveLevel[index] ?? 1;
     const maxHealth = level === 2 ? 35 : 7;
-    const healthPercent = health / maxHealth;
-    const hiveIsHealthy = health === maxHealth;
+    const healthPercent = Math.min(health / maxHealth, 1);
+    const isUnderConstruction = index >= tree.hiveHealth.length || health === 0;
+
+    const buildPct = isUnderConstruction
+      ? ((tree.buildingProgress?.[index] ?? 0) / 5)
+      : healthPercent;
+
     const clipId = `hive-clip-${tree.id}-${index}`;
+    const gradId = `hive-grad-${tree.id}-${index}`;
+
+    const body = `M ${-10*sc} ${-46*sc} Q ${-6*sc} ${-52*sc} ${6*sc} ${-52*sc} Q ${16*sc} ${-52*sc} ${24*sc} ${-38*sc} Q ${30*sc} ${-20*sc} ${28*sc} ${4*sc} Q ${24*sc} ${22*sc} 0 ${28*sc} Q ${-24*sc} ${22*sc} ${-28*sc} ${4*sc} Q ${-30*sc} ${-20*sc} ${-24*sc} ${-38*sc} Q ${-18*sc} ${-52*sc} ${-10*sc} ${-46*sc} Z`;
+
+    const fillColor   = isUnderConstruction ? '#888888' : tree.owner === 'enemy' ? '#cc2222' : '#e8a020';
+    const strokeColor = isUnderConstruction ? 'rgba(255,255,255,0.75)' : tree.owner === 'enemy' ? '#991111' : '#c4780a';
+    const liquidColor = tree.owner === 'enemy' ? '#cc2222' : '#e8a020';
+    const stripeColor = isUnderConstruction ? 'rgba(187,187,187,0.4)' : tree.owner === 'enemy' ? '#991111' : '#c4780a';
+
+    const shapeBottom = cy + 28 * sc;
+    const shapeHeight = 80 * sc;
+    const liquidY     = shapeBottom - shapeHeight * buildPct;
 
     return (
-      <g key={`hive-${index}`}>
-        {/* Empty background */}
-        <circle cx={cx} cy={cy} r={r} fill="#D7CCC8" opacity={0.3} />
-
-        {/* Health fill */}
+      <g key={`hive-${index}`} transform={`translate(${cx}, ${cy})`}>
         <defs>
           <clipPath id={clipId}>
-            <rect
-              x={cx - r}
-              y={cy - r + 2 * r * (1 - healthPercent)}
-              width={2 * r}
-              height={2 * r * healthPercent}
-            />
+            <path d={body} />
           </clipPath>
         </defs>
-        <circle cx={cx} cy={cy} r={r} fill={hiveColors.fill} clipPath={`url(#${clipId})`} />
 
-        {/* Border */}
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke={hiveColors.border} strokeWidth={1.5 * s} />
+        {/* Corps fond */}
+        <path d={body} fill={fillColor} opacity={isUnderConstruction ? 0.55 : 1} />
 
-        {/* Texture lines */}
-        <path
-          d={`M ${cx - r * 0.7} ${cy - r * 0.4} Q ${cx} ${cy - r * 0.5} ${cx + r * 0.7} ${cy - r * 0.4}`}
-          fill="none" stroke={hiveColors.border} strokeWidth={0.8 * s} opacity={0.5}
-        />
-        <path
-          d={`M ${cx - r * 0.8} ${cy} Q ${cx} ${cy + r * 0.1} ${cx + r * 0.8} ${cy}`}
-          fill="none" stroke={hiveColors.border} strokeWidth={0.8 * s} opacity={0.5}
-        />
-        <path
-          d={`M ${cx - r * 0.7} ${cy + r * 0.4} Q ${cx} ${cy + r * 0.5} ${cx + r * 0.7} ${cy + r * 0.4}`}
-          fill="none" stroke={hiveColors.border} strokeWidth={0.8 * s} opacity={0.5}
+        {/* Liquide qui monte */}
+        {(buildPct < 1 || isUnderConstruction) && (
+          <rect
+            x={-32 * sc}
+            y={liquidY - cy}
+            width={64 * sc}
+            height={shapeHeight * buildPct + 2}
+            fill={liquidColor}
+            clipPath={`url(#${clipId})`}
+          />
+        )}
+
+        {/* Stries horizontales */}
+        {([-34, -16, 2, 16] as number[]).map((yOff, i) => (
+          <line
+            key={i}
+            x1={-30 * sc} y1={yOff * sc}
+            x2={30 * sc}  y2={yOff * sc}
+            stroke={stripeColor}
+            strokeWidth={1.5 * sc}
+            clipPath={`url(#${clipId})`}
+          />
+        ))}
+
+        {/* Contour */}
+        <path d={body} fill="none" stroke={strokeColor} strokeWidth={2 * sc} />
+
+        {/* Tige */}
+        <rect
+          x={-3 * sc} y={-62 * sc}
+          width={6 * sc} height={12 * sc}
+          rx={2 * sc}
+          fill={isUnderConstruction ? '#aaa' : tree.owner === 'enemy' ? '#6a1010' : '#7a4010'}
         />
 
-        {/* Brown hole */}
-        <circle cx={cx} cy={cy} r={2.5 * s} fill="#5a3010" />
+        {/* Trou */}
+        <circle cx={0} cy={8 * sc} r={12 * sc} fill={isUnderConstruction ? '#555' : tree.owner === 'enemy' ? '#6a1010' : '#7a4010'} />
+        <circle cx={0} cy={8 * sc} r={9 * sc}  fill={isUnderConstruction ? '#333' : tree.owner === 'enemy' ? '#3a0808' : '#5a2e08'} />
 
         {/* Highlight */}
-        <ellipse
-          cx={cx - r * 0.35} cy={cy - r * 0.35}
-          rx={r * 0.3} ry={r * 0.25}
-          fill="white" opacity={0.35}
-        />
-
-        {/* Health counter — only when damaged */}
-        {!hiveIsHealthy && (
-          <text
-            x={cx}
-            y={cy + r + 10 * s}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="#fff"
-            stroke="#000"
-            strokeWidth={3 * s}
-            paintOrder="stroke"
-            fontSize={14 * s}
-            fontWeight="bold"
-          >
-            {health}/{maxHealth}
-          </text>
-        )}
+        <ellipse cx={-9 * sc} cy={-38 * sc} rx={5 * sc} ry={4 * sc} fill="#fff" opacity={isUnderConstruction ? 0.15 : 0.35} />
       </g>
     );
   };
@@ -231,50 +240,25 @@ export function Tree({
   return (
     <g>
       <g style={{ pointerEvents: 'none' }}>
-        {/* Hives */}
+        {/* Hives — renderHive gère aussi l'état en construction */}
         {!tree.isCut && (
           tree.maxHives === 1 ? (
-            renderHive(0, tree.x + 32 * s, tree.y - 18 * s, 10 * s)
+            renderHive(0, tree.x - 8 * s, trunkTopY - 10 * s, 14 * s)
           ) : (
             <>
-              {renderHive(0, tree.x - 38 * s, tree.y - 20 * s, 11 * s)}
-              {renderHive(1, tree.x + 44 * s, tree.y - 14 * s, 10 * s)}
+              {renderHive(0, tree.x - 22 * s, trunkTopY - 8 * s,  13 * s)}
+              {renderHive(1, tree.x + 28 * s, trunkTopY - 18 * s, 11 * s)}
             </>
           )
         )}
 
-        {/* Building progress — ghost hive */}
-        {tree.buildingProgress && tree.buildingProgress[0] > 0 && tree.hiveCount === 0 && (
-          <g>
-            <circle
-              cx={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
-              cy={tree.y - 18 * s}
-              r={10 * s}
-              fill={hiveColors.fill}
-              stroke="#F57C00"
-              strokeWidth={2 * s}
-              strokeDasharray={`${3 * s},${3 * s}`}
-              opacity={0.4}
-            />
-            <text
-              x={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
-              y={tree.y - 18 * s}
-              textAnchor="middle" dominantBaseline="middle"
-              fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
-              fontSize={14 * s} fontWeight="bold"
-            >
-              {tree.buildingProgress[0]}/5
-            </text>
-          </g>
-        )}
-
-        {/* Upgrade progress — ghost hive */}
+        {/* Upgrade progress — ghost à la position de la 2ème ruche */}
         {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
           <g>
             <circle
-              cx={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
-              cy={trunkTopY - 15 * s}
-              r={10 * s}
+              cx={tree.maxHives === 1 ? tree.x - 8 * s  : tree.x + 28 * s}
+              cy={tree.maxHives === 1 ? trunkTopY - 10 * s : trunkTopY - 18 * s}
+              r={tree.maxHives === 1 ? 14 * s : 11 * s}
               fill={hiveColors.fill}
               stroke="#F57C00"
               strokeWidth={2 * s}
@@ -282,8 +266,8 @@ export function Tree({
               opacity={0.4}
             />
             <text
-              x={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
-              y={trunkTopY - 15 * s}
+              x={tree.maxHives === 1 ? tree.x - 8 * s  : tree.x + 28 * s}
+              y={tree.maxHives === 1 ? trunkTopY - 10 * s : trunkTopY - 18 * s}
               textAnchor="middle" dominantBaseline="middle"
               fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
               fontSize={11 * s} fontWeight="bold"
