@@ -283,6 +283,9 @@ export function useGameLoop({
                   beesToRemove.add(bee.id);
                 } else if (targetTree.hiveCount === 1 && targetTree.hiveLevel[0] === 1 && !targetTree.isStartingTree && targetTree.owner === 'player' && targetTree.maxHives === 2) {
                   // UPGRADE NIVEAU 1 -> NIVEAU 2
+                  if (targetTree.upgradeLocked) {
+                    beesToRemove.add(bee.id);
+                  } else {
                   const currentHealth = targetTree.hiveHealth[0] || 0;
                   if (currentHealth < HIVE_L1_HP) {
                     beesToRemove.add(bee.id);
@@ -320,6 +323,7 @@ export function useGameLoop({
                       beesToRemove.add(bee.id);
                     }
                   }
+                  } // fin else upgradeLocked
                 } else if (targetTree.hiveCount === 0 && (targetTree.owner === 'player' || targetTree.owner === 'neutral')) {
                   // CONSTRUCTION NOUVELLE RUCHE NIVEAU 1
                   const buildingProgress = targetTree.buildingProgress || [];
@@ -338,6 +342,8 @@ export function useGameLoop({
                       targetTree.hiveCount = 1;
                       targetTree.hiveHealth = [HIVE_L1_HP];
                       targetTree.hiveLevel = [1];
+                      targetTree.upgradingProgress = 0;
+                      targetTree.upgradeLocked = true;
                       newBuildingProgress[0] = 0;
                       targetTree.buildingProgress = newBuildingProgress;
 

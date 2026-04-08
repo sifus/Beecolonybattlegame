@@ -286,23 +286,27 @@ export function Tree({
           </g>
         )}
 
-        {/* Upgrade progress bar */}
+        {/* Upgrade progress — ghost hive */}
         {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
           <g>
-            <rect x={tree.x - 20 * s} y={trunkTopY - 15 * s} width={40 * s} height={6 * s} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
-            <rect
-              x={tree.x - 20 * s} y={trunkTopY - 15 * s}
-              width={(40 * s * tree.upgradingProgress) / 20}
-              height={6 * s}
-              fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s}
+            <circle
+              cx={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
+              cy={trunkTopY - 15 * s}
+              r={10 * s}
+              fill={hiveColors.fill}
+              stroke="#F57C00"
+              strokeWidth={2 * s}
+              strokeDasharray={`${3 * s},${3 * s}`}
+              opacity={0.4}
             />
             <text
-              x={tree.x} y={trunkTopY - 22 * s}
+              x={tree.maxHives === 1 ? tree.x + 32 * s : tree.x - 38 * s}
+              y={trunkTopY - 15 * s}
               textAnchor="middle" dominantBaseline="middle"
               fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
-              fontSize={12 * s} fontWeight="bold"
+              fontSize={11 * s} fontWeight="bold"
             >
-              ⬆ {tree.upgradingProgress}/20
+              {tree.upgradingProgress}/20
             </text>
           </g>
         )}

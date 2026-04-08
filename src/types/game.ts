@@ -18,6 +18,7 @@ export interface Tree {
   hiveLevel: number[]; // Niveau de chaque ruche (1 ou 2)
   buildingProgress?: number[]; // Abeilles investies pour construction
   upgradingProgress?: number; // Abeilles investies pour amélioration niveau 1 → 2
+  upgradeLocked?: boolean;   // Bloque l'upgrade automatique — true après construction, false quand le joueur re-cible l'arbre
   isStartingTree?: boolean; // Arbre de départ - ne peut pas être amélioré
   isCut?: boolean; // RÉSERVÉ POUR FUTURE FONCTIONNALITÉ (bûcherons)
   cutProgress?: number; // RÉSERVÉ POUR FUTURE FONCTIONNALITÉ (bûcherons)

@@ -935,14 +935,15 @@ export default function App() {
         const currentProgress = tree.upgradingProgress || 0;
         const beesStillNeeded = UPGRADE_HIVE_COST - currentProgress;
         const beesToUse = Math.min(numBees, beesStillNeeded);
-        
+
         toast.info(`Amélioration en cours... ${beesToUse}/${UPGRADE_HIVE_COST} abeilles`);
-        
-        // Mettre les abeilles en mode building
+
+        // Mettre les abeilles en mode building + déverrouiller l'upgrade
         const beesForBuilding = currentBeesAtTree.slice(0, beesToUse);
-        
+
         return {
           ...prev,
+          trees: prev.trees.map(t => t.id === treeId ? { ...t, upgradeLocked: false } : t),
           bees: prev.bees.map(bee => {
             if (beesForBuilding.some(b => b.id === bee.id)) {
               return { ...bee, state: 'building' as const, buildingTreeId: treeId, treeId: null };
@@ -1140,9 +1141,27 @@ export default function App() {
       fireflies: [],
     });
     
+    // TEST TEMPORAIRE — 50 abeilles sur l'arbre joueur de départ
+    const playerTree = randomMap.trees.find(t => t.owner === 'player' && t.isStartingTree);
+    if (playerTree) {
+      const testBees = Array.from({ length: 50 }, (_, i) => ({
+        id: `bee-test-${i}`,
+        x: playerTree.x + Math.cos((i / 50) * Math.PI * 2) * 38,
+        y: playerTree.y + Math.sin((i / 50) * Math.PI * 2) * 38,
+        owner: 'player' as const,
+        treeId: playerTree.id,
+        targetTreeId: null,
+        state: 'flying' as const,
+        angle: (i / 50) * Math.PI * 2,
+        createdAt: undefined,
+      }));
+      setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
+    }
+    // FIN TEST TEMPORAIRE
+
     setLastClickedTreeId(null);
     setLastClickTime(0);
-    
+
     const w = getWording(globalTimeOfDay);
     toast.success('🎮 Nouvelle partie - Carte aléatoire générée !');
   };
