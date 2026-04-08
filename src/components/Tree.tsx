@@ -5,7 +5,6 @@ interface TreeProps {
   tree: TreeType;
   onClick: (e: React.MouseEvent) => void;
   onDragStart?: (e: React.PointerEvent) => void;
-  playerBeesCount?: number;
   cellSize: number;
   renderLayer?: 'base' | 'top';
   isNightMode?: boolean;
@@ -15,7 +14,6 @@ export function Tree({
   tree,
   onClick,
   onDragStart,
-  playerBeesCount = 0,
   cellSize,
   renderLayer = 'base',
   isNightMode = false,
@@ -119,18 +117,6 @@ export function Tree({
   if (renderLayer === 'base') {
     return (
       <g>
-        {/* Click area */}
-        <circle
-          cx={tree.x}
-          cy={tree.y}
-          r={cellSize * 1.1}
-          fill="transparent"
-          onClick={handleClick}
-          onPointerDown={handlePointerDown}
-          style={{ cursor: tree.isCut ? 'default' : 'pointer', touchAction: 'none' }}
-          pointerEvents="all"
-        />
-
         <motion.g whileHover={{ scale: 1.05 }} style={{ pointerEvents: 'none' }}>
           {tree.isCut ? (
             <>
@@ -224,13 +210,23 @@ export function Tree({
             </>
           )}
         </motion.g>
+        {/* Click area — en dernier pour intercepter tous les clics */}
+        <rect
+          x={tree.x - cellSize * 0.5}
+          y={tree.y - cellSize * 0.5}
+          width={cellSize}
+          height={cellSize}
+          fill="transparent"
+          onClick={handleClick}
+          onPointerDown={handlePointerDown}
+          style={{ cursor: tree.isCut ? 'default' : 'pointer', touchAction: 'none' }}
+          pointerEvents="all"
+        />
       </g>
     );
   }
 
-  // ─── TOP LAYER: hives + bee badge + indicators ───────────────────────────
-  const hiveCx = tree.maxHives === 1 ? tree.x + 32 * s : tree.x + 38 * s;
-  const badgeCy = tree.y - cellSize * 0.5 + 14 * s;
+  // ─── TOP LAYER: hives + indicators ───────────────────────────────────────
 
   return (
     <g>
@@ -245,20 +241,6 @@ export function Tree({
               {renderHive(1, tree.x + 44 * s, tree.y - 14 * s, 10 * s)}
             </>
           )
-        )}
-
-        {/* Bee badge */}
-        {playerBeesCount > 0 && (
-          <g>
-            <circle cx={hiveCx} cy={badgeCy} r={13 * s} fill="#2196F3" stroke="white" strokeWidth={2 * s} />
-            <text
-              x={hiveCx} y={badgeCy}
-              textAnchor="middle" dominantBaseline="middle"
-              fill="white" fontSize={13 * s} fontWeight="bold"
-            >
-              {playerBeesCount}
-            </text>
-          </g>
         )}
 
         {/* Building progress — ghost hive */}
