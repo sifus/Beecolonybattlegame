@@ -157,15 +157,23 @@ export function GameBoard({
 
         {/* Grass patchwork pattern */}
         {mapData.grassGrid.map((grass, idx) => (
-          <rect
-            key={`grass-${idx}`}
-            x={grass.x - 0.5}
-            y={grass.y - 0.5}
-            width={gridParams.cellSize + 1}
-            height={gridParams.cellSize + 1}
-            fill={grass.color}
-            shapeRendering="crispEdges"
-          />
+          <g key={`grass-${idx}`}>
+            <rect
+              x={grass.x}
+              y={grass.y}
+              width={gridParams.cellSize}
+              height={gridParams.cellSize}
+              fill={grass.color}
+              shapeRendering="crispEdges"
+            />
+            <rect
+              x={grass.x - 0.5}
+              y={grass.y}
+              width={gridParams.cellSize + 1}
+              height={2}
+              fill="rgba(255,220,220,0.10)"
+            />
+          </g>
         ))}
 
         {/* Faisceau solaire directionnel 45° */}
@@ -287,6 +295,46 @@ export function GameBoard({
             </g>
           );
         })}
+
+        {/* Cailloux décoratifs — déterministes */}
+        {(() => {
+          const stoneColors = ['#c8cc3e', '#bec432', '#d2d644'];
+          const cellSize = gridParams.cellSize;
+          const trees = gameState.trees;
+          const ponds = mapData.ponds;
+          return Array.from({ length: 5 }, (_, i) => {
+            let col = 0, row = 0;
+            let attempt = 0;
+            do {
+              const s = i * 7919 + attempt * 1337;
+              col = Math.floor((Math.sin(s) * 0.5 + 0.5) * gridParams.cols);
+              row = Math.floor((Math.cos(s * 1.618) * 0.5 + 0.5) * gridParams.rows);
+              attempt++;
+              const onTree = !trees.every(t => Math.floor(t.x / cellSize) !== col || Math.floor(t.y / cellSize) !== row);
+              const onPond = !ponds.every(p => col < Math.floor(p.x / cellSize) || col >= Math.floor(p.x / cellSize) + p.width || row !== Math.floor(p.y / cellSize));
+              if (!onTree && !onPond) break;
+            } while (attempt < 20);
+            const cx = col * cellSize + cellSize * 0.5;
+            const cy = row * cellSize + cellSize * 0.7;
+            const color = stoneColors[i % stoneColors.length];
+            return (
+              <g key={`stone-${i}`} pointerEvents="none">
+                {/* Ombre */}
+                <ellipse cx={cx + 4} cy={cy + 3} rx={14} ry={6} fill="#000" opacity={0.22} />
+                {i % 2 === 0 ? (
+                  <>
+                    {/* Groupe : grand + petit */}
+                    <ellipse cx={cx} cy={cy} rx={13} ry={10} fill={color} />
+                    <ellipse cx={cx - 10} cy={cy + 4} rx={8} ry={6} fill={color} opacity={0.85} />
+                  </>
+                ) : (
+                  /* Caillou seul arrondi */
+                  <ellipse cx={cx} cy={cy} rx={9} ry={8} fill={color} />
+                )}
+              </g>
+            );
+          });
+        })()}
       </svg>
 
       {/* Game SVG - Interactive layer */}
