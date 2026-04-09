@@ -300,6 +300,12 @@ export function useGameLoop({
                     if (currentProgress >= UPGRADE_HIVE_COST || targetTree.hiveLevel[0] === 2) {
                       beesToRemove.add(bee.id);
                     } else {
+                      // Throttle : une contribution toutes les 150ms maximum
+                      const now = Date.now();
+                      if (now - (targetTree.lastBuildTick ?? 0) < 80) {
+                        // Trop tôt — l'abeille attend
+                      } else {
+                      targetTree.lastBuildTick = now;
                       const newProgress = currentProgress + 1;
                       targetTree.upgradingProgress = newProgress;
 
@@ -326,6 +332,7 @@ export function useGameLoop({
                       }
 
                       beesToRemove.add(bee.id);
+                      } // fin else throttle
                     }
                   }
                   } // fin else upgradeLocked
@@ -337,6 +344,12 @@ export function useGameLoop({
                   if (currentProgress >= BUILD_HIVE_COST) {
                     beesToRemove.add(bee.id);
                   } else {
+                    // Throttle : une contribution toutes les 200ms maximum
+                    const now = Date.now();
+                    if (now - (targetTree.lastBuildTick ?? 0) < 200) {
+                      // Trop tôt — l'abeille attend
+                    } else {
+                    targetTree.lastBuildTick = now;
                     const newProgress = currentProgress + 1;
 
                     const newBuildingProgress = [...buildingProgress];
@@ -362,6 +375,7 @@ export function useGameLoop({
                     }
 
                     beesToRemove.add(bee.id);
+                    } // fin else throttle
                   }
                 } else {
                   bee.state = 'idle';

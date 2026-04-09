@@ -39,7 +39,7 @@ export function Tree({
   };
 
   const renderHive = (index: number, cx: number, cy: number, r: number) => {
-    if (index >= tree.hiveHealth.length && !tree.buildingProgress?.[index]) return null;
+    if (index >= tree.hiveHealth.length && !tree.buildingProgress?.[index] && !(index === 1 && tree.upgradingProgress)) return null;
 
     const sc = r / 30;
     const health = tree.hiveHealth[index] ?? 0;
@@ -49,7 +49,9 @@ export function Tree({
     const isUnderConstruction = index >= tree.hiveHealth.length || health === 0;
 
     const buildPct = isUnderConstruction
-      ? ((tree.buildingProgress?.[index] ?? 0) / 5)
+      ? index === 1 && tree.upgradingProgress
+        ? tree.upgradingProgress / 20
+        : ((tree.buildingProgress?.[index] ?? 0) / 5)
       : healthPercent;
 
     const clipId = `hive-clip-${tree.id}-${index}`;
@@ -252,30 +254,66 @@ export function Tree({
           )
         )}
 
-        {/* Upgrade progress — ghost à la position de la 2ème ruche */}
-        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
-          <g>
-            <circle
-              cx={tree.maxHives === 1 ? tree.x            : tree.x + 14 * s}
-              cy={tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s}
-              r={tree.maxHives === 1 ? 11 * s : 14 * s}
-              fill={hiveColors.fill}
-              stroke="#F57C00"
-              strokeWidth={2 * s}
-              strokeDasharray={`${3 * s},${3 * s}`}
-              opacity={0.4}
-            />
-            <text
-              x={tree.maxHives === 1 ? tree.x            : tree.x + 14 * s}
-              y={tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s}
-              textAnchor="middle" dominantBaseline="middle"
-              fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
-              fontSize={11 * s} fontWeight="bold"
-            >
-              {tree.upgradingProgress}/20
-            </text>
-          </g>
+        {/* Ruche fantôme upgrade vers 2ème slot */}
+        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && tree.maxHives === 2 && (
+          renderHive(1, tree.x + 14 * s, trunkTopY - 16 * s, 14 * s)
         )}
+
+        {/* Upgrade progress bar */}
+        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (() => {
+          const upgCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x + 14 * s;
+          const upgCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s;
+          const barW = 40 * s;
+          const barH = 6 * s;
+          const barX = upgCx - barW / 2;
+          const barY = upgCy - 20 * s;
+          return (
+            <g key="upgrade-bar">
+              <rect x={barX} y={barY} width={barW} height={barH} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
+              <rect x={barX} y={barY} width={(barW * tree.upgradingProgress) / 20} height={barH} fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s} />
+              <text x={upgCx} y={barY - 6 * s} textAnchor="middle" dominantBaseline="middle" fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke" fontSize={12 * s} fontWeight="bold">
+                ⬆ {tree.upgradingProgress}/20
+              </text>
+            </g>
+          );
+        })()}
+
+        {/* Construction progress bar */}
+        {!tree.isCut && tree.buildingProgress?.[0] && tree.buildingProgress[0] > 0 && (() => {
+          const bpCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x - 22 * s;
+          const bpCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 10 * s;
+          const barW = 40 * s;
+          const barH = 6 * s;
+          const barX = bpCx - barW / 2;
+          const barY = bpCy - 20 * s;
+          const prog = tree.buildingProgress[0];
+          return (
+            <g key="build-bar">
+              <rect x={barX} y={barY} width={barW} height={barH} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
+              <rect x={barX} y={barY} width={(barW * prog) / 5} height={barH} fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s} />
+              <text x={bpCx} y={barY - 6 * s} textAnchor="middle" dominantBaseline="middle" fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke" fontSize={12 * s} fontWeight="bold">
+                ⬆ {prog}/5
+              </text>
+            </g>
+          );
+        })()}
+
+        {/* Damage indicators */}
+        {!tree.isCut && tree.hiveHealth.map((health, index) => {
+          const level = tree.hiveLevel[index] ?? 1;
+          const maxHealth = level === 2 ? 35 : 7;
+          if (health >= maxHealth) return null;
+          const hivePos = tree.maxHives === 1
+            ? { cx: tree.x, cy: trunkTopY - 14 * s }
+            : index === 0
+              ? { cx: tree.x - 16 * s, cy: trunkTopY - 10 * s }
+              : { cx: tree.x + 14 * s, cy: trunkTopY - 16 * s };
+          return (
+            <text key={`dmg-${index}`} x={hivePos.cx} y={hivePos.cy - 18 * s} textAnchor="middle" dominantBaseline="middle" fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke" fontSize={11 * s} fontWeight="bold">
+              {health}/{maxHealth}
+            </text>
+          );
+        })}
 
         {/* Cut progress bar */}
         {!tree.isCut && tree.cutProgress && tree.cutProgress > 0 && (() => {

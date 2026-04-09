@@ -90,23 +90,8 @@ export function Bee({ bee, isSelected, isNightMode = false }: BeeProps) {
         />
       )}
 
-      {/* Ombre sous la goutte */}
-      <ellipse
-        cx={bee.x + 2 * sc}
-        cy={bee.y + 22 * sc + 2}
-        rx={13 * sc}
-        ry={4 * sc}
-        fill="#000"
-        opacity={0.15}
-      />
-
       {/* Corps goutte + bande colorée */}
-      <motion.g
-        transform={`translate(${bee.x}, ${bee.y}) rotate(${((bee.displayAngle ?? bee.angle) * (180 / Math.PI) + 270) || 0}) scale(${sc})`}
-        style={{ transformOrigin: `${bee.x}px ${bee.y}px` }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.4 }}
-      >
+      <g transform={`translate(${bee.x}, ${bee.y}) rotate(${((bee.displayAngle ?? bee.angle) * (180 / Math.PI) + 270) || 0}) scale(${sc})`}>
         <defs>
           <clipPath id={clipId}>
             <path d={dropPath} />
@@ -115,7 +100,7 @@ export function Bee({ bee, isSelected, isNightMode = false }: BeeProps) {
         <path d={dropPath} fill={bodyColor} />
         <rect x={-22} y={-3} width={44} height={16} fill={stripeColor} clipPath={`url(#${clipId})`} />
         <ellipse cx={-6} cy={-14} rx={5} ry={4} fill="#fff" opacity={0.18} />
-      </motion.g>
+      </g>
     </g>
   );
 }

@@ -362,6 +362,14 @@ src/
 - Les deux nuages sont actuellement en mode **fair** (`rgba(220,240,230,0.82)`) — le type stormy est désactivé
 - Gameplay orage prévu : les nuages orageux décimeront les abeilles et casseront des ruches
 
+### Ruches — mécanique et visuels
+- Santé ruche visuelle : liquide qui monte/descend selon healthPercent (même système que construction)
+- Compteurs de progression : barre ⬆ X/5 (construction) et ⬆ X/20 (upgrade 2ème ruche), positionnés au dessus de chaque ruche
+- Ruche fantôme grise pendant l'upgrade vers la 2ème ruche, liquide qui monte selon upgradingProgress/20
+- Construction animée : délai 200ms entre chaque abeille → ruche se construit en ~1 seconde
+- Upgrade 2ème ruche : délai 80ms entre chaque abeille
+- `lastBuildTick?: number` ajouté dans le type Tree
+
 ---
 
 ## Prochaines étapes
