@@ -281,18 +281,56 @@ src/
 - Palette grassGenerator complète (9 tons pipetés de la maquette) : `#DADC57` `#CAD551` `#D9D255` `#CDC950` `#CFCF51` `#D1DA56` `#E1E159` `#DBDE67` `#C8C250`
 - `shapeRendering="crispEdges"` ajouté sur les rects herbe pour un rendu net pixel-perfect
 
+### Rayon solaire directionnel (`useSolarSystem.ts`, `GameBoard.tsx`)
+- Remplacement de la lumière radiale par un **faisceau 45°** haut-gauche → bas-droite
+- `linearGradient id="beam-grad"` perpendiculaire au faisceau (`x1/y1/x2/y2` vertical), 11 stops, fondu sur les bords latéraux sur ~35% de largeur de chaque côté
+- Rect `2000×480px` (`x=-1000, y=-240`) centré sur `sunPosition`, `rotate(45)`, `opacity = sunIntensity * 0.9`
+- **Cycle 3 phases** (`useSolarSystem.ts`, refs `beamPhaseRef` / `beamPhaseStartRef`) :
+  - `visible` 5s : montée `sunIntensity` 0→1 en 1s puis plateau
+  - `fadeout` 1.5s : descente 1→0
+  - `hidden` 10s : intensité 0, nouvelle position du soleil tirée au passage hidden→visible
+- **Sparkles alignés sur l'axe 45°** : angle `π/4 ± 0.25 rad`, dispersion latérale ±80px (perpendiculaire au faisceau)
+
+### Nuages — refonte complète (`GameBoard.tsx`, `index.css`)
+- **2 nuages** (au lieu de 3), forme **fluffy vue de dessus** : 7 cercles en cluster symétrique chevauchants
+- **Écrasement vertical** `scaleY(0.6)` pour simuler la perspective aérienne
+- **Deux types** : fair = `rgba(220,240,230,0.82)`, stormy = `rgba(180,170,210,0.82)` — couleur fixe par index
+- **Bandes Y séparées** : nuage 0 à `0.15 * gameHeight`, nuage 1 à `0.72 * gameHeight` — superposition impossible
+- Rayons : `r = cellSize * 2` (160px) pour nuage 0, `r = cellSize * 1.5` (120px) pour nuage 1
+- Vitesses CSS : 65s (nuage 0) et 95s (nuage 1) via `animationDuration` inline
+- Opacité : **0.80** jour / **0.28** nuit
+- Rendus en **dernier dans le game SVG** (zIndex 10) — passent devant tout
+
+### Étangs — ripples supprimées
+- Les 3 `motion.circle` en boucle infinie sur chaque étang ont été supprimées
+- Seuls restent : blob bezier, reflet lumineux clippé, contour sombre
+
+### Ruches — repositionnement dans le feuillage (`Tree.tsx`)
+- **Solo** : `cx = tree.x`, `cy = trunkTopY - 14*s` (centré horizontalement, dans le feuillage)
+- **Groupe flanc gauche** (ruche 1, petite) : `cx = tree.x - 16*s`, `cy = trunkTopY - 10*s`, `r = 10*s`
+- **Groupe flanc droit** (ruche 2, grande) : `cx = tree.x + 14*s`, `cy = trunkTopY - 16*s`, `r = 14*s`
+- Distance entre centres : `30*s`, somme des rayons : `24*s` — pas de superposition possible
+- Compteur upgrade suit les mêmes cx/cy que la ruche cible
+
+### Réparation `hiveHealth[1]` — corrigée (`useGameLoop.ts`)
+- La branche réparation utilisait un accès fixe à `hiveHealth[0]`
+- Remplacé par `hiveHealth.findIndex((health, idx) => health < maxHp)` — répare le premier slot endommagé trouvé parmi tous les slots
+
+### `.gitignore` mis à jour
+- Ajout : `.DS_Store`, `src/.DS_Store`, `build/`, `.claude/`
+- Ces fichiers retirés du tracking git (sans suppression disque)
+
 ### Bugs connus — à corriger
-- `hiveHealth[1]` non réparé par les abeilles (branche réparation ne vérifie que `hiveHealth[0]`)
-- 50 abeilles de test dans `App.tsx` à supprimer avant release
+- 20 abeilles de test dans `App.tsx` à supprimer avant release
 
 ---
 
 ## Prochaines étapes
 
 ### Priorité haute
-- Supprimer les 50 abeilles de test dans `App.tsx`
-- Corriger la réparation de `hiveHealth[1]`
-- Rayon solaire directionnel : faisceau 45° concentré, sparkles dans son sillage
+- Supprimer les 20 abeilles de test dans `App.tsx`
+- Étangs : forme rectangle arrondi pour les grands étangs (2–3 cellules), brins d'herbe sur les bords
+- Orage gameplay : nuages orageux déciment les abeilles et cassent des ruches
 
 ### Suite
 - Responsive mobile/tablette
