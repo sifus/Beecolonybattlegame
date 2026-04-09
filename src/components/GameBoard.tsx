@@ -34,6 +34,7 @@ interface GameBoardProps {
   selectionCurrent: { x: number; y: number } | null;
   flashEffect: { x: number; y: number; type: 'small' | 'large' } | null;
   waterSplashes: Array<{ x: number; y: number; id: string; timestamp: number }>;
+  ripples: { id: number; x: number; y: number }[];
   svgRef: React.RefObject<SVGSVGElement>;
   onMouseDown: (e: React.MouseEvent<SVGSVGElement>) => void;
   onMouseMove: (e: React.MouseEvent<SVGSVGElement>) => void;
@@ -86,6 +87,7 @@ export function GameBoard({
   selectionCurrent,
   flashEffect,
   waterSplashes,
+  ripples,
   svgRef,
   onMouseDown,
   onMouseMove,
@@ -563,6 +565,22 @@ export function GameBoard({
             />
           );
         })}
+
+        {/* Ripples au clic/touch */}
+        {ripples.map(r => (
+          <motion.circle
+            key={r.id}
+            cx={r.x}
+            cy={r.y}
+            r={0}
+            fill="none"
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth={2}
+            initial={{ r: 0, opacity: 0.8 }}
+            animate={{ r: 40, opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        ))}
 
         {/* Nuages décoratifs — défilent de droite à gauche, au premier plan */}
         {(() => {

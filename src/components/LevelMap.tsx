@@ -134,6 +134,8 @@ export function LevelMap({ levels, onLevelClick, onBack, timeOfDay = 'day', onUn
         style={{
           top: '80px',
           height: 'min(400px, calc(100vh - 100px))',
+          overflowX: 'auto',
+          touchAction: 'pan-x',
         }}
       >
         <div 

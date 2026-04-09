@@ -137,6 +137,7 @@ export default function App() {
   const [selectionCircle, setSelectionCircle] = useState<{ x: number; y: number; radius: number } | null>(null);
   const [flashEffect, setFlashEffect] = useState<{ x: number; y: number; type: 'small' | 'large' } | null>(null);
   const [waterSplashes, setWaterSplashes] = useState<Array<{ x: number; y: number; id: string; timestamp: number }>>([]);
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [lastClickedTreeId, setLastClickedTreeId] = useState<string | null>(null);
@@ -500,7 +501,10 @@ export default function App() {
     const { x, y } = getGameCoordinates(e.clientX, e.clientY);
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
-    setIsDragging(false); // Reset au début
+    setIsDragging(false);
+    const id = Date.now();
+    setRipples(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
   };
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -560,7 +564,10 @@ export default function App() {
     const { x, y } = getGameCoordinates(touch.clientX, touch.clientY);
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
-    setIsDragging(false); // Reset au début
+    setIsDragging(false);
+    const id = Date.now();
+    setRipples(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
   };
 
   const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
@@ -1649,6 +1656,7 @@ export default function App() {
           selectionCurrent={selectionCurrent}
           flashEffect={flashEffect}
           waterSplashes={waterSplashes}
+          ripples={ripples}
           svgRef={svgRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
