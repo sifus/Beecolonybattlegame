@@ -255,11 +255,11 @@ export function useGameLoop({
 
                 let damagedHiveIndex = -1;
                 if (targetTree.owner === 'player' && targetTree.hiveHealth.length > 0) {
-                  const health0 = targetTree.hiveHealth[0];
-                  const level0 = targetTree.hiveLevel[0] || 1;
-                  if (health0 < getMaxHealth(level0)) {
-                    damagedHiveIndex = 0;
-                  }
+                  damagedHiveIndex = targetTree.hiveHealth.findIndex((health, idx) => {
+                    const level = targetTree.hiveLevel[idx] || 1;
+                    const maxHp = level === 2 ? HIVE_L2_HP : HIVE_L1_HP;
+                    return health < maxHp;
+                  });
                 }
 
                 if (damagedHiveIndex !== -1) {

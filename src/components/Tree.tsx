@@ -243,11 +243,11 @@ export function Tree({
         {/* Hives — renderHive gère aussi l'état en construction */}
         {!tree.isCut && (
           tree.maxHives === 1 ? (
-            renderHive(0, tree.x - 8 * s, trunkTopY - 10 * s, 14 * s)
+            renderHive(0, tree.x, trunkTopY - 14 * s, 11 * s)
           ) : (
             <>
-              {renderHive(0, tree.x - 22 * s, trunkTopY - 8 * s,  13 * s)}
-              {renderHive(1, tree.x + 28 * s, trunkTopY - 18 * s, 11 * s)}
+              {renderHive(0, tree.x - 16 * s, trunkTopY - 10 * s, 10 * s)}
+              {renderHive(1, tree.x + 14 * s, trunkTopY - 16 * s, 14 * s)}
             </>
           )
         )}
@@ -256,9 +256,9 @@ export function Tree({
         {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (
           <g>
             <circle
-              cx={tree.maxHives === 1 ? tree.x - 8 * s  : tree.x + 28 * s}
-              cy={tree.maxHives === 1 ? trunkTopY - 10 * s : trunkTopY - 18 * s}
-              r={tree.maxHives === 1 ? 14 * s : 11 * s}
+              cx={tree.maxHives === 1 ? tree.x            : tree.x + 14 * s}
+              cy={tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s}
+              r={tree.maxHives === 1 ? 11 * s : 14 * s}
               fill={hiveColors.fill}
               stroke="#F57C00"
               strokeWidth={2 * s}
@@ -266,8 +266,8 @@ export function Tree({
               opacity={0.4}
             />
             <text
-              x={tree.maxHives === 1 ? tree.x - 8 * s  : tree.x + 28 * s}
-              y={tree.maxHives === 1 ? trunkTopY - 10 * s : trunkTopY - 18 * s}
+              x={tree.maxHives === 1 ? tree.x            : tree.x + 14 * s}
+              y={tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s}
               textAnchor="middle" dominantBaseline="middle"
               fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke"
               fontSize={11 * s} fontWeight="bold"

@@ -1141,10 +1141,10 @@ export default function App() {
       fireflies: [],
     });
     
-    // TEST TEMPORAIRE — 50 abeilles sur l'arbre joueur de départ
+    // TEST TEMPORAIRE — 20 abeilles sur l'arbre joueur de départ
     const playerTree = randomMap.trees.find(t => t.owner === 'player' && t.isStartingTree);
     if (playerTree) {
-      const testBees = Array.from({ length: 50 }, (_, i) => ({
+      const testBees = Array.from({ length: 20 }, (_, i) => ({
         id: `bee-test-${i}`,
         x: playerTree.x + Math.cos((i / 50) * Math.PI * 2) * 38,
         y: playerTree.y + Math.sin((i / 50) * Math.PI * 2) * 38,

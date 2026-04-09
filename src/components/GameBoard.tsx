@@ -133,13 +133,19 @@ export function GameBoard({
         viewBox={`0 0 ${gameWidth} ${gameHeight}`}
         preserveAspectRatio="none"
       >
-        {/* Dégradé solaire + filtre glow étoiles */}
+        {/* Faisceau directionnel + filtre glow étoiles */}
         <defs>
-          <radialGradient id="sun-beam" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"   stopColor="rgba(255,255,180)" stopOpacity={0.55} />
-            <stop offset="50%"  stopColor="rgba(255,255,180)" stopOpacity={0.2} />
-            <stop offset="100%" stopColor="rgba(255,255,180)" stopOpacity={0} />
-          </radialGradient>
+          <linearGradient id="beam-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   stopColor="#ffffaa" stopOpacity={0}/>
+            <stop offset="15%"  stopColor="#ffffaa" stopOpacity={0}/>
+            <stop offset="35%"  stopColor="#ffffcc" stopOpacity={0.08}/>
+            <stop offset="45%"  stopColor="#ffffdd" stopOpacity={0.28}/>
+            <stop offset="50%"  stopColor="#ffffee" stopOpacity={0.35}/>
+            <stop offset="55%"  stopColor="#ffffdd" stopOpacity={0.28}/>
+            <stop offset="65%"  stopColor="#ffffcc" stopOpacity={0.08}/>
+            <stop offset="85%"  stopColor="#ffffaa" stopOpacity={0}/>
+            <stop offset="100%" stopColor="#ffffaa" stopOpacity={0}/>
+          </linearGradient>
           <filter id="sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="2.5" result="blur" />
             <feMerge>
@@ -162,23 +168,16 @@ export function GameBoard({
           />
         ))}
 
-        {/* Lumière solaire mobile au-dessus du damier */}
-        <g
-          className="solar-cloud-layer"
-          style={{
-            transform: `translate(${(sunPosition.x / 100) * gameWidth}px, ${(sunPosition.y / 100) * gameHeight}px)`,
-            transition: 'transform 3.5s ease-in-out',
-          }}
-        >
-          <ellipse
-            cx={0} cy={0}
-            rx={160} ry={60}
-            fill="url(#sun-beam)"
-            transform="rotate(45, 0, 0)"
-            opacity={sunIntensity}
-            pointerEvents="none"
-          />
-        </g>
+        {/* Faisceau solaire directionnel 45° */}
+        {(() => {
+          const sunX = sunPosition.x * gameWidth / 100;
+          const sunY = sunPosition.y * gameHeight / 100;
+          return (
+            <g transform={`translate(${sunX}, ${sunY}) rotate(45)`} opacity={sunIntensity * 0.9} pointerEvents="none">
+              <rect x={-1000} y={-240} width={2000} height={480} fill="url(#beam-grad)" />
+            </g>
+          );
+        })()}
 
         {/* Étoiles scintillantes à 4 branches */}
         {sparkles.map(s => {
@@ -195,34 +194,6 @@ export function GameBoard({
               pointerEvents="none"
             >
               <path d={d} fill="rgba(255,255,230,0.9)" />
-            </g>
-          );
-        })}
-
-        {/* Nuages décoratifs — défilent de droite à gauche */}
-        {[
-          { cls: 'cloud-a', yFrac: 0.10, scale: 1.0  },
-          { cls: 'cloud-b', yFrac: 0.22, scale: 0.68 },
-          { cls: 'cloud-c', yFrac: 0.05, scale: 1.3  },
-        ].map((cloud, idx) => {
-          const s = cloud.scale;
-          const isNight = globalTimeOfDay === 'night';
-          const fill = isNight ? '#3a5a80' : 'white';
-
-          return (
-            <g
-              key={`cloud-${idx}`}
-              transform={`translate(0, ${cloud.yFrac * gameHeight})`}
-              opacity={isNight ? 0.18 : 0.55}
-              pointerEvents="none"
-            >
-              <g className={cloud.cls}>
-                <ellipse cx={0}       cy={0}        rx={50 * s} ry={22 * s} fill={fill} />
-                <ellipse cx={-18 * s} cy={-14 * s}  rx={20 * s} ry={16 * s} fill={fill} />
-                <ellipse cx={8 * s}   cy={-18 * s}  rx={24 * s} ry={18 * s} fill={fill} />
-                <ellipse cx={32 * s}  cy={-10 * s}  rx={18 * s} ry={14 * s} fill={fill} />
-                <ellipse cx={0}       cy={8 * s}     rx={48 * s} ry={12 * s} fill={fill} />
-              </g>
             </g>
           );
         })}
@@ -285,30 +256,8 @@ export function GameBoard({
               {/* Forme organique de base */}
               <path d={path} fill={waterColor} />
 
-              {/* Effets clippés à l'intérieur du blob */}
+              {/* Reflet lumineux clippé à l'intérieur du blob */}
               <g clipPath={`url(#${clipId})`} pointerEvents="none">
-                {/* Ripples concentriques animées */}
-                {[0, 1, 2].map((i) => (
-                  <motion.circle
-                    key={i}
-                    cx={cx + (i - 1) * pondW * 0.22}
-                    cy={cy + pondH * 0.05}
-                    r={rippleRBase}
-                    stroke={rippleColor}
-                    fill="none"
-                    strokeWidth={1.2}
-                    initial={{ scale: 0.6, opacity: 0.6 }}
-                    animate={{ scale: 2.8, opacity: 0 }}
-                    transition={{
-                      duration: 3.2,
-                      repeat: Infinity,
-                      delay: idx * 0.7 + i * 1.1,
-                      ease: 'easeOut',
-                    }}
-                  />
-                ))}
-
-                {/* Reflet lumineux */}
                 <ellipse
                   cx={isNight ? cx + pondW * 0.28 : cx - pondW * 0.18}
                   cy={pond.y + pondH * 0.28}
@@ -564,6 +513,40 @@ export function GameBoard({
             isNightMode={globalTimeOfDay === 'night'}
           />
         ))}
+
+        {/* Nuages décoratifs — défilent de droite à gauche, au premier plan */}
+        {(() => {
+          const cloudFills = ['rgba(220, 240, 230, 0.82)', 'rgba(180, 170, 210, 0.82)'];
+          return [
+            { cls: 'cloud-a', cy: gameHeight * 0.15, r: gridParams.cellSize * 2,   duration: '65s' },
+            { cls: 'cloud-b', cy: gameHeight * 0.72, r: gridParams.cellSize * 1.5, duration: '95s' },
+          ].map((cloud, cloudIndex) => {
+            const r = cloud.r;
+            const isNight = globalTimeOfDay === 'night';
+            const fill = isNight ? '#3a5a80' : cloudFills[cloudIndex % 2];
+
+            return (
+              <g
+                key={`cloud-${cloudIndex}`}
+                transform={`translate(0, ${cloud.cy})`}
+                opacity={isNight ? 0.28 : 0.80}
+                pointerEvents="none"
+              >
+                <g className={cloud.cls} style={{ animationDuration: cloud.duration }}>
+                  <g transform="scale(1, 0.6)">
+                    <circle cx={0}         cy={0}         r={r}        fill={fill} />
+                    <circle cx={-r * 0.6}  cy={-r * 0.3}  r={r * 0.75} fill={fill} />
+                    <circle cx={r * 0.6}   cy={-r * 0.3}  r={r * 0.72} fill={fill} />
+                    <circle cx={-r * 0.55} cy={r * 0.35}  r={r * 0.70} fill={fill} />
+                    <circle cx={r * 0.55}  cy={r * 0.35}  r={r * 0.68} fill={fill} />
+                    <circle cx={0}         cy={-r * 0.65} r={r * 0.65} fill={fill} />
+                    <circle cx={0}         cy={r * 0.65}  r={r * 0.63} fill={fill} />
+                  </g>
+                </g>
+              </g>
+            );
+          });
+        })()}
       </svg>
     </div>
   );
