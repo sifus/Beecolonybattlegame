@@ -168,21 +168,134 @@ Extrait vers `src/components/GameBoard.tsx` :
 
 ---
 
-## Prochaines étapes — Visuels
+## Ce qui a été fait — 8 avril 2026 (session 2)
 
-### Étape 5 — Style des arbres selon les maquettes
-- Refonte visuelle du composant `src/components/Tree.tsx`
-- Aligner le rendu sur les maquettes graphiques (formes, couleurs, détails trunk/feuillage)
-- Adapter les indicateurs de ruche et compteurs
+### Étape 5 — Refonte visuelle `Tree.tsx` (commit `8825791`)
+**Problème :** l'ancien Tree.tsx (~790 lignes) avait des formes génériques, symétriques, sans caractère.
 
-### Étape 6 — Étang organique
-- Remplacer le rectangle `rx={8}` par une forme SVG organique (path ou clipPath)
-- Ondulations animées, reflets plus naturels
+**Nouveau rendu (~305 lignes après toutes les passes) :**
+- **Feuillage asymétrique** : deux ellipses légèrement décalées (une grande + une petite) pour casser la symétrie
+- **Couleur selon colonisation** : arbre colonisé → vert vif (`#6dc23c`), neutre → vert olive (`#a8bc40`)
+- **Ombre diffuse** sous le tronc (ellipse noire semi-transparente)
+- **Tronc court** calculé proportionnellement à `cellSize` (facteur `s = cellSize / 80`)
+- **Ruches sur les flancs** du feuillage (et non plus centrées en dessous)
+- Suppression de toute la logique d'affichage du badge abeilles et de clic sur les abeilles
 
-### Étape 7 — Nuages décoratifs
-- Ajouter des nuages SVG animés traversant lentement la carte
-- Synchroniser éventuellement avec `sunIntensity` pour l'ombrage
+**Corrections du système d'upgrade (commits `2fde311`, `e9b1e5f`) :**
+- Nouveau champ `upgradeLocked` dans `game.ts` : empêche le joueur d'upgrader un arbre solo (1 ruche max)
+- `mapGenerator.ts` : introduction de `QUICK_PLAY_RULES` (`src/constants/quickPlayRules.ts`) — ratio de groupes d'arbres (`GROUP_TREE_RATIO: 0.25`, min 1, max 3)
+- Arbres *groupe* = `maxHives: 2`, arbres *solo* = `maxHives: 1`, solo bloqué à l'upgrade
+- `useGameLoop.ts` : respect du `maxHives` dans la logique de construction
+- Compteurs de ruches et états de construction affichés correctement
+- Zone de clic étendue à la cellule entière (fix `f519b2a`) — les abeilles SVG ne sont plus cliquables (pointer-events none)
 
-### Étape 8 — Responsive
-- Tester et ajuster sur différentes tailles d'écran (mobile portrait, tablette, desktop)
-- Vérifier le recalcul de `gridParams` et l'adaptation de `GameBoard`
+### Étape 5b — Ruche trapézoïdale + liquide montant (commit `95d1f65`)
+**Nouveau rendu de ruche (`renderHive`) :**
+- Forme **trapèze arrondi** dessiné en path bezier (8 courbes Q) — plus organique qu'un cercle
+- **Liquide qui monte** (`<rect>` clippé sur la forme) pour visualiser la vie/progression de construction
+- **Stries horizontales** pour la texture alvéolaire
+- **Tige** en haut (rect arrondi) + **trou d'entrée** (double cercle) en bas
+- **Highlight** elliptique pour le reflet
+- Couleurs : joueur = orange-ambre (`#e8a020`), ennemi = rouge (`#cc2222`), en construction = gris
+- Positionnement revu : ruche unique sur le flanc gauche du feuillage, groupe = flanc gauche + flanc droit
+
+### Étape 6 — Herbe 9 couleurs + soleil en ellipse (commit `c341fbb`)
+- `grassGenerator.ts` : palette élargie de 2 à **9 tons jaune-vert** pour plus de variété naturelle
+- `GameBoard.tsx` : remplacement du grand `<rect>` de lumière solaire par une **ellipse rotée 45°**, positionnée dynamiquement selon `sunPosition`
+- Overlap de `+0.5px` sur les cases herbe pour éliminer les joints/artefacts de rendu entre cellules
+
+### Étape 6b — Étangs organiques (commit `dc73569`)
+**Remplacement du `<rect rx={8}>` par une forme blob SVG :**
+- **Forme bezier seeded** : 4 courbes cubiques calculées à partir de l'`id` de l'étang pour un aspect aléatoire mais déterministe
+- **3 ripples concentriques** animées avec Framer Motion, clippées à l'intérieur du blob (`<clipPath>`)
+- Contour sombre organique pour la profondeur
+- Reflet lumineux elliptique repositionné dans la forme
+
+### Étape 7 — Nuages décoratifs (commit `7012d6c`)
+- **3 nuages** composés d'ellipses superposées (composition classique), opacité 0.55 en mode jour, 0.18 en mode nuit
+- **Animation CSS `cloud-drift`** : translation droite→gauche, durées 65 / 85 / 110s (lent/moyen/rapide)
+- `animationDelay` décalé pour que chaque nuage couvre une zone différente dès le lancement
+- Assombris passivement par le voile nocturne déjà en place dans `GameBoard`
+- Keyframe ajoutée dans `src/index.css`
+
+---
+
+## Structure actuelle de `src/` (après session 8 avril)
+
+```
+src/
+├── App.tsx                    (~1 868 lignes — orchestration, state, navigation)
+├── main.tsx
+├── index.css                  (keyframes: solar-cloud, solar-sparkle, cloud-drift)
+├── constants/
+│   ├── gameRules.ts           ← constantes partagées joueur/IA
+│   └── quickPlayRules.ts      ← règles de génération mode Partie Rapide (ratio groupes)
+├── hooks/
+│   ├── useStorage.ts
+│   ├── useSolarSystem.ts
+│   └── useGameLoop.ts
+├── utils/
+│   ├── grassGenerator.ts      ← palette 9 couleurs
+│   ├── mapGenerator.ts        ← groupes d'arbres (maxHives: 2)
+│   ├── levelGenerator.ts
+│   ├── storyLevelGenerator.ts
+│   ├── enemyAI.ts
+│   └── storage.ts
+├── components/
+│   ├── GameBoard.tsx          (~570 lignes — damier, soleil ellipse, étangs blob, nuages, abeilles)
+│   ├── Tree.tsx               (~305 lignes — feuillage asymétrique, ruche trapézoïdale, liquide)
+│   ├── Bee.tsx
+│   ├── GameUI.tsx
+│   ├── MainMenu.tsx
+│   ├── OptionsMenu.tsx
+│   ├── LevelMap.tsx
+│   ├── LevelCompleteModal.tsx
+│   ├── TutorialBanner.tsx
+│   ├── AmbientSound.tsx
+│   └── Lumberjack.tsx
+└── types/
+    ├── game.ts                ← champ upgradeLocked ajouté
+    └── levels.ts
+```
+
+---
+
+## Ce qui a été fait — 9 avril 2026 (session 3)
+
+### Tree.tsx — corrections layout (raffinements post-session 2)
+- **Ancrage feuillage sur `trunkTopY`** (`= trunkBottomY - 20*s`) : corrige le gap visible entre tronc et feuillage (l'ancre était sur `tree.y` avant)
+- Groupe asymétrique : lobe du petit arbre ancré sur `trunkTopY_petit = trunkBottomY - 4*s - 14*s`
+- **Zone de clic** : `<rect>` invisible `cellSize×cellSize` placé en *dernier* dans `renderLayer base` — intercepte tous les événements y compris les zones hors-feuillage
+- **Ombre décalée à droite** : ellipse avec `radialGradient` 3 stops (`0.18 → 0.07 → 0`) centrée à `cx + 55*s` pour un effet directionnel
+
+### Tree.tsx — ruche trapézoïdale (raffinements)
+- `upgradingProgress` remis à `0` après construction pour éviter l'affichage parasite du cercle compteur
+- Mode construction : contour `rgba(255,255,255,0.75)` continu (plus de pointillés)
+
+### Système d'upgrade — corrections logique (détails)
+- `upgradeLocked = true` après construction (hiveCount 0→1), remis à `false` uniquement quand le joueur re-cible l'arbre explicitement — empêche l'upgrade automatique par abeilles excédentaires
+- Upgrade bloqué sur arbre solo (`maxHives === 1`) : `App.tsx` ~ligne 914, `useGameLoop.ts` ~ligne 284
+- Pour `maxHives === 2` : upgrade = construction d'une 2ème ruche (`hiveCount 1→2`, `hiveHealth [7,7]`, `hiveLevel [1,1]`) et non montée de niveau de la ruche existante
+
+### Damier — palette exacte + anti-joints
+- Palette grassGenerator complète (9 tons pipetés de la maquette) : `#DADC57` `#CAD551` `#D9D255` `#CDC950` `#CFCF51` `#D1DA56` `#E1E159` `#DBDE67` `#C8C250`
+- `shapeRendering="crispEdges"` ajouté sur les rects herbe pour un rendu net pixel-perfect
+
+### Bugs connus — à corriger
+- `hiveHealth[1]` non réparé par les abeilles (branche réparation ne vérifie que `hiveHealth[0]`)
+- 50 abeilles de test dans `App.tsx` à supprimer avant release
+
+---
+
+## Prochaines étapes
+
+### Priorité haute
+- Supprimer les 50 abeilles de test dans `App.tsx`
+- Corriger la réparation de `hiveHealth[1]`
+- Rayon solaire directionnel : faisceau 45° concentré, sparkles dans son sillage
+
+### Suite
+- Responsive mobile/tablette
+- Animations de combat (impact abeilles sur ruches)
+- Effets de particules lors de la prise d'un arbre
+- Difficulté configurable en mode Partie Rapide
