@@ -101,6 +101,7 @@ export function useGameLoop({
               const radius = baseRadius + radiusVariation;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
               bee.y = tree.y + Math.sin(bee.angle) * radius;
+              bee.displayAngle = bee.angle + Math.PI / 2;
             } else if (tree && tree.isCut) {
               bee.treeId = null;
 
@@ -173,6 +174,8 @@ export function useGameLoop({
                 }
               } else {
                 const speed = 0.8 * beeSpeedMultiplier;
+                bee.angle = Math.atan2(dy, dx);
+                bee.displayAngle = bee.angle;
                 bee.x += (dx / dist) * speed;
                 bee.y += (dy / dist) * speed;
 
@@ -214,6 +217,8 @@ export function useGameLoop({
               bee.angle = Math.random() * Math.PI * 2;
             } else {
               const speed = 0.8 * beeSpeedMultiplier;
+              bee.angle = Math.atan2(dy, dx);
+              bee.displayAngle = bee.angle;
               bee.x += (dx / dist) * speed;
               bee.y += (dy / dist) * speed;
 
@@ -364,6 +369,8 @@ export function useGameLoop({
                 }
               } else {
                 const speed = 1.2;
+                bee.angle = Math.atan2(dy, dx);
+                bee.displayAngle = bee.angle;
                 bee.x += (dx / dist) * speed;
                 bee.y += (dy / dist) * speed;
               }

@@ -1144,17 +1144,21 @@ export default function App() {
     // TEST TEMPORAIRE — 20 abeilles sur l'arbre joueur de départ
     const playerTree = randomMap.trees.find(t => t.owner === 'player' && t.isStartingTree);
     if (playerTree) {
-      const testBees = Array.from({ length: 20 }, (_, i) => ({
-        id: `bee-test-${i}`,
-        x: playerTree.x + Math.cos((i / 50) * Math.PI * 2) * 38,
-        y: playerTree.y + Math.sin((i / 50) * Math.PI * 2) * 38,
-        owner: 'player' as const,
-        treeId: playerTree.id,
-        targetTreeId: null,
-        state: 'flying' as const,
-        angle: (i / 50) * Math.PI * 2,
-        createdAt: undefined,
-      }));
+      const testBees = Array.from({ length: 20 }, (_, i) => {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 30 + Math.random() * 16;
+        return {
+          id: `bee-test-${i}`,
+          x: playerTree.x + Math.cos(angle) * radius,
+          y: playerTree.y + Math.sin(angle) * radius,
+          owner: 'player' as const,
+          treeId: playerTree.id,
+          targetTreeId: null,
+          state: 'idle' as const,
+          angle,
+          createdAt: undefined,
+        };
+      });
       setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
     }
     // FIN TEST TEMPORAIRE

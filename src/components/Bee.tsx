@@ -68,7 +68,7 @@ export function Bee({ bee, isSelected, isNightMode = false }: BeeProps) {
 
   // Goutte centrée à l'origine — span ±18 en x, -22 (haut) à +22 (bas)
   const dropPath = 'M 0,-22 C 0,-22 -18,-9 -18,3 C -18,14 -10,22 0,22 C 10,22 18,14 18,3 C 18,-9 0,-22 0,-22 Z';
-  const sc = 0.42; // scale finale (~15px large, ~18px haut)
+  const sc = 0.21; // scale finale (~15px large, ~18px haut)
 
   return (
     <g style={{ pointerEvents: 'none' }}>
@@ -109,7 +109,7 @@ export function Bee({ bee, isSelected, isNightMode = false }: BeeProps) {
 
       {/* Corps goutte + bande colorée */}
       <motion.g
-        transform={`translate(${bee.x}, ${bee.y}) scale(${sc})`}
+        transform={`translate(${bee.x}, ${bee.y}) rotate(${(bee.displayAngle ?? bee.angle) * (180 / Math.PI) + 270}) scale(${sc})`}
         style={{ transformOrigin: `${bee.x}px ${bee.y}px` }}
         initial={isNewBee ? { scale: 0.3 } : { scale: 1 }}
         animate={{ scale: 1 }}

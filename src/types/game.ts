@@ -42,6 +42,7 @@ export interface Bee {
   hoverCenterY?: number; // Centre fixe pour le hover
   state: 'idle' | 'moving' | 'fighting' | 'building';
   angle: number; // Angle de rotation autour de l'arbre
+  displayAngle?: number; // Direction tangentielle pour l'orientation visuelle
   createdAt?: number; // Timestamp de création
   buildingTreeId?: string | null; // Arbre sur lequel elle construit/répare/améliore
 }
