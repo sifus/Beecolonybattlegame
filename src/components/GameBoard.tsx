@@ -47,11 +47,11 @@ interface GameBoardProps {
   onTreeDragStart: (e: React.PointerEvent) => void;
 }
 
-function organicPondPath(x: number, y: number, w: number, h: number, seed: number): string {
+function organicPondPath(x: number, y: number, w: number, h: number, seed: number, rxOverride?: number, ryOverride?: number): string {
   const cx = x + w / 2;
   const cy = y + h / 2;
-  const rx = (w / 2) * 0.90;
-  const ry = (h / 2) * 0.80;
+  const rx = rxOverride ?? (w / 2) * 0.90;
+  const ry = ryOverride ?? (h / 2) * 0.80;
   const kx = 0.5523 * rx;
   const ky = 0.5523 * ry;
 
@@ -238,7 +238,13 @@ export function GameBoard({
           const cx = pond.x + pondW / 2;
           const cy = pond.y + pondH / 2;
           const seed = pond.x * 3 + pond.y * 7;
-          const path = organicPondPath(pond.x, pond.y, pondW, pondH, seed);
+          const path = pondW > gridParams.cellSize
+            ? organicPondPath(
+                pond.x + pondW * 0.075, pond.y + pondH * 0.075,
+                pondW * 0.85, pondH * 0.85,
+                seed, pondW * 0.42, pondH * 0.42
+              )
+            : organicPondPath(pond.x, pond.y, pondW, pondH, seed);
           const isNight = globalTimeOfDay === 'night';
           const waterColor = isNight ? 'rgb(20, 60, 100)' : 'rgb(55, 173, 238)';
           const clipId = `pond-clip-${idx}`;
@@ -277,6 +283,7 @@ export function GameBoard({
                 opacity={isNight ? 0.35 : 0.15}
                 pointerEvents="none"
               />
+
             </g>
           );
         })}
@@ -516,7 +523,7 @@ export function GameBoard({
 
         {/* Nuages décoratifs — défilent de droite à gauche, au premier plan */}
         {(() => {
-          const cloudFills = ['rgba(220, 240, 230, 0.82)', 'rgba(180, 170, 210, 0.82)'];
+          const cloudFills = ['rgba(220, 240, 230, 0.82)', 'rgba(220, 240, 230, 0.82)'];
           return [
             { cls: 'cloud-a', cy: gameHeight * 0.15, r: gridParams.cellSize * 2,   duration: '65s' },
             { cls: 'cloud-b', cy: gameHeight * 0.72, r: gridParams.cellSize * 1.5, duration: '95s' },
