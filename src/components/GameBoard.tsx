@@ -311,7 +311,11 @@ export function GameBoard({
               row = Math.floor((Math.cos(s * 1.618) * 0.5 + 0.5) * gridParams.rows);
               attempt++;
               const onTree = !trees.every(t => Math.floor(t.x / cellSize) !== col || Math.floor(t.y / cellSize) !== row);
-              const onPond = !ponds.every(p => col < Math.floor(p.x / cellSize) || col >= Math.floor(p.x / cellSize) + p.width || row !== Math.floor(p.y / cellSize));
+              const onPond = !ponds.every(p => {
+                const pondCol = Math.floor(p.x / cellSize);
+                const pondRow = Math.floor(p.y / cellSize);
+                return col < pondCol || col >= pondCol + p.width || row < pondRow || row >= pondRow + p.height;
+              });
               if (!onTree && !onPond) break;
             } while (attempt < 20);
             const cx = col * cellSize + cellSize * 0.5;

@@ -327,6 +327,19 @@ src/
 
 ## Ce qui a été fait — 9 avril 2026 (suite session 3)
 
+### Abeilles — redesign et comportement
+- Nouveau design : forme goutte d'eau, corps brun (`#7a3a08` joueur / `#5a1a08` ennemi), bande colorée clippée jaune (`#f0c020` joueur) ou rouge (`#cc2020` ennemi), taille `sc=0.21`
+- Orientation tête en avant : `bee.displayAngle` calculé comme angle tangentiel (rayon + 90°) en orbite, et via `Math.atan2` en déplacement
+- Abeilles de départ espacées aléatoirement sur l'orbite (angle et rayon aléatoires, rayon 30–46px)
+- Orbite corrigée : abeilles TEST TEMPORAIRE passées en `state: 'idle'` pour orbiter dès le départ
+
+### Visuels divers
+- Cercle de sélection : fond `rgba(255,255,255,0.10)`, contour blanc, suppression pointillé jaune et `<line>` centrale
+- Highlight damier : `<rect>` 2px `rgba(255,220,220,0.10)` sur arête haute de chaque case
+- Cailloux décoratifs : 2 formes alternées, couleur `#c8cc3e`, placement sur cases libres
+- Nuages tous fair pour l'instant, orageux désactivés
+- Ripples étangs supprimées
+
 ### Cercle de sélection (`GameBoard.tsx`)
 - Fond : `fill="rgba(255,255,255,0.10)"`, contour `stroke="white"` `strokeWidth={3}` `opacity={0.9}`
 - Suppression de la `<line>` pointillée jaune centrale (diamètre du drag)
@@ -355,6 +368,7 @@ src/
 
 ### Priorité haute
 - Supprimer les 20 abeilles de test dans `App.tsx`
+- Mouvement essaim abeilles à améliorer (actuellement banc de poisson)
 - Bûcheron trébuche sur cailloux (gameplay)
 - Orage : nuages orageux déciment abeilles et cassent ruches
 
