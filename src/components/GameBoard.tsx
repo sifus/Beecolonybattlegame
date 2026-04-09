@@ -481,22 +481,10 @@ export function GameBoard({
                 cx={centerX}
                 cy={centerY}
                 r={radius}
-                fill={isNight ? 'rgba(127, 255, 0, 0.08)' : 'rgba(255, 235, 59, 0.08)'}
-                stroke={isNight ? '#7FFF00' : '#FFEB3B'}
-                strokeWidth={4}
-                opacity={0.95}
-                strokeDasharray="10 5"
-                style={{ filter: isNight ? 'drop-shadow(0 0 8px rgba(127, 255, 0, 0.8))' : 'drop-shadow(0 0 8px rgba(255, 235, 59, 0.8))' }}
-              />
-              <line
-                x1={selectionStart.x}
-                y1={selectionStart.y}
-                x2={selectionCurrent.x}
-                y2={selectionCurrent.y}
-                stroke={isNight ? '#7FFF00' : '#FFEB3B'}
-                strokeWidth={2}
-                opacity={0.7}
-                strokeDasharray="5 5"
+                fill="rgba(255,255,255,0.10)"
+                stroke="white"
+                strokeWidth={3}
+                opacity={0.9}
               />
             </>
           );

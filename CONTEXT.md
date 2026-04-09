@@ -325,14 +325,41 @@ src/
 
 ---
 
+## Ce qui a été fait — 9 avril 2026 (suite session 3)
+
+### Cercle de sélection (`GameBoard.tsx`)
+- Fond : `fill="rgba(255,255,255,0.10)"`, contour `stroke="white"` `strokeWidth={3}` `opacity={0.9}`
+- Suppression de la `<line>` pointillée jaune centrale (diamètre du drag)
+- Suppression du `strokeDasharray` et du `drop-shadow` dynamiques
+
+### Cailloux décoratifs (`GameBoard.tsx`)
+- 5 cailloux maximum par carte, positionnés de façon déterministe (`seed = i * 7919`, retry `+1337` si case occupée)
+- Filtrage : ne se placent pas sur les cases d'étang ni d'arbre (max 20 tentatives par caillou)
+- **2 formes alternées** selon l'index :
+  - Pair : groupe de 2 (grand `rx=13 ry=10` + petit décalé `rx=8 ry=6, cx-10 cy+4`)
+  - Impair : caillou seul arrondi (`rx=9 ry=8`)
+- Couleurs : `['#c8cc3e', '#bec432', '#d2d644']`, ombre `opacity=0.22`
+- Prévu : interaction gameplay bûcheron (trébuche sur les cailloux)
+
+### Highlight damier (`GameBoard.tsx`)
+- `<rect>` de 2px de hauteur `fill="rgba(255,220,220,0.10)"` sur l'arête haute de chaque case herbe
+- Donne un léger effet de lumière rasante sur la grille
+
+### Nuages
+- Les deux nuages sont actuellement en mode **fair** (`rgba(220,240,230,0.82)`) — le type stormy est désactivé
+- Gameplay orage prévu : les nuages orageux décimeront les abeilles et casseront des ruches
+
+---
+
 ## Prochaines étapes
 
 ### Priorité haute
 - Supprimer les 20 abeilles de test dans `App.tsx`
-- Étangs : forme rectangle arrondi pour les grands étangs (2–3 cellules), brins d'herbe sur les bords
-- Orage gameplay : nuages orageux déciment les abeilles et cassent des ruches
+- Bûcheron trébuche sur cailloux (gameplay)
+- Orage : nuages orageux déciment abeilles et cassent ruches
 
 ### Suite
+- Cohérence lumineuse globale (highlight/ombre sur tous les objets)
 - Responsive mobile/tablette
 - Animations de combat (impact abeilles sur ruches)
 - Effets de particules lors de la prise d'un arbre
