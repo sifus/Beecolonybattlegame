@@ -52,81 +52,24 @@ type Screen = 'menu' | 'options' | 'game' | 'levelmap' | 'story';
  * 5. Centrer parfaitement
  */
 function calculateGridParams(levelId?: number, subLevelIndex?: number) {
-  const screenWidth = window.innerWidth || 390;
-  const screenHeight = window.innerHeight || 844;
-  
-  // Espace UI
-  const UI_TOP = 60;
-  const UI_BOTTOM = levelId !== undefined ? 90 : 0;
-  
-  const availW = screenWidth;
-  const availH = screenHeight - UI_TOP - UI_BOTTOM;
-  
-  // Tester différentes tailles de cellules (40px à 80px)
-  // On veut MAXIMISER le nombre de cellules
-  const MIN_CELL_SIZE = 80;
-  const MAX_CELL_SIZE = 80;
-  const MIN_GAME_CELLS = 6; // Minimum 6x6 pour la zone de jeu
-  
-  let bestConfig = { cellSize: 60, gameCols: 6, gameRows: 6, totalCells: 36 };
-  
-  for (let size = MIN_CELL_SIZE; size <= MAX_CELL_SIZE; size += 2) {
-    // Calculer combien de cellules rentrent (avec 2 bordures)
-    const totalCols = Math.floor(availW / size);
-    const totalRows = Math.floor(availH / size);
-    
-    // Zone de jeu = total - 2 bordures
-    const gameCols = totalCols - 2;
-    const gameRows = totalRows - 2;
-    
-    // Vérifier minimums
-    if (gameCols < MIN_GAME_CELLS || gameRows < MIN_GAME_CELLS) continue;
-    
-    const totalCells = gameCols * gameRows;
-    
-    // On préfère plus de cellules, mais pas trop petites
-    // Score = totalCells - pénalité si trop petit
-    const penalty = size < 50 ? (50 - size) * 2 : 0; // Pénaliser les cellules < 50px
-    const score = totalCells - penalty;
-    const bestScore = bestConfig.totalCells - (bestConfig.cellSize < 50 ? (50 - bestConfig.cellSize) * 2 : 0);
-    
-    if (score > bestScore) {
-      bestConfig = { cellSize: size, gameCols, gameRows, totalCells };
-    }
-  }
-  
-  const cellSize = bestConfig.cellSize;
-  const gameCols = bestConfig.gameCols;
-  const gameRows = bestConfig.gameRows;
-  
-  // Grille TOTALE = zone de jeu + bordures (1 de chaque côté)
-  const totalCols = gameCols + 2;
-  const totalRows = gameRows + 2;
-  
-  // Dimensions EXACTES de la grille
+  const availW = window.innerWidth || 390;
+  const availH = window.innerHeight || 844;
+
+  // Grille fixe 13×8 cases visibles, bordure incluse (1 case de chaque côté)
+  const totalCols = 13;
+  const totalRows = 8;
+
+  const cellSizeByWidth  = Math.floor(availW / totalCols);
+  const cellSizeByHeight = Math.floor(availH / totalRows);
+  const cellSize = Math.min(cellSizeByWidth, cellSizeByHeight);
+
   const gridW = totalCols * cellSize;
   const gridH = totalRows * cellSize;
-  
-  // CENTRAGE PARFAIT par rapport à l'espace disponible
+
   const marginLeft = Math.round((availW - gridW) / 2);
-  const marginTop = Math.round((availH - gridH) / 2) + UI_TOP;
-  
-  console.log(`
-🎮 GRILLE MAXIMISÉE + BORDURE DÉCORATIVE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📱 Écran: ${screenWidth}×${screenHeight}
-📦 Dispo: ${availW}×${availH} (après UI)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 Zone de jeu: ${gameCols}×${gameRows} = ${bestConfig.totalCells} cellules
-🖼️  Grille totale: ${totalCols}×${totalRows} (avec bordure)
-📏 Cellule optimale: ${cellSize}px
-📐 Grille: ${gridW}×${gridH}px
-⬜ Centrage: L=${marginLeft} T=${marginTop - UI_TOP}
-🎨 Espaces: L=${marginLeft} R=${availW - gridW - marginLeft} T=${marginTop - UI_TOP} B=${availH - gridH - (marginTop - UI_TOP)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  `.trim());
-  
-  return { 
+  const marginTop = Math.round((availH - gridH) / 2);
+
+  return {
     cols: totalCols,
     rows: totalRows,
     cellSize,
@@ -134,7 +77,6 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
     gridHeight: gridH,
     marginLeft,
     marginTop,
-    // Indices de la zone de jeu (bordure = 0 et last)
     gameStartCol: 1,
     gameEndCol: totalCols - 2,
     gameStartRow: 1,
@@ -204,6 +146,7 @@ export default function App() {
   const victoryHandledRef = useRef(false); // Pour éviter les boucles infinies de victoire
   const beeConsumedByPondRef = useRef(false); // Pour détecter quand une abeille tombe dans l'étang (niveau dangers)
   const justSentBeesRef = useRef(false); // Pour éviter de sélectionner les abeilles après avoir envoyé des abeilles
+  const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
 
   // Helper pour adapter le wording selon le mode jour/nuit
   const getWording = (timeOfDay: 'day' | 'night') => {
@@ -287,48 +230,40 @@ export default function App() {
   // 🔄 Sauvegarde automatique (progression + préférences)
   useStorage(levelProgress, soundEnabled, globalTimeOfDay);
   
-  // Détecter les changements de taille d'écran pour recalculer la grille
-  // NE PAS recalculer pendant une partie active pour éviter la réinitialisation
+  // Maintenir gridParamsRef à jour à chaque render
+  gridParamsRef.current = gridParams;
+
+  // Détecter les changements de taille d'écran — recalcule toujours, y compris pendant une partie
   useEffect(() => {
     const handleResize = () => {
-      // Ne recalculer que si on est au menu ou en sélection de niveau
-      if (currentScreen !== 'menu' && currentScreen !== 'story-levels') {
-        return;
-      }
-      
       const newParams = calculateGridParams(
         currentScreen === 'story' ? levelProgress.currentLevel : undefined,
         currentScreen === 'story' ? levelProgress.currentSubLevel : undefined
       );
-      const changed = 
-        newParams.cols !== gridParams.cols || 
-        newParams.rows !== gridParams.rows || 
-        newParams.cellSize !== gridParams.cellSize;
-      
-      if (changed) {
-        setGridParams(newParams);
-      }
+      const oldCellSize = gridParamsRef.current.cellSize;
+      if (newParams.cellSize === oldCellSize) return;
+
+      const scale = newParams.cellSize / oldCellSize;
+      // Rescaler positions des arbres et abeilles proportionnellement
+      setGameState(prev => ({
+        ...prev,
+        trees: prev.trees.map(t => ({ ...t, x: t.x * scale, y: t.y * scale })),
+        bees: prev.bees.map(b => ({ ...b, x: b.x * scale, y: b.y * scale })),
+      }));
+      setGridParams(newParams);
     };
-    
+
     const handleOrientationChange = () => {
-      // Ne rien faire pendant une partie active
-      if (currentScreen !== 'menu' && currentScreen !== 'story-levels') {
-        return;
-      }
-      
-      // Délai pour laisser le temps à l'orientation de se finaliser
-      setTimeout(() => {
-        handleResize();
-      }, 300);
+      setTimeout(() => handleResize(), 300);
     };
-    
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
-  }, [gridParams, currentScreen, levelProgress]);
+  }, [currentScreen, levelProgress]);
 
   // Régénérer la carte quand les paramètres de grille changent
   // Seulement si on est au menu, pas pendant une partie active
@@ -1679,7 +1614,7 @@ export default function App() {
         height: '100vh',
         minHeight: '100vh',
         maxHeight: '100vh',
-        backgroundColor: globalTimeOfDay === 'night' ? '#2a3d1a' : '#d4d448', // Couleur moyenne du damier
+        backgroundColor: globalTimeOfDay === 'night' ? '#2a3d1a' : '#c2d040', // Couleur du damier
         userSelect: 'none',
         WebkitUserSelect: 'none',
         MozUserSelect: 'none',
