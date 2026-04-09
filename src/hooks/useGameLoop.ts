@@ -726,8 +726,8 @@ export function useGameLoop({
 
                   newBees.push({
                     id: beeId,
-                    x: tree.x,
-                    y: hiveY,
+                    x: tree.x + (Math.random() - 0.5) * 20,
+                    y: tree.y + (Math.random() - 0.5) * 20,
                     owner: tree.owner,
                     treeId: null,
                     targetTreeId: tree.id,

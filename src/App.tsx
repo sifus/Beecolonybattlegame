@@ -237,7 +237,7 @@ export default function App() {
             owner: tree.owner,
             treeId: tree.id,
             targetTreeId: null,
-            state: 'flying', // Les abeilles commencent en mouvement !
+            state: 'idle',
             angle,
             createdAt: undefined,
           });

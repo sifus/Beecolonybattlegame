@@ -552,14 +552,17 @@ export function GameBoard({
         })}
 
         {/* Bees - rendered last to be on top of everything */}
-        {gameState.bees.map((bee) => (
-          <Bee
-            key={bee.id}
-            bee={bee}
-            isSelected={gameState.selectedBeeIds.has(bee.id)}
-            isNightMode={globalTimeOfDay === 'night'}
-          />
-        ))}
+        {gameState.bees.map((bee) => {
+          if (bee.x < -50 || bee.x > gameWidth + 50 || bee.y < -50 || bee.y > gameHeight + 50) return null;
+          return (
+            <Bee
+              key={bee.id}
+              bee={bee}
+              isSelected={gameState.selectedBeeIds.has(bee.id)}
+              isNightMode={globalTimeOfDay === 'night'}
+            />
+          );
+        })}
 
         {/* Nuages décoratifs — défilent de droite à gauche, au premier plan */}
         {(() => {

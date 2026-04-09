@@ -197,8 +197,8 @@ export function generateRandomMap(
       let gridX: number;
       let gridY: number;
       
-      // Toujours garder les marges de safe zone (1 cellule minimum)
-      gridY = Math.floor(Math.random() * (rows - 2)) + 1;
+      // Borner sur la zone de jeu avec marge de 1 cellule (abeilles restent dans la zone visible)
+      gridY = Math.floor(Math.random() * (gameEndRow - gameStartRow - 1)) + gameStartRow + 1;
       if (preferLeft) {
         gridX = Math.floor(Math.random() * Math.floor(cols / 2 - 1)) + 1;
       } else if (preferRight) {
@@ -220,11 +220,11 @@ export function generateRandomMap(
     }
     
     // Fallback: cherche une cellule libre en balayant toute la grille
-    // Toujours avec safe zones (1 cellule minimum de marge)
-    const startY = 1;
-    const endY = rows - 1;
-    const startX = 1;
-    const endX = cols - 1;
+    // Respecte la marge gameStartRow+1 / gameEndRow-1 pour garder les abeilles dans la zone visible
+    const startY = gameStartRow + 1;
+    const endY = gameEndRow;
+    const startX = gameStartCol + 1;
+    const endX = gameEndCol;
     
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
