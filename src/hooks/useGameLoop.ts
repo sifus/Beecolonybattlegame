@@ -104,7 +104,7 @@ export function useGameLoop({
 
             if (tree && !tree.isCut) {
               bee.angle += 0.01;
-              const baseRadius = BEE_ORBIT_RADIUS;
+              const baseRadius = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80);
               const radiusVariation = ((parseInt(bee.id.slice(-5), 36) % 16) - 8);
               const radius = baseRadius + radiusVariation;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
@@ -720,7 +720,7 @@ export function useGameLoop({
 
                   const beeId = `bee-${tree.id}-${now}-${Math.random()}`;
 
-                  const baseRadius = BEE_ORBIT_RADIUS;
+                  const baseRadius = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80);
                   const radiusVariation = ((parseInt(beeId.slice(-5), 36) % 16) - 8);
                   const radius = baseRadius + radiusVariation;
                   const targetX = tree.x + Math.cos(angle) * radius;

@@ -5,9 +5,10 @@ interface BeeProps {
   bee: BeeType;
   isSelected: boolean;
   isNightMode?: boolean;
+  cellSize: number;
 }
 
-export function Bee({ bee, isSelected, isNightMode = false }: BeeProps) {
+export function Bee({ bee, isSelected, isNightMode = false, cellSize }: BeeProps) {
   const isNewBee = bee.createdAt && Date.now() - bee.createdAt < 800;
 
   // ─── NIGHT MODE : lucioles ────────────────────────────────────────────────
@@ -64,7 +65,7 @@ export function Bee({ bee, isSelected, isNightMode = false }: BeeProps) {
 
   // Goutte centrée à l'origine — span ±18 en x, -22 (haut) à +22 (bas)
   const dropPath = 'M 0,-22 C 0,-22 -18,-9 -18,3 C -18,14 -10,22 0,22 C 10,22 18,14 18,3 C 18,-9 0,-22 0,-22 Z';
-  const sc = 0.21;
+  const sc = (cellSize / 80) * 0.21;
 
   return (
     <g style={{ pointerEvents: 'none' }}>

@@ -597,6 +597,7 @@ export function GameBoard({
               bee={bee}
               isSelected={gameState.selectedBeeIds.has(bee.id)}
               isNightMode={globalTimeOfDay === 'night'}
+              cellSize={gridParams.cellSize}
             />
           );
         })}
