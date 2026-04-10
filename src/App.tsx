@@ -1138,6 +1138,10 @@ export default function App() {
     setCurrentScreen('levelmap');
   };
 
+  const handleStartTutorial = () => {
+    startLevel(1, 0);
+  };
+
   const handleResetProgress = () => {
     // Réinitialiser la progression des niveaux
     const initialProgress = {
@@ -1546,6 +1550,7 @@ export default function App() {
         <MainMenu 
           onStartGame={handleStartGame}
           onStartStoryMode={handleStartStoryMode}
+          onStartTutorial={handleStartTutorial}
           onShowOptions={handleShowOptions}
           timeOfDay={globalTimeOfDay}
           onToggleTimeOfDay={handleToggleTimeOfDay}

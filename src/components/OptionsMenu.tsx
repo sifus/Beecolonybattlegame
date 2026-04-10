@@ -196,7 +196,7 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="mb-1 text-amber-950" style={{ fontSize: '15px', fontWeight: '700' }}>
-                        Mode Gaucher
+                        Sélection inversée
                       </p>
                       <p className="text-amber-900" style={{ fontSize: '13px', lineHeight: '1.4' }}>
                         {leftHanded ? 'Cercle : centre = départ, rayon = distance' : 'Cercle : centre = milieu, rayon = moitié'}

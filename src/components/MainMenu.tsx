@@ -1,9 +1,10 @@
-import { Play, Settings } from 'lucide-react';
+import { Play, Settings, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface MainMenuProps {
   onStartGame: () => void;
   onStartStoryMode: () => void;
+  onStartTutorial: () => void;
   onShowOptions: () => void;
   timeOfDay?: 'day' | 'night';
   onToggleTimeOfDay?: () => void;
@@ -79,7 +80,7 @@ function MenuButton({ onClick, icon, title, subtitle, secondary = false, fullWid
   );
 }
 
-export function MainMenu({ onStartGame, onStartStoryMode, onShowOptions, timeOfDay = 'day', onToggleTimeOfDay }: MainMenuProps) {
+export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onShowOptions, timeOfDay = 'day', onToggleTimeOfDay }: MainMenuProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [isLandscape, setIsLandscape] = useState(true);
 
@@ -178,16 +179,16 @@ export function MainMenu({ onStartGame, onStartStoryMode, onShowOptions, timeOfD
 
           {/* Menu buttons */}
           <div className="space-y-4 pb-20">
-            {/* Mode Histoire */}
+            {/* Tutoriel */}
             <MenuButton
-              onClick={onStartStoryMode}
-              icon={<Play className="w-6 h-6" fill="currentColor" strokeWidth={0} />}
-              title="Jouer"
-              subtitle="Mode histoire"
+              onClick={onStartTutorial}
+              icon={<BookOpen className="w-6 h-6" />}
+              title="Tutoriel"
+              subtitle="Apprendre les bases"
               fullWidth
             />
 
-            {/* Partie Rapide et Options côte à côte */}
+            {/* Partie Rapide + Mode Histoire désactivé côte à côte */}
             <div className="flex gap-2.5">
               <MenuButton
                 onClick={onStartGame}
@@ -196,12 +197,34 @@ export function MainMenu({ onStartGame, onStartStoryMode, onShowOptions, timeOfD
                 subtitle="Partie rapide"
               />
 
-              <MenuButton
-                onClick={onShowOptions}
-                icon={<Settings className="w-6 h-6" fill="currentColor" strokeWidth={0} />}
-                title="Options"
-              />
+              {/* Mode Histoire — désactivé temporairement */}
+              <button
+                disabled
+                className="relative flex-1 py-2.5 px-4 rounded-2xl cursor-not-allowed"
+                style={{
+                  background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                  boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
+                  border: '4px solid rgba(120, 53, 15, 0.4)',
+                  opacity: 0.4,
+                }}
+              >
+                <div className="flex items-center justify-center gap-2.5 text-amber-950">
+                  <Play className="w-6 h-6" fill="currentColor" strokeWidth={0} />
+                  <div className="text-left">
+                    <div style={{ fontSize: '18px', fontWeight: '700' }}>Jouer</div>
+                    <div style={{ fontSize: '14px', opacity: 0.8 }}>Mode histoire</div>
+                  </div>
+                </div>
+              </button>
             </div>
+
+            {/* Options seul en dessous */}
+            <MenuButton
+              onClick={onShowOptions}
+              icon={<Settings className="w-6 h-6" fill="currentColor" strokeWidth={0} />}
+              title="Options"
+              fullWidth
+            />
           </div>
 
 

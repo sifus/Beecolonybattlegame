@@ -94,7 +94,7 @@ export const INITIAL_LEVELS: Level[] = [
     id: i + 2,
     title: `Niveau ${i + 2}`,
     description: 'À venir bientôt...',
-    unlocked: true, // Déverrouillé pour voir le chemin complet
+    unlocked: false,
     completed: false,
     stars: 0,
     subLevels: Array.from({ length: 5 }, (_, j) => ({
@@ -111,7 +111,7 @@ export const INITIAL_LEVELS: Level[] = [
     id: 10,
     title: "Boss Final",
     description: "Le défi ultime !",
-    unlocked: true, // Déverrouillé pour voir le chemin complet
+    unlocked: false,
     completed: false,
     stars: 0,
     subLevels: Array.from({ length: 5 }, (_, j) => ({
