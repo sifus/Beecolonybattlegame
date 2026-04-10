@@ -46,7 +46,7 @@ export function Tree({
     const level = tree.hiveLevel[index] ?? 1;
     const maxHealth = level === 2 ? HIVE_L2_HP : HIVE_L1_HP;
     const healthPercent = Math.min(health / maxHealth, 1);
-    const isUnderConstruction = index >= tree.hiveHealth.length || health === 0;
+    const isUnderConstruction = index >= tree.hiveHealth.length;
 
     const buildPct = isUnderConstruction
       ? index === 1 && tree.upgradingProgress
@@ -64,31 +64,28 @@ export function Tree({
     const liquidColor = tree.owner === 'enemy' ? '#cc2222' : '#e8a020';
     const stripeColor = isUnderConstruction ? 'rgba(187,187,187,0.4)' : tree.owner === 'enemy' ? '#991111' : '#c4780a';
 
-    const shapeBottom = cy + 28 * sc;
-    const shapeHeight = 80 * sc;
-    const liquidY     = shapeBottom - shapeHeight * buildPct;
-
     return (
       <g key={`hive-${index}`} transform={`translate(${cx}, ${cy})`}>
         <defs>
           <clipPath id={clipId}>
             <path d={body} />
           </clipPath>
+          {(buildPct < 1 || isUnderConstruction) && (
+            <linearGradient id={gradId} x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+              <stop offset="0%" stopColor={liquidColor} stopOpacity="1" />
+              <stop offset={`${buildPct * 100}%`} stopColor={liquidColor} stopOpacity="1" />
+              <stop offset={`${buildPct * 100}%`} stopColor={liquidColor} stopOpacity="0" />
+              <stop offset="100%" stopColor={liquidColor} stopOpacity="0" />
+            </linearGradient>
+          )}
         </defs>
 
         {/* Corps fond */}
         <path d={body} fill={fillColor} opacity={isUnderConstruction ? 0.55 : 1} />
 
-        {/* Liquide qui monte */}
+        {/* Liquide — gradient appliqué sur le path de la ruche, aucun clipPath nécessaire */}
         {(buildPct < 1 || isUnderConstruction) && (
-          <rect
-            x={-32 * sc}
-            y={liquidY - cy}
-            width={64 * sc}
-            height={shapeHeight * buildPct + 2}
-            fill={liquidColor}
-            clipPath={`url(#${clipId})`}
-          />
+          <path d={body} fill={`url(#${gradId})`} />
         )}
 
         {/* Stries horizontales */}
