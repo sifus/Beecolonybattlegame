@@ -274,11 +274,11 @@ export function useGameLoop({
                 setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
               }
             }
-          } else if (bee.state === 'building' && (bee as any).buildingTreeId) {
-            const targetTree = newState.trees.find(t => t.id === (bee as any).buildingTreeId);
+          } else if (bee.state === 'building' && bee.buildingTreeId) {
+            const targetTree = newState.trees.find(t => t.id === bee.buildingTreeId);
             if (!targetTree) {
               bee.state = 'idle';
-              (bee as any).buildingTreeId = null;
+              bee.buildingTreeId = null;
             } else {
               const dx = targetTree.x - bee.x;
               const dy = targetTree.y - bee.y;
@@ -409,7 +409,7 @@ export function useGameLoop({
                 } else {
                   // Rien à construire/réparer : rejoindre l'orbite de l'arbre
                   bee.state = 'idle';
-                  (bee as any).buildingTreeId = null;
+                  bee.buildingTreeId = null;
                   bee.treeId = targetTree.id;
                   if (!bee.angle) bee.angle = Math.random() * Math.PI * 2;
                 }
@@ -440,14 +440,14 @@ export function useGameLoop({
                 bee.targetTreeId = closestTree.id;
               }
             } else {
-              if (!(bee as any).hoverCenterX) {
-                (bee as any).hoverCenterX = bee.x;
-                (bee as any).hoverCenterY = bee.y;
+              if (!bee.hoverCenterX) {
+                bee.hoverCenterX = bee.x;
+                bee.hoverCenterY = bee.y;
               }
               bee.angle += 0.02;
               const wiggleRadius = 3;
-              bee.x = (bee as any).hoverCenterX + Math.cos(bee.angle) * wiggleRadius;
-              bee.y = (bee as any).hoverCenterY + Math.sin(bee.angle) * wiggleRadius;
+              bee.x = bee.hoverCenterX + Math.cos(bee.angle) * wiggleRadius;
+              bee.y = (bee.hoverCenterY ?? bee.y) + Math.sin(bee.angle) * wiggleRadius;
             }
           }
 
@@ -768,7 +768,7 @@ export function useGameLoop({
 
     const interval = setInterval(() => {
       setGameState(prev => {
-        if ((prev as any).timeOfDay !== 'night' || !prev.fireflies) return prev;
+        if (!prev.fireflies) return prev;
 
         return {
           ...prev,
@@ -820,7 +820,7 @@ export function useGameLoop({
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist >= 30) return false;
-            if ((bee as any).targetLumberjackId !== lumberjack.id) return false;
+            if (bee.targetLumberjackId !== lumberjack.id) return false;
             if (bee.owner === 'player' && !lumberjack.isConverted) return true;
             if (bee.owner === 'enemy' && lumberjack.isConverted) return true;
             return false;
@@ -836,7 +836,7 @@ export function useGameLoop({
               lumberjack.state = 'dead';
 
               attackingBees.forEach(bee => {
-                (bee as any).targetLumberjackId = null;
+                bee.targetLumberjackId = null;
                 const friendlyTrees = newState.trees.filter(t => t.owner === bee.owner && !t.isCut);
                 if (friendlyTrees.length > 0) {
                   let closestTree = friendlyTrees[0];
@@ -975,5 +975,5 @@ export function useGameLoop({
     }, aiInterval);
 
     return () => clearInterval(interval);
-  }, [gameState.isPlaying, mapData, currentScreen, levelProgress]);
+  }, [gameState.isPlaying, mapData, currentScreen, levelProgress.currentLevel, levelProgress.currentSubLevel]);
 }

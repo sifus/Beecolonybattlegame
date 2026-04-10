@@ -40,8 +40,10 @@ export interface Bee {
   targetY?: number; // Position Y cible pour mouvement libre
   offsetX?: number; // Offset pour effet de nuage
   offsetY?: number; // Offset pour effet de nuage
-  hoverCenterX?: number; // Centre fixe pour le hover
-  hoverCenterY?: number; // Centre fixe pour le hover
+  hoverCenterX?: number; // Centre fixe pour le hover (wiggle sans arbre)
+  hoverCenterY?: number; // Centre fixe pour le hover (wiggle sans arbre)
+  buildingTreeId?: string | null; // Arbre ciblé pour construction/réparation/amélioration
+  targetLumberjackId?: string | null; // Bûcheron ciblé (future fonctionnalité)
   state: 'idle' | 'moving' | 'fighting' | 'building';
   angle: number; // Angle de rotation autour de l'arbre
   displayAngle?: number; // Direction tangentielle pour l'orientation visuelle
