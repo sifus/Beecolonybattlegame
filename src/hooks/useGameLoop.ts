@@ -83,6 +83,11 @@ export function useGameLoop({
         const updatedBees = [...newState.bees];
         const beesToRemove = new Set<string>();
 
+        // Limites de la zone de jeu (marge de 10px pour que les abeilles restent sélectionnables)
+        const BEE_MARGIN = 10;
+        const maxX = gridParams.cols * gridParams.cellSize - BEE_MARGIN;
+        const maxY = gridParams.rows * gridParams.cellSize - BEE_MARGIN;
+
         // FIX PERFORMANCE : Adapter la vitesse selon le nombre d'abeilles
         const beeSpeedMultiplier = newState.bees.length > 100
           ? 1.5
@@ -311,10 +316,10 @@ export function useGameLoop({
 
                       if (newProgress >= UPGRADE_HIVE_COST) {
                         if (targetTree.maxHives === 2) {
-                          // Groupe d'arbres : on ajoute une 2ème ruche niveau 1
+                          // Groupe d'arbres : on ajoute une 2ème ruche niveau 2
                           targetTree.hiveCount = 2;
-                          targetTree.hiveHealth = [HIVE_L1_HP, HIVE_L1_HP];
-                          targetTree.hiveLevel = [1, 1];
+                          targetTree.hiveHealth = [HIVE_L1_HP, HIVE_L2_HP];
+                          targetTree.hiveLevel = [1, 2];
                         } else {
                           // Arbre solo : on monte la ruche existante au niveau 2
                           targetTree.hiveLevel[0] = 2;
@@ -378,8 +383,11 @@ export function useGameLoop({
                     } // fin else throttle
                   }
                 } else {
+                  // Rien à construire/réparer : rejoindre l'orbite de l'arbre
                   bee.state = 'idle';
                   (bee as any).buildingTreeId = null;
+                  bee.treeId = targetTree.id;
+                  if (!bee.angle) bee.angle = Math.random() * Math.PI * 2;
                 }
               } else {
                 const speed = 1.2;
@@ -417,6 +425,12 @@ export function useGameLoop({
               bee.x = (bee as any).hoverCenterX + Math.cos(bee.angle) * wiggleRadius;
               bee.y = (bee as any).hoverCenterY + Math.sin(bee.angle) * wiggleRadius;
             }
+          }
+
+          // Clamping : empêcher les abeilles de sortir de la zone de jeu
+          if (!beesToRemove.has(bee.id)) {
+            bee.x = Math.max(BEE_MARGIN, Math.min(maxX, bee.x));
+            bee.y = Math.max(BEE_MARGIN, Math.min(maxY, bee.y));
           }
         });
 
@@ -483,14 +497,14 @@ export function useGameLoop({
               let targetType: 'hive' | 'hive-upgrading' | 'construction' | null = null;
 
               if (tree.hiveHealth.length > 0) {
-                const currentHP = tree.hiveHealth[0];
+                const lastIdx = tree.hiveHealth.length - 1;
                 const upgradingProgress = tree.upgradingProgress || 0;
 
                 if (upgradingProgress > 0) {
-                  totalCostToDestroy = currentHP + upgradingProgress;
+                  totalCostToDestroy = tree.hiveHealth[0] + upgradingProgress;
                   targetType = 'hive-upgrading';
                 } else {
-                  totalCostToDestroy = currentHP;
+                  totalCostToDestroy = tree.hiveHealth[lastIdx]; // attaque la dernière ruche (niveau 2 en premier)
                   targetType = 'hive';
                 }
               } else if (tree.buildingProgress && tree.buildingProgress[0] > 0) {
@@ -519,7 +533,6 @@ export function useGameLoop({
                       }
                     } else {
                       const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
-                      const currentLevel = tree.hiveLevel[0] || 1;
                       if (newHealth === 0) {
                         tree.hiveHealth = [];
                         tree.hiveLevel = [];
@@ -527,21 +540,27 @@ export function useGameLoop({
                         tree.upgradingProgress = 0;
                         tree.owner = 'neutral';
                       } else {
-                        tree.hiveHealth = [newHealth];
-                        tree.hiveLevel = [currentLevel];
+                        tree.hiveHealth = [newHealth, ...tree.hiveHealth.slice(1)];
                       }
                     }
                   } else if (targetType === 'hive') {
-                    const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
-                    const currentLevel = tree.hiveLevel[0] || 1;
+                    // Attaque la dernière ruche (niveau 2 d'abord, puis niveau 1)
+                    const lastIdx = tree.hiveHealth.length - 1;
+                    const newHealth = Math.max(0, tree.hiveHealth[lastIdx] - 1);
                     if (newHealth === 0) {
-                      tree.hiveHealth = [];
-                      tree.hiveLevel = [];
-                      tree.hiveCount = 0;
-                      tree.owner = 'neutral';
+                      if (tree.hiveCount > 1) {
+                        // Retirer la dernière ruche, conserver les précédentes
+                        tree.hiveHealth = tree.hiveHealth.slice(0, lastIdx);
+                        tree.hiveLevel = tree.hiveLevel.slice(0, lastIdx);
+                        tree.hiveCount--;
+                      } else {
+                        tree.hiveHealth = [];
+                        tree.hiveLevel = [];
+                        tree.hiveCount = 0;
+                        tree.owner = 'neutral';
+                      }
                     } else {
-                      tree.hiveHealth = [newHealth];
-                      tree.hiveLevel = [currentLevel];
+                      tree.hiveHealth = [...tree.hiveHealth.slice(0, lastIdx), newHealth];
                     }
                   } else if (targetType === 'construction') {
                     tree.buildingProgress![0] = Math.max(0, tree.buildingProgress![0] - 1);
@@ -562,14 +581,14 @@ export function useGameLoop({
               let targetType: 'hive' | 'hive-upgrading' | 'construction' | null = null;
 
               if (tree.hiveHealth.length > 0) {
-                const currentHP = tree.hiveHealth[0];
+                const lastIdx = tree.hiveHealth.length - 1;
                 const upgradingProgress = tree.upgradingProgress || 0;
 
                 if (upgradingProgress > 0) {
-                  totalCostToDestroy = currentHP + upgradingProgress;
+                  totalCostToDestroy = tree.hiveHealth[0] + upgradingProgress;
                   targetType = 'hive-upgrading';
                 } else {
-                  totalCostToDestroy = currentHP;
+                  totalCostToDestroy = tree.hiveHealth[lastIdx]; // attaque la dernière ruche (niveau 2 en premier)
                   targetType = 'hive';
                 }
               } else if (tree.buildingProgress && tree.buildingProgress[0] > 0) {
@@ -592,7 +611,6 @@ export function useGameLoop({
                       tree.upgradingProgress = upgradingProgress - 1;
                     } else {
                       const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
-                      const currentLevel = tree.hiveLevel[0] || 1;
                       if (newHealth === 0) {
                         tree.hiveHealth = [];
                         tree.hiveLevel = [];
@@ -600,21 +618,27 @@ export function useGameLoop({
                         tree.upgradingProgress = 0;
                         tree.owner = 'neutral';
                       } else {
-                        tree.hiveHealth = [newHealth];
-                        tree.hiveLevel = [currentLevel];
+                        tree.hiveHealth = [newHealth, ...tree.hiveHealth.slice(1)];
                       }
                     }
                   } else if (targetType === 'hive') {
-                    const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
-                    const currentLevel = tree.hiveLevel[0] || 1;
+                    // Attaque la dernière ruche (niveau 2 d'abord, puis niveau 1)
+                    const lastIdx = tree.hiveHealth.length - 1;
+                    const newHealth = Math.max(0, tree.hiveHealth[lastIdx] - 1);
                     if (newHealth === 0) {
-                      tree.hiveHealth = [];
-                      tree.hiveLevel = [];
-                      tree.hiveCount = 0;
-                      tree.owner = 'neutral';
+                      if (tree.hiveCount > 1) {
+                        // Retirer la dernière ruche, conserver les précédentes
+                        tree.hiveHealth = tree.hiveHealth.slice(0, lastIdx);
+                        tree.hiveLevel = tree.hiveLevel.slice(0, lastIdx);
+                        tree.hiveCount--;
+                      } else {
+                        tree.hiveHealth = [];
+                        tree.hiveLevel = [];
+                        tree.hiveCount = 0;
+                        tree.owner = 'neutral';
+                      }
                     } else {
-                      tree.hiveHealth = [newHealth];
-                      tree.hiveLevel = [currentLevel];
+                      tree.hiveHealth = [...tree.hiveHealth.slice(0, lastIdx), newHealth];
                     }
                   } else if (targetType === 'construction') {
                     tree.buildingProgress![0] = Math.max(0, tree.buildingProgress![0] - 1);

@@ -615,6 +615,19 @@ export function GameBoard({
             );
           });
         })()}
+        {/* Trees - CLICK LAYER — au-dessus de tout, zones de clic transparentes */}
+        {gameState.trees.map((tree) => (
+          <Tree
+            key={`${tree.id}-click`}
+            tree={tree}
+            onClick={(e) => onTreeClick(tree.id, e)}
+            onDragStart={onTreeDragStart}
+            playerBeesCount={0}
+            cellSize={gridParams.cellSize}
+            renderLayer="click"
+            isNightMode={globalTimeOfDay === 'night'}
+          />
+        ))}
       </svg>
     </div>
   );

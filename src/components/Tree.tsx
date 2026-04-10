@@ -1,12 +1,12 @@
 import { Tree as TreeType } from '../types/game';
-import { motion } from 'motion/react';
+import { HIVE_L1_HP, HIVE_L2_HP } from '../constants/gameRules';
 
 interface TreeProps {
   tree: TreeType;
   onClick: (e: React.MouseEvent) => void;
   onDragStart?: (e: React.PointerEvent) => void;
   cellSize: number;
-  renderLayer?: 'base' | 'top';
+  renderLayer?: 'base' | 'top' | 'click';
   isNightMode?: boolean;
 }
 
@@ -44,7 +44,7 @@ export function Tree({
     const sc = r / 30;
     const health = tree.hiveHealth[index] ?? 0;
     const level = tree.hiveLevel[index] ?? 1;
-    const maxHealth = level === 2 ? 35 : 7;
+    const maxHealth = level === 2 ? HIVE_L2_HP : HIVE_L1_HP;
     const healthPercent = Math.min(health / maxHealth, 1);
     const isUnderConstruction = index >= tree.hiveHealth.length || health === 0;
 
@@ -128,7 +128,7 @@ export function Tree({
   if (renderLayer === 'base') {
     return (
       <g>
-        <motion.g whileHover={{ scale: 1.05 }} style={{ pointerEvents: 'none' }}>
+        <g style={{ pointerEvents: 'none' }}>
           {tree.isCut ? (
             <>
               {/* Stump */}
@@ -220,20 +220,25 @@ export function Tree({
               )}
             </>
           )}
-        </motion.g>
-        {/* Click area — en dernier pour intercepter tous les clics */}
-        <rect
-          x={tree.x - cellSize * 0.5}
-          y={tree.y - cellSize * 0.5}
-          width={cellSize}
-          height={cellSize}
-          fill="transparent"
-          onClick={handleClick}
-          onPointerDown={handlePointerDown}
-          style={{ cursor: tree.isCut ? 'default' : 'pointer', touchAction: 'none' }}
-          pointerEvents="all"
-        />
+        </g>
       </g>
+    );
+  }
+
+  // ─── CLICK LAYER: transparent hit zone — doit être rendu en DERNIER dans le SVG ──
+  if (renderLayer === 'click') {
+    return (
+      <rect
+        x={tree.x - cellSize * 0.5}
+        y={tree.y - cellSize * 0.5}
+        width={cellSize}
+        height={cellSize}
+        fill="transparent"
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        style={{ cursor: tree.isCut ? 'default' : 'pointer', touchAction: 'none' }}
+        pointerEvents="all"
+      />
     );
   }
 
@@ -301,7 +306,7 @@ export function Tree({
         {/* Damage indicators */}
         {!tree.isCut && tree.hiveHealth.map((health, index) => {
           const level = tree.hiveLevel[index] ?? 1;
-          const maxHealth = level === 2 ? 35 : 7;
+          const maxHealth = level === 2 ? HIVE_L2_HP : HIVE_L1_HP;
           if (health >= maxHealth) return null;
           const hivePos = tree.maxHives === 1
             ? { cx: tree.x, cy: trunkTopY - 14 * s }
