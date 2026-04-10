@@ -8,6 +8,7 @@ interface TreeProps {
   cellSize: number;
   renderLayer?: 'base' | 'top' | 'click';
   isNightMode?: boolean;
+  playerBeesCount?: number;
 }
 
 export function Tree({
@@ -17,6 +18,7 @@ export function Tree({
   cellSize,
   renderLayer = 'base',
   isNightMode = false,
+  playerBeesCount = 0,
 }: TreeProps) {
   const s = cellSize / 80;
   const treeIsColonized = tree.hiveCount > 0;
@@ -335,6 +337,36 @@ export function Tree({
                 fontSize={8 * s} fontWeight="bold"
               >
                 {healthRemaining}/10
+              </text>
+            </g>
+          );
+        })()}
+
+        {/* Bulle compteur abeilles — arbres joueur uniquement */}
+        {tree.owner === 'player' && !tree.isCut && (() => {
+          const r = cellSize * 0.22;
+          const bx = tree.x + cellSize * 0.25;
+          const by = tree.y - cellSize * 0.25;
+          const gradId = `bee-count-grad-${tree.id}`;
+          return (
+            <g filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.30))">
+              <defs>
+                <radialGradient id={gradId} cx="35%" cy="30%" r="65%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
+                </radialGradient>
+              </defs>
+              <circle cx={bx} cy={by} r={r} fill="#4DA8E8" />
+              <circle cx={bx} cy={by} r={r} fill={`url(#${gradId})`} />
+              <text
+                x={bx} y={by}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="white"
+                fontWeight="bold"
+                fontSize={r * 1.1}
+              >
+                {playerBeesCount}
               </text>
             </g>
           );
