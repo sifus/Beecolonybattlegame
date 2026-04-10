@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw, Info, X, Volume2, VolumeX, Sun, Moon, Hand } from 'lucide-react';
+import { Pause, Play, RotateCcw, Info, X, Volume2, VolumeX, Sun, Moon, Hand, Home } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
 interface GameUIProps {
@@ -15,6 +15,7 @@ interface GameUIProps {
   onDragStart?: (e: React.PointerEvent) => void;
   isDragging?: boolean;
   hasSelection?: boolean;
+  isTutorial?: boolean;
 }
 
 // Composant SettingToggle extrait pour éviter les problèmes de re-render
@@ -131,7 +132,7 @@ function StyledButton({ onClick, title, icon, className = '', onDragStart, isDra
   );
 }
 
-export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, leftHanded = false, onToggleLeftHanded, onDragStart, isDragging = false, hasSelection = false }: GameUIProps) {
+export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, leftHanded = false, onToggleLeftHanded, onDragStart, isDragging = false, hasSelection = false, isTutorial = false }: GameUIProps) {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   
@@ -202,17 +203,19 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
         />
       </div>
 
-      {/* Recommencer - Haut Droite */}
-      <div className={`absolute ${positioningRight} z-20`} style={{ pointerEvents: 'none' }}>
-        <StyledButton
-          onClick={onRestart}
-          onDragStart={onDragStart}
-          isDragging={isDragging}
-          hasSelection={hasSelection}
-          title="Recommencer"
-          icon={<RotateCcw className={`${iconSize} text-white`} strokeWidth={2.5} />}
-        />
-      </div>
+      {/* Recommencer - Haut Droite (masqué en mode tutoriel) */}
+      {!isTutorial && (
+        <div className={`absolute ${positioningRight} z-20`} style={{ pointerEvents: 'none' }}>
+          <StyledButton
+            onClick={onRestart}
+            onDragStart={onDragStart}
+            isDragging={isDragging}
+            hasSelection={hasSelection}
+            title="Recommencer"
+            icon={<RotateCcw className={`${iconSize} text-white`} strokeWidth={2.5} />}
+          />
+        </div>
+      )}
 
       {/* Menu Pause */}
       {showPauseMenu && (
@@ -266,7 +269,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                         fontWeight: '900'
                       }}
                     >
-                      ⏸️ Pause
+                      Pause
                     </h2>
                     
                     {/* Paramètres */}
@@ -301,31 +304,41 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
 
                   {/* Colonne droite : Boutons d'action */}
                   <div className="flex flex-col gap-2 min-w-[150px]">
-                    <button
-                      onClick={handleContinue}
-                      className="relative px-4 py-2 hover:scale-105 transition-transform rounded-2xl"
-                      style={{
-                        background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                        boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
-                        border: '4px solid rgba(120, 53, 15, 0.4)',
-                      }}
-                    >
-                      <span className="relative text-amber-950" style={{ fontSize: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>▶️ Continuer</span>
-                    </button>
-                    
                     {onHome && (
                       <button
                         onClick={handleBackToMenu}
-                        className="relative px-4 py-2 hover:scale-105 transition-transform rounded-2xl"
                         style={{
-                          background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                          boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
-                          border: '4px solid rgba(120, 53, 15, 0.4)',
+                          padding: '14px 24px', borderRadius: '16px',
+                          background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                          boxShadow: '0 8px 16px rgba(217,119,6,0.4), inset 0 -3px 8px rgba(0,0,0,0.2), inset 0 3px 8px rgba(255,255,255,0.3)',
+                          border: '3px solid rgba(120,53,15,0.4)',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                          fontSize: '16px', fontWeight: '700', color: '#78350f', cursor: 'pointer',
+                          outline: 'none', minHeight: '52px', touchAction: 'manipulation',
+                          userSelect: 'none', WebkitTapHighlightColor: 'transparent',
                         }}
                       >
-                        <span className="relative text-amber-950" style={{ fontSize: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>🏠 Accueil</span>
+                        <Home style={{ width: '20px', height: '20px', flexShrink: 0 }} strokeWidth={2.5} />
+                        <span>Accueil</span>
                       </button>
                     )}
+
+                    <button
+                      onClick={handleContinue}
+                      style={{
+                        padding: '14px 24px', borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                        boxShadow: '0 8px 16px rgba(217,119,6,0.4), inset 0 -3px 8px rgba(0,0,0,0.2), inset 0 3px 8px rgba(255,255,255,0.3)',
+                        border: '3px solid rgba(120,53,15,0.4)',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        fontSize: '16px', fontWeight: '700', color: '#78350f', cursor: 'pointer',
+                        outline: 'none', minHeight: '52px', touchAction: 'manipulation',
+                        userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <Play style={{ width: '20px', height: '20px', flexShrink: 0 }} fill="#78350f" strokeWidth={0} />
+                      <span>Continuer</span>
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -341,7 +354,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                       fontWeight: '900'
                     }}
                   >
-                    ⏸️ Pause
+                    Pause
                   </h2>
                   
                   {/* Paramètres */}
@@ -374,32 +387,42 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                   </div>
                   
                   {/* Boutons côte à côte */}
-                  <div className="flex gap-2.5">
-                    <button
-                      onClick={handleContinue}
-                      className="relative flex-1 px-4 py-2.5 hover:scale-105 transition-transform rounded-2xl"
-                      style={{
-                        background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                        boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
-                        border: '4px solid rgba(120, 53, 15, 0.4)',
-                      }}
-                    >
-                      <span className="relative text-amber-950" style={{ fontSize: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>▶️ Continuer</span>
-                    </button>
-                    
+                  <div className="flex gap-2.5" style={{ marginTop: '6px' }}>
                     {onHome && (
                       <button
                         onClick={handleBackToMenu}
-                        className="relative flex-1 px-4 py-2.5 hover:scale-105 transition-transform rounded-2xl"
                         style={{
-                          background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                          boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
-                          border: '4px solid rgba(120, 53, 15, 0.4)',
+                          flex: '1', padding: '14px 24px', borderRadius: '16px',
+                          background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                          boxShadow: '0 8px 16px rgba(217,119,6,0.4), inset 0 -3px 8px rgba(0,0,0,0.2), inset 0 3px 8px rgba(255,255,255,0.3)',
+                          border: '3px solid rgba(120,53,15,0.4)',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                          fontSize: '16px', fontWeight: '700', color: '#78350f', cursor: 'pointer',
+                          outline: 'none', minHeight: '52px', touchAction: 'manipulation',
+                          userSelect: 'none', WebkitTapHighlightColor: 'transparent',
                         }}
                       >
-                        <span className="relative text-amber-950" style={{ fontSize: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>🏠 Accueil</span>
+                        <Home style={{ width: '20px', height: '20px', flexShrink: 0 }} strokeWidth={2.5} />
+                        <span>Accueil</span>
                       </button>
                     )}
+
+                    <button
+                      onClick={handleContinue}
+                      style={{
+                        flex: '1', padding: '14px 24px', borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                        boxShadow: '0 8px 16px rgba(217,119,6,0.4), inset 0 -3px 8px rgba(0,0,0,0.2), inset 0 3px 8px rgba(255,255,255,0.3)',
+                        border: '3px solid rgba(120,53,15,0.4)',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        fontSize: '16px', fontWeight: '700', color: '#78350f', cursor: 'pointer',
+                        outline: 'none', minHeight: '52px', touchAction: 'manipulation',
+                        userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <Play style={{ width: '20px', height: '20px', flexShrink: 0 }} fill="#78350f" strokeWidth={0} />
+                      <span>Continuer</span>
+                    </button>
                   </div>
                 </>
               )}
@@ -440,7 +463,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                     fontWeight: '800'
                   }}
                 >
-                  🎮 Comment Jouer
+                  Comment Jouer
                 </h2>
                 <button
                   onClick={handleToggleTutorial}
@@ -456,7 +479,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                   backgroundColor: 'rgba(255, 255, 255, 0.25)', 
                   backdropFilter: 'blur(2px)'
                 }}>
-                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>📍 Sélectionner des {beesWord.charAt(0).toUpperCase() + beesWord.slice(1)}</h3>
+                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>Sélectionner des {beesWord.charAt(0).toUpperCase() + beesWord.slice(1)}</h3>
                   <ul className="space-y-1.5 text-amber-950" style={{ fontSize: '15px', lineHeight: '1.5' }}>
                     <li>• <strong>Clic sur arbre allié</strong> : Sélectionne toutes les {beesWord}</li>
                     <li>• <strong>Clic-glisser (cercle)</strong> : Sélection multiple libre</li>
@@ -468,7 +491,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                   backgroundColor: 'rgba(255, 255, 255, 0.25)', 
                   backdropFilter: 'blur(2px)'
                 }}>
-                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>🚀 Envoyer des {beesWord.charAt(0).toUpperCase() + beesWord.slice(1)}</h3>
+                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>Envoyer des {beesWord.charAt(0).toUpperCase() + beesWord.slice(1)}</h3>
                   <ul className="space-y-1.5 text-amber-950" style={{ fontSize: '15px', lineHeight: '1.5' }}>
                     <li>• <strong>Simple clic sur arbre</strong> : Envoie la sélection</li>
                     <li>• Arbre <strong>neutre/allié</strong> : Gravitation autour</li>
@@ -481,7 +504,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                   backgroundColor: 'rgba(255, 255, 255, 0.25)', 
                   backdropFilter: 'blur(2px)'
                 }}>
-                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>🏗️ Construire/Réparer</h3>
+                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>Construire/Réparer</h3>
                   <ul className="space-y-1.5 text-amber-950" style={{ fontSize: '15px', lineHeight: '1.5' }}>
                     <li>• <strong>Double-clic sur arbre allié/neutre</strong></li>
                     <li>• Avec {beesWord} autour → Construction/Réparation</li>
@@ -495,7 +518,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                   backgroundColor: 'rgba(255, 255, 255, 0.25)', 
                   backdropFilter: 'blur(2px)'
                 }}>
-                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>💧 Attention aux Étangs !</h3>
+                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>Attention aux Étangs !</h3>
                   <ul className="space-y-1.5 text-amber-950" style={{ fontSize: '15px', lineHeight: '1.5' }}>
                     <li>• <strong>1 {beeWord} sur 3</strong> tombe dans l'eau (33%)</li>
                     <li>• Zones bleues = danger mortel 🌊</li>
@@ -508,7 +531,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                   backgroundColor: 'rgba(255, 255, 255, 0.25)', 
                   backdropFilter: 'blur(2px)'
                 }}>
-                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>🏆 Objectif</h3>
+                  <h3 className="mb-2 text-amber-950" style={{ fontSize: '16px', fontWeight: '700' }}>Objectif</h3>
                   <p className="text-amber-950" style={{ fontSize: '15px', lineHeight: '1.5' }}>
                     Détruire <strong>tous les {hivesWord} {isNightMode ? 'ennemis' : 'ennemies'}</strong> ({isNightMode ? 'bleus' : 'rouges'}) !
                   </p>

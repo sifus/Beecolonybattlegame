@@ -69,22 +69,22 @@ export function TutorialBanner({ title, instructions, timeOfDay = 'day', isCompl
           <div className="relative flex-1" style={{ paddingRight: isCompleted && onNext ? 'clamp(120px, 18vw, 160px)' : '0', pointerEvents: 'none' }}>
             {isCompleted ? (
               <>
-                <h3 
+                <h3
                   className="text-amber-950"
-                  style={{ 
-                    fontSize: 'clamp(14px, 3.5vw, 18px)', 
+                  style={{
+                    fontSize: 'clamp(14px, 3.5vw, 18px)',
                     fontWeight: '900',
                     textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                     marginBottom: 'clamp(4px, 1vh, 8px)',
                     pointerEvents: 'none',
                   }}
                 >
-                  🎉 Bravo !
+                  Bravo !
                 </h3>
-                <p 
+                <p
                   className="text-amber-900"
-                  style={{ 
-                    fontSize: 'clamp(12px, 3vw, 15px)', 
+                  style={{
+                    fontSize: 'clamp(12px, 3vw, 15px)',
                     lineHeight: '1.4',
                     fontWeight: '600',
                     pointerEvents: 'none',
@@ -95,22 +95,22 @@ export function TutorialBanner({ title, instructions, timeOfDay = 'day', isCompl
               </>
             ) : (
               <>
-                <h3 
+                <h3
                   className="text-amber-950"
-                  style={{ 
-                    fontSize: 'clamp(14px, 3.5vw, 18px)', 
+                  style={{
+                    fontSize: 'clamp(14px, 3.5vw, 18px)',
                     fontWeight: '900',
                     textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                     marginBottom: 'clamp(4px, 1vh, 8px)',
                     pointerEvents: 'none',
                   }}
                 >
-                  📚 {title}
+                  {title}
                 </h3>
-                <p 
+                <p
                   className="text-amber-900"
-                  style={{ 
-                    fontSize: 'clamp(12px, 3vw, 15px)', 
+                  style={{
+                    fontSize: 'clamp(12px, 3vw, 15px)',
                     lineHeight: '1.4',
                     fontWeight: '600',
                     pointerEvents: 'none',
@@ -121,18 +121,10 @@ export function TutorialBanner({ title, instructions, timeOfDay = 'day', isCompl
               </>
             )}
           </div>
-          
-          {/* Bouton "Suivant" - FLEXBOX au lieu de position absolute */}
+
+          {/* Bouton Suivant */}
           {isCompleted && onNext && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                flexShrink: 0,
-                marginLeft: 'clamp(8px, 2vw, 12px)',
-                pointerEvents: 'none',
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, marginLeft: 'clamp(8px, 2vw, 12px)', pointerEvents: 'none' }}>
               <button
                 onClick={onNext}
                 style={{
@@ -141,10 +133,7 @@ export function TutorialBanner({ title, instructions, timeOfDay = 'day', isCompl
                   border: '3px solid rgba(4, 120, 87, 0.3)',
                   padding: 'clamp(12px, 3vh, 16px) clamp(20px, 4vw, 28px)',
                   borderRadius: '12px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   minWidth: 'clamp(100px, 20vw, 140px)',
                   minHeight: 'clamp(44px, 6vh, 56px)',
                   pointerEvents: 'auto',
@@ -155,9 +144,7 @@ export function TutorialBanner({ title, instructions, timeOfDay = 'day', isCompl
                   outline: 'none',
                 }}
               >
-                <span className="text-white" style={{ fontSize: 'clamp(13px, 3vw, 16px)', fontWeight: '700', pointerEvents: 'none' }}>
-                  Suivant
-                </span>
+                <span className="text-white" style={{ fontSize: 'clamp(13px, 3vw, 16px)', fontWeight: '700', pointerEvents: 'none' }}>Suivant</span>
                 <span className="text-white" style={{ fontSize: 'clamp(14px, 3.5vw, 18px)', pointerEvents: 'none' }}>→</span>
               </button>
             </div>

@@ -1,6 +1,7 @@
 import { Tree } from '../types/game';
 import { PondShape } from './mapGenerator';
 import { generateGrassGrid } from './grassGenerator';
+import { treeX, treeY } from './gridUtils';
 
 
 export interface LevelData {
@@ -30,8 +31,8 @@ export function generateLevel1(cellSize: number): LevelData {
   const trees: Tree[] = [];
   
   // Arbre de départ du joueur (gauche, milieu vertical)
-  const playerTreeX = 2 * cellSize + cellSize / 2; // Colonne 2
-  const playerTreeY = 4 * cellSize + cellSize / 2; // Ligne 4 (milieu)
+  const playerTreeX = treeX(2, cellSize); // Colonne 2
+  const playerTreeY = treeY(4, cellSize); // Ligne 4 (milieu)
   
   trees.push({
     id: 'player-start',
@@ -50,8 +51,8 @@ export function generateLevel1(cellSize: number): LevelData {
   });
 
   // Arbre de départ de l'ennemi (droite, milieu vertical - SYMÉTRIQUE)
-  const enemyTreeX = 10 * cellSize + cellSize / 2; // Colonne 10 (symétrique à 2)
-  const enemyTreeY = 4 * cellSize + cellSize / 2; // Ligne 4 (même hauteur)
+  const enemyTreeX = treeX(10, cellSize); // Colonne 10 (symétrique à 2)
+  const enemyTreeY = treeY(4, cellSize); // Ligne 4 (même hauteur)
   
   trees.push({
     id: 'enemy-start',
@@ -70,8 +71,8 @@ export function generateLevel1(cellSize: number): LevelData {
   });
 
   // Arbre neutre du haut (milieu-gauche)
-  const neutralTree1X = 5 * cellSize + cellSize / 2; // Colonne 5
-  const neutralTree1Y = 2 * cellSize + cellSize / 2; // Ligne 2 (haut)
+  const neutralTree1X = treeX(5, cellSize); // Colonne 5
+  const neutralTree1Y = treeY(2, cellSize); // Ligne 2 (haut)
   
   trees.push({
     id: 'neutral-1',
@@ -90,8 +91,8 @@ export function generateLevel1(cellSize: number): LevelData {
   });
 
   // Arbre neutre du bas (milieu-droite - SYMÉTRIQUE au premier)
-  const neutralTree2X = 7 * cellSize + cellSize / 2; // Colonne 7 (symétrique à 5)
-  const neutralTree2Y = 6 * cellSize + cellSize / 2; // Ligne 6 (bas, symétrique à 2)
+  const neutralTree2X = treeX(7, cellSize); // Colonne 7 (symétrique à 5)
+  const neutralTree2Y = treeY(6, cellSize); // Ligne 6 (bas, symétrique à 2)
   
   trees.push({
     id: 'neutral-2',

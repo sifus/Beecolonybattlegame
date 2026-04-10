@@ -26,6 +26,7 @@ import { useSolarSystem } from './hooks/useSolarSystem';
 import { useGameLoop } from './hooks/useGameLoop';
 import { GameBoard } from './components/GameBoard';
 import { motion } from 'motion/react';
+import { BEE_ORBIT_RADIUS, GRID_COLS, GRID_ROWS } from './constants/gameRules';
 
 // Désactiver les toasts
 const toast = {
@@ -57,8 +58,8 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   const availH = window.innerHeight || 844;
 
   // Grille fixe 13×8 cases visibles, bordure incluse (1 case de chaque côté)
-  const totalCols = 13;
-  const totalRows = 8;
+  const totalCols = GRID_COLS;
+  const totalRows = GRID_ROWS;
 
   const cellSizeByWidth  = Math.floor(availW / totalCols);
   const cellSizeByHeight = Math.floor(availH / totalRows);
@@ -138,7 +139,8 @@ export default function App() {
   const [selectionCurrent, setSelectionCurrent] = useState<{ x: number; y: number } | null>(null);
   const [selectionCircle, setSelectionCircle] = useState<{ x: number; y: number; radius: number } | null>(null);
   const [flashEffect, setFlashEffect] = useState<{ x: number; y: number; type: 'small' | 'large' } | null>(null);
-  const [waterSplashes, setWaterSplashes] = useState<Array<{ x: number; y: number; id: string; timestamp: number }>>([]);
+  const [waterSplashes, setWaterSplashes] = useState<Array<{ x: number; y: number; id: string; timestamp: number; pondIdx: number }>>([]);
+  const [dyingBees, setDyingBees] = useState<Array<{ id: string; x: number; y: number; timestamp: number; owner: string }>>([]);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
@@ -176,7 +178,7 @@ export default function App() {
         // Position bees from the first hive
         for (let i = 0; i < tree.beeCount; i++) {
           const angle = (i / tree.beeCount) * Math.PI * 2;
-          const radius = 38;
+          const radius = BEE_ORBIT_RADIUS;
           initialBees.push({
             id: `bee-${tree.id}-${i}-${Date.now()}`,
             x: tree.x + Math.cos(angle) * radius,
@@ -318,6 +320,7 @@ export default function App() {
     beeConsumedByPondRef,
     setWaterSplashes,
     setFlashEffect,
+    setDyingBees,
   });
 
   // Check win/lose condition
@@ -396,10 +399,9 @@ export default function App() {
           const isFirstBattle = currentSubLevel === 4; // Premier combat (Level 1-5)
           
           if (isTutorialLevel && !isFirstBattle) {
-            // Tutoriels 1-4 : on ne s'arrête pas - le joueur peut continuer à s'entraîner
-            const stars = 3; // Pas de système d'étoiles pour le tutoriel
-            handleLevelComplete(stars, true); // true = ne pas afficher le modal
-            setTutorialCompleted(true); // Mettre à jour la cartouche tutoriel
+            const stars = 3;
+            handleLevelComplete(stars, true); // pas de popup — le bouton Suivant dans la bannière suffit
+            setTutorialCompleted(true);
           } else {
             // Premier combat (Level 1-5) OU niveaux normaux : arrêter le jeu et afficher le modal
             const stars = playerAliveHives >= 2 ? 3 : playerAliveHives >= 1 ? 2 : 1;
@@ -449,6 +451,35 @@ export default function App() {
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [selectionStart]);
+
+  // Raccourci clavier R / E — sous-niveau suivant / précédent (test tuto)
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (currentScreen !== 'story') return;
+      const { currentLevel, currentSubLevel } = levelProgress;
+      const level = levelProgress.levels.find(l => l.id === currentLevel);
+      if (!level) return;
+
+      if (e.key === 'r' || e.key === 'R') {
+        const nextIndex = currentSubLevel + 1;
+        if (nextIndex < level.subLevels.length) {
+          startLevel(currentLevel, nextIndex);
+        } else {
+          // Dernier sous-niveau : déclencher la popup de fin
+          setCurrentStars(3);
+          setShowLevelComplete(true);
+          setGameState(prev => ({ ...prev, isPlaying: false }));
+        }
+      }
+
+      if (e.key === 'e' || e.key === 'E') {
+        const prevIndex = currentSubLevel - 1;
+        if (prevIndex >= 0) startLevel(currentLevel, prevIndex);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [currentScreen, levelProgress]);
 
   // Raccourci clavier T — spawn 20 abeilles de test sur l'arbre joueur
   useEffect(() => {
@@ -1128,8 +1159,10 @@ export default function App() {
 
   const handleBackToMenu = () => {
     setCurrentScreen('menu');
-    setTutorialCompleted(false); // Réinitialiser le statut du tutoriel
-    // Rétablir les gridParams normaux quand on quitte le mode histoire
+    setShowLevelComplete(false);
+    setTutorialCompleted(false);
+    setLevelProgress({ currentLevel: 1, currentSubLevel: 0, levels: INITIAL_LEVELS });
+    resetLevelProgress();
     const normalGridParams = calculateGridParams();
     setGridParams(normalGridParams);
   };
@@ -1139,7 +1172,21 @@ export default function App() {
   };
 
   const handleStartTutorial = () => {
+    setShowLevelComplete(false);
     startLevel(1, 0);
+  };
+
+  const handleRestartTutorial = () => {
+    setShowLevelComplete(false);
+    startLevel(1, 0);
+  };
+
+  const handleStartQuickGameFromTutorial = () => {
+    setShowLevelComplete(false);
+    setTutorialCompleted(false);
+    setLevelProgress({ currentLevel: 1, currentSubLevel: 0, levels: INITIAL_LEVELS });
+    resetLevelProgress();
+    handleStartGame();
   };
 
   const handleResetProgress = () => {
@@ -1294,22 +1341,42 @@ export default function App() {
         }
       );
       
+      const initialTrees = levelConfig.trees.map((tree, index) => ({
+        ...tree,
+        id: `tree-${index}`,
+      }));
+
+      const initialBees: BeeType[] = [];
+      initialTrees.forEach((tree) => {
+        if (tree.beeCount > 0 && tree.hiveHealth.length > 0) {
+          for (let i = 0; i < tree.beeCount; i++) {
+            const angle = (i / tree.beeCount) * Math.PI * 2;
+            const radius = BEE_ORBIT_RADIUS;
+            initialBees.push({
+              id: `bee-${tree.id}-${i}-${Date.now()}`,
+              x: tree.x + Math.cos(angle) * radius,
+              y: tree.y + Math.sin(angle) * radius,
+              owner: tree.owner,
+              treeId: tree.id,
+              targetTreeId: null,
+              state: 'idle',
+              angle,
+              createdAt: undefined,
+            });
+          }
+        }
+      });
+
       setMapData({
-        trees: levelConfig.trees.map((tree, index) => ({
-          ...tree,
-          id: `tree-${index}`,
-        })),
+        trees: initialTrees,
         ponds: levelConfig.ponds,
         grassGrid: levelConfig.grassGrid,
       });
-      
+
       setGameOver(null);
       setGameState({
-        trees: levelConfig.trees.map((tree, index) => ({
-          ...tree,
-          id: `tree-${index}`,
-        })),
-        bees: [],
+        trees: initialTrees,
+        bees: initialBees,
         selectedBeeIds: new Set(),
         gameTime: 0,
         isPlaying: true,
@@ -1317,23 +1384,26 @@ export default function App() {
         haloEffects: [],
         fireflies: [],
       });
-      
+
       setLastClickedTreeId(null);
       setLastClickTime(0);
     }
-    
+
     setCurrentScreen('story');
   };
 
   const handleLevelClick = (levelId: number) => startLevel(levelId, 0);
   const handleSubLevelClick = (levelId: number, subLevelIndex: number) => startLevel(levelId, subLevelIndex);
 
-  const handleLevelComplete = (stars: number, skipModal: boolean = false) => {
+  const handleLevelComplete = (stars: number, skipModal: boolean = false, delay: number = 0) => {
     setCurrentStars(stars);
-    
-    // Pour le tutoriel, ne pas afficher le modal
+
     if (!skipModal) {
-      setShowLevelComplete(true);
+      if (delay > 0) {
+        setTimeout(() => setShowLevelComplete(true), delay);
+      } else {
+        setShowLevelComplete(true);
+      }
     }
     
     // Update progress
@@ -1662,6 +1732,7 @@ export default function App() {
           leftHanded={leftHanded}
           flashEffect={flashEffect}
           waterSplashes={waterSplashes}
+          dyingBees={dyingBees}
           ripples={ripples}
           svgRef={svgRef}
           onMouseDown={handleMouseDown}
@@ -1708,6 +1779,7 @@ export default function App() {
           onDragStart={handleTreeDragStart}
           isDragging={isDragging}
           hasSelection={!!selectionStart}
+          isTutorial={currentScreen === 'story' && levelProgress.currentLevel === 1}
         />
 
         {/* Ambient Sound */}
@@ -1724,8 +1796,9 @@ export default function App() {
         {currentScreen === 'story' && showLevelComplete && (
           <LevelCompleteModal
             stars={currentStars}
-            onRestart={handleRestartLevel}
+            onRestart={levelProgress.currentLevel === 1 && levelProgress.currentSubLevel === 4 ? handleRestartTutorial : handleRestartLevel}
             onNext={handleNextLevel}
+            onStartQuickGame={handleStartQuickGameFromTutorial}
             timeOfDay={globalTimeOfDay}
             isFinalTutorial={levelProgress.currentLevel === 1 && levelProgress.currentSubLevel === 4}
           />

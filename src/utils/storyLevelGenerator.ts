@@ -1,6 +1,7 @@
 import { Tree } from '../types/game';
 import { SubLevelType } from '../types/levels';
 import { generateGrassGrid } from './grassGenerator';
+import { treeX, treeY } from './gridUtils';
 
 interface LevelConfig {
   trees: Omit<Tree, 'id'>[];
@@ -11,6 +12,10 @@ interface LevelConfig {
 
 /**
  * Génère la configuration d'un sous-niveau du tutoriel
+ *
+ * Position d'un arbre dans son carré (constante partagée avec mapGenerator.ts) :
+ *   x = col * cellSize + cellSize / 2
+ *   y = row * cellSize + cellSize * 0.2
  */
 export function generateStoryLevel(
   levelId: number,
@@ -35,6 +40,7 @@ export function generateStoryLevel(
   const gameCols = gameEndCol - gameStartCol + 1;
   const grassGrid = generateGrassGrid(rows, cols, cellSize);
 
+
   const config: LevelConfig = {
     trees: [],
     ponds: [],
@@ -44,16 +50,16 @@ export function generateStoryLevel(
 
   // Level 1-1: Movement tutorial (déplacement)
   if (levelId === 1 && subLevelIndex === 0) {
-    // Arbre de départ du joueur (gauche de la zone de jeu, centré verticalement)
     const centerY = gameStartRow + Math.floor(gameRows / 2);
-    const safeY = Math.max(centerY, gameStartRow + 3); // Au moins 3 cellules depuis le début
+    const safeRow = Math.max(centerY, gameStartRow + 3);
+    const centerCol = gameStartCol + Math.floor(gameCols / 2);
     config.trees.push({
-      x: cellSize * (gameStartCol + 1.5),
-      y: cellSize * safeY,
+      x: treeX(centerCol - 2, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'player',
       hiveCount: 1,
       maxHives: 1,
-      beeCount: 10,
+      beeCount: 0,
       hiveHealth: [7],
       hiveLevel: [1],
       buildingProgress: [],
@@ -61,10 +67,9 @@ export function generateStoryLevel(
       isStartingTree: true,
     });
 
-    // Un seul arbre neutre cible (à droite de la zone de jeu, centré verticalement)
     config.trees.push({
-      x: cellSize * (gameEndCol - 0.5),
-      y: cellSize * safeY,
+      x: treeX(centerCol + 2, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'neutral',
       hiveCount: 0,
       maxHives: 1,
@@ -78,16 +83,15 @@ export function generateStoryLevel(
 
   // Level 1-2: Build hive tutorial (construction)
   else if (levelId === 1 && subLevelIndex === 1) {
-    // Arbre de départ avec plus d'abeilles
     const centerY = gameStartRow + Math.floor(gameRows / 2);
-    const safeY = Math.max(centerY, gameStartRow + 3);
+    const safeRow = Math.max(centerY, gameStartRow + 3);
     config.trees.push({
-      x: cellSize * (gameStartCol + 2.5),
-      y: cellSize * safeY,
+      x: treeX(gameStartCol + 2, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'player',
       hiveCount: 1,
       maxHives: 1,
-      beeCount: 15,
+      beeCount: 10,
       hiveHealth: [7],
       hiveLevel: [1],
       buildingProgress: [],
@@ -99,10 +103,10 @@ export function generateStoryLevel(
     const spacing = Math.floor(gameCols / 4);
     for (let i = 0; i < 3; i++) {
       const offsetY = i % 2 === 0 ? -1 : 1;
-      const treeY = Math.max(Math.min(safeY + offsetY, gameEndRow - 1), gameStartRow + 3);
+      const treeRow = Math.max(Math.min(safeRow + offsetY, gameEndRow - 1), gameStartRow + 3);
       config.trees.push({
-        x: cellSize * (gameStartCol + 4 + i * spacing),
-        y: cellSize * treeY,
+        x: treeX(gameStartCol + 4 + i * spacing, cellSize),
+        y: treeY(treeRow, cellSize),
         owner: 'neutral',
         hiveCount: 0,
         maxHives: 1,
@@ -117,16 +121,15 @@ export function generateStoryLevel(
 
   // Level 1-3: Upgrade hive tutorial (amélioration)
   else if (levelId === 1 && subLevelIndex === 2) {
-    // Arbre de départ
     const centerY = gameStartRow + Math.floor(gameRows / 2);
-    const safeY = Math.max(centerY, gameStartRow + 3);
+    const safeRow = Math.max(centerY, gameStartRow + 3);
     config.trees.push({
-      x: cellSize * (gameStartCol + 2.5),
-      y: cellSize * safeY,
+      x: treeX(gameStartCol + 2, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'player',
       hiveCount: 1,
       maxHives: 1,
-      beeCount: 30,
+      beeCount: 10,
       hiveHealth: [7],
       hiveLevel: [1],
       buildingProgress: [],
@@ -136,8 +139,8 @@ export function generateStoryLevel(
 
     // Groupe d'arbres neutre proche (maxHives: 2 pour permettre la 2ème ruche)
     config.trees.push({
-      x: cellSize * (gameStartCol + 6),
-      y: cellSize * safeY,
+      x: treeX(gameStartCol + 6, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'neutral',
       hiveCount: 0,
       maxHives: 2,
@@ -151,16 +154,15 @@ export function generateStoryLevel(
 
   // Level 1-4: Dangers tutorial (étangs)
   else if (levelId === 1 && subLevelIndex === 3) {
-    // Arbre de départ
     const centerY = gameStartRow + Math.floor(gameRows / 2);
-    const safeY = Math.max(centerY, gameStartRow + 3);
+    const safeRow = Math.max(centerY, gameStartRow + 3);
     config.trees.push({
-      x: cellSize * (gameStartCol + 2.5),
-      y: cellSize * safeY,
+      x: treeX(gameStartCol + 2, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'player',
       hiveCount: 1,
       maxHives: 1,
-      beeCount: 20,
+      beeCount: 10,
       hiveHealth: [7],
       hiveLevel: [1],
       buildingProgress: [],
@@ -170,8 +172,8 @@ export function generateStoryLevel(
 
     // Arbre cible de l'autre côté de l'étang
     config.trees.push({
-      x: cellSize * (gameEndCol - 3),
-      y: cellSize * safeY,
+      x: treeX(gameEndCol - 3, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'neutral',
       hiveCount: 0,
       maxHives: 1,
@@ -186,7 +188,7 @@ export function generateStoryLevel(
     const centerCol = gameStartCol + Math.floor(gameCols / 2);
     config.ponds.push({
       x: cellSize * (centerCol - 1.5),
-      y: cellSize * (safeY - 0.5),
+      y: cellSize * (safeRow - 0.5),
       width: 3,
       height: 2,
     });
@@ -194,16 +196,15 @@ export function generateStoryLevel(
 
   // Level 1-5: First battle tutorial (premier combat)
   else if (levelId === 1 && subLevelIndex === 4) {
-    // Arbre de départ du joueur
     const centerY = gameStartRow + Math.floor(gameRows / 2);
-    const safeY = Math.max(centerY, gameStartRow + 3);
+    const safeRow = Math.max(centerY, gameStartRow + 3);
     config.trees.push({
-      x: cellSize * (gameStartCol + 2.5),
-      y: cellSize * safeY,
+      x: treeX(gameStartCol + 2, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'player',
       hiveCount: 1,
       maxHives: 1,
-      beeCount: 15,
+      beeCount: 0,
       hiveHealth: [7],
       hiveLevel: [1],
       buildingProgress: [],
@@ -214,8 +215,8 @@ export function generateStoryLevel(
     // Un seul arbre neutre au milieu (tutoriel simplifié)
     const centerCol = gameStartCol + Math.floor(gameCols / 2);
     config.trees.push({
-      x: cellSize * centerCol,
-      y: cellSize * safeY,
+      x: treeX(centerCol, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'neutral',
       hiveCount: 0,
       maxHives: 1,
@@ -228,13 +229,13 @@ export function generateStoryLevel(
 
     // Arbre ennemi (faible mais un peu actif)
     config.trees.push({
-      x: cellSize * (gameEndCol - 3),
-      y: cellSize * safeY,
+      x: treeX(gameEndCol - 3, cellSize),
+      y: treeY(safeRow, cellSize),
       owner: 'enemy',
       hiveCount: 1,
       maxHives: 1,
-      beeCount: 8, // Augmenté pour être un peu actif
-      hiveHealth: [7], // Santé normale
+      beeCount: 0,
+      hiveHealth: [7],
       hiveLevel: [1],
       buildingProgress: [],
       upgradingProgress: 0,

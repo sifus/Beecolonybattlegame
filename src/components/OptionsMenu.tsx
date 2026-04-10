@@ -59,7 +59,7 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
             fontWeight: '900'
           }}
         >
-          ⚙️ Options
+          Options
         </h1>
       </div>
 
@@ -158,35 +158,6 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                   </div>
                 </div>
 
-                {/* Gameplay */}
-                <div className="border-b pb-4" style={{ borderColor: 'rgba(120, 53, 15, 0.3)' }}>
-                  <h3 className="mb-3 flex items-center gap-2 text-amber-950" style={{ fontSize: '18px', fontWeight: '700' }}>
-                    <Axe className="w-5 h-5" />
-                    Gameplay
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="mb-1 text-amber-950" style={{ fontSize: '15px', fontWeight: '700' }}>
-                        Bûcherons (Difficile)
-                      </p>
-                      <p className="text-amber-900" style={{ fontSize: '13px', lineHeight: '1.4' }}>
-                        Ils coupent les arbres
-                      </p>
-                    </div>
-                    <div
-                      className="px-3 py-1.5 rounded-full text-center"
-                      style={{
-                        background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
-                      }}
-                    >
-                      <span className="text-amber-950" style={{ fontSize: '12px', fontWeight: '700' }}>
-                        Arrive bientôt
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Accessibilité */}
                 <div className="border-b pb-4" style={{ borderColor: 'rgba(120, 53, 15, 0.3)' }}>
                   <h3 className="mb-3 flex items-center gap-2 text-amber-950" style={{ fontSize: '18px', fontWeight: '700' }}>
@@ -222,8 +193,37 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                   </div>
                 </div>
 
-                {/* Réinitialisation progression */}
+                {/* Gameplay */}
                 <div>
+                  <h3 className="mb-3 flex items-center gap-2 text-amber-950" style={{ fontSize: '18px', fontWeight: '700' }}>
+                    <Axe className="w-5 h-5" />
+                    Gameplay
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="mb-1 text-amber-950" style={{ fontSize: '15px', fontWeight: '700' }}>
+                        Bûcherons (Difficile)
+                      </p>
+                      <p className="text-amber-900" style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                        Ils coupent les arbres
+                      </p>
+                    </div>
+                    <div
+                      className="px-3 py-1.5 rounded-full text-center"
+                      style={{
+                        background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <span className="text-amber-950" style={{ fontSize: '12px', fontWeight: '700' }}>
+                        Arrive bientôt
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Réinitialisation progression — masqué temporairement */}
+                {/* <div>
                   <h3 className="mb-3 flex items-center gap-2 text-amber-950" style={{ fontSize: '18px', fontWeight: '700' }}>
                     <RotateCcw className="w-5 h-5" />
                     Progression
@@ -250,7 +250,7 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                       </span>
                     </button>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
         </div>

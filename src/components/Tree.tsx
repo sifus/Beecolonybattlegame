@@ -1,5 +1,5 @@
 import { Tree as TreeType } from '../types/game';
-import { HIVE_L1_HP, HIVE_L2_HP } from '../constants/gameRules';
+import { HIVE_L1_HP, HIVE_L2_HP, BUILD_HIVE_COST, UPGRADE_HIVE_COST } from '../constants/gameRules';
 
 interface TreeProps {
   tree: TreeType;
@@ -50,8 +50,8 @@ export function Tree({
 
     const buildPct = isUnderConstruction
       ? index === 1 && tree.upgradingProgress
-        ? tree.upgradingProgress / 20
-        : ((tree.buildingProgress?.[index] ?? 0) / 5)
+        ? tree.upgradingProgress / UPGRADE_HIVE_COST
+        : ((tree.buildingProgress?.[index] ?? 0) / BUILD_HIVE_COST)
       : healthPercent;
 
     const clipId = `hive-clip-${tree.id}-${index}`;
@@ -272,9 +272,9 @@ export function Tree({
           return (
             <g key="upgrade-bar">
               <rect x={barX} y={barY} width={barW} height={barH} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
-              <rect x={barX} y={barY} width={(barW * tree.upgradingProgress) / 20} height={barH} fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s} />
+              <rect x={barX} y={barY} width={(barW * tree.upgradingProgress) / UPGRADE_HIVE_COST} height={barH} fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s} />
               <text x={upgCx} y={barY - 6 * s} textAnchor="middle" dominantBaseline="middle" fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke" fontSize={12 * s} fontWeight="bold">
-                ⬆ {tree.upgradingProgress}/20
+                ⬆ {tree.upgradingProgress}/{UPGRADE_HIVE_COST}
               </text>
             </g>
           );
@@ -292,9 +292,9 @@ export function Tree({
           return (
             <g key="build-bar">
               <rect x={barX} y={barY} width={barW} height={barH} fill="#333" stroke="#000" strokeWidth={s} rx={2 * s} />
-              <rect x={barX} y={barY} width={(barW * prog) / 5} height={barH} fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s} />
+              <rect x={barX} y={barY} width={(barW * prog) / BUILD_HIVE_COST} height={barH} fill="#FDD835" stroke="#F57C00" strokeWidth={s} rx={2 * s} />
               <text x={bpCx} y={barY - 6 * s} textAnchor="middle" dominantBaseline="middle" fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke" fontSize={12 * s} fontWeight="bold">
-                ⬆ {prog}/5
+                ⬆ {prog}/{BUILD_HIVE_COST}
               </text>
             </g>
           );

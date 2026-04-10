@@ -9,6 +9,7 @@ import {
   HIVE_L1_HP,
   HIVE_L2_HP,
   MAX_BEES,
+  BEE_ORBIT_RADIUS,
 } from '../constants/gameRules';
 
 const toast = {
@@ -54,8 +55,9 @@ interface UseGameLoopParams {
   currentScreen: string;
   levelProgress: LevelProgress;
   beeConsumedByPondRef: React.MutableRefObject<boolean>;
-  setWaterSplashes: React.Dispatch<React.SetStateAction<Array<{ x: number; y: number; id: string; timestamp: number }>>>;
+  setWaterSplashes: React.Dispatch<React.SetStateAction<Array<{ x: number; y: number; id: string; timestamp: number; pondIdx: number }>>>;
   setFlashEffect: React.Dispatch<React.SetStateAction<{ x: number; y: number; type: 'small' | 'large' } | null>>;
+  setDyingBees: React.Dispatch<React.SetStateAction<Array<{ id: string; x: number; y: number; timestamp: number; owner: string }>>>;
 }
 
 export function useGameLoop({
@@ -69,6 +71,7 @@ export function useGameLoop({
   beeConsumedByPondRef,
   setWaterSplashes,
   setFlashEffect,
+  setDyingBees,
 }: UseGameLoopParams): void {
 
   // Game loop — 60 FPS : déplacements abeilles, combat, construction
@@ -101,12 +104,27 @@ export function useGameLoop({
 
             if (tree && !tree.isCut) {
               bee.angle += 0.01;
-              const baseRadius = 38;
+              const baseRadius = BEE_ORBIT_RADIUS;
               const radiusVariation = ((parseInt(bee.id.slice(-5), 36) % 16) - 8);
               const radius = baseRadius + radiusVariation;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
               bee.y = tree.y + Math.sin(bee.angle) * radius;
               bee.displayAngle = bee.angle + Math.PI / 2;
+
+              // Abeilles idle au-dessus d'un marais — meurent moins vite
+              const idlePondIdx = mapData.ponds.findIndex(pond =>
+                bee.x >= pond.x && bee.x <= pond.x + pond.width * gridParams.cellSize &&
+                bee.y >= pond.y && bee.y <= pond.y + pond.height * gridParams.cellSize
+              );
+              if (idlePondIdx !== -1 && Math.random() < 0.0005) {
+                beesToRemove.add(bee.id);
+                const dyingId = `dying-${bee.id}-${Date.now()}`;
+                setDyingBees(prev => [...prev, { id: dyingId, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner }]);
+                setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId)), 300);
+                const splashId = `splash-idle-${Date.now()}-${Math.random()}`;
+                setWaterSplashes(prev => [...prev, { x: bee.x, y: bee.y, id: splashId, timestamp: Date.now(), pondIdx: idlePondIdx }]);
+                setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
+              }
             } else if (tree && tree.isCut) {
               bee.treeId = null;
 
@@ -184,29 +202,32 @@ export function useGameLoop({
                 bee.x += (dx / dist) * speed;
                 bee.y += (dy / dist) * speed;
 
-                const isOverPond = mapData.ponds.some(pond => {
+                const pondIdx1 = mapData.ponds.findIndex(pond => {
                   return bee.x >= pond.x &&
                          bee.x <= pond.x + pond.width * gridParams.cellSize &&
                          bee.y >= pond.y &&
                          bee.y <= pond.y + pond.height * gridParams.cellSize;
                 });
+                const isOverPond = pondIdx1 !== -1;
 
-                if (isOverPond && Math.random() < 0.002) {
+                if (isOverPond && Math.random() < 0.0015) {
                   beesToRemove.add(bee.id);
 
                   beeConsumedByPondRef.current = true;
+
+                  const dyingId = `dying-${bee.id}-${Date.now()}`;
+                  setDyingBees(prev => [...prev, { id: dyingId, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner }]);
+                  setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId)), 300);
 
                   const splashId = `splash-${Date.now()}-${Math.random()}`;
                   setWaterSplashes(prev => [...prev, {
                     x: bee.x,
                     y: bee.y,
                     id: splashId,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    pondIdx: pondIdx1,
                   }]);
-
-                  setTimeout(() => {
-                    setWaterSplashes(prev => prev.filter(s => s.id !== splashId));
-                  }, 800);
+                  setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
                 }
               }
             }
@@ -227,27 +248,30 @@ export function useGameLoop({
               bee.x += (dx / dist) * speed;
               bee.y += (dy / dist) * speed;
 
-              const isOverPond = mapData.ponds.some(pond => {
+              const pondIdx2 = mapData.ponds.findIndex(pond => {
                 return bee.x >= pond.x &&
                        bee.x <= pond.x + pond.width * gridParams.cellSize &&
                        bee.y >= pond.y &&
                        bee.y <= pond.y + pond.height * gridParams.cellSize;
               });
+              const isOverPond = pondIdx2 !== -1;
 
-              if (isOverPond && Math.random() < 0.002) {
+              if (isOverPond && Math.random() < 0.0015) {
                 beesToRemove.add(bee.id);
+
+                const dyingId2 = `dying-${bee.id}-${Date.now()}`;
+                setDyingBees(prev => [...prev, { id: dyingId2, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner }]);
+                setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId2)), 300);
 
                 const splashId = `splash-${Date.now()}-${Math.random()}`;
                 setWaterSplashes(prev => [...prev, {
                   x: bee.x,
                   y: bee.y,
                   id: splashId,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
+                  pondIdx: pondIdx2,
                 }]);
-
-                setTimeout(() => {
-                  setWaterSplashes(prev => prev.filter(s => s.id !== splashId));
-                }, 800);
+                setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
               }
             }
           } else if (bee.state === 'building' && (bee as any).buildingTreeId) {
@@ -696,7 +720,7 @@ export function useGameLoop({
 
                   const beeId = `bee-${tree.id}-${now}-${Math.random()}`;
 
-                  const baseRadius = 38;
+                  const baseRadius = BEE_ORBIT_RADIUS;
                   const radiusVariation = ((parseInt(beeId.slice(-5), 36) % 16) - 8);
                   const radius = baseRadius + radiusVariation;
                   const targetX = tree.x + Math.cos(angle) * radius;

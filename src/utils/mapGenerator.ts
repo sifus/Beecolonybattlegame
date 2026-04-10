@@ -1,6 +1,8 @@
 import { Tree } from '../types/game';
 import { generateGrassGrid } from './grassGenerator';
 import { QUICK_PLAY_RULES } from '../constants/quickPlayRules';
+import { treeX, treeY } from './gridUtils';
+import { GRID_COLS, GRID_ROWS } from '../constants/gameRules';
 
 export interface PondShape {
   x: number;
@@ -11,8 +13,8 @@ export interface PondShape {
 
 export function generateRandomMap(
   cellSize: number, 
-  gridRows: number = 7, 
-  gridCols: number = 13,
+  gridRows: number = GRID_ROWS,
+  gridCols: number = GRID_COLS,
   options?: {
     gameStartRow?: number;
     gameEndRow?: number;
@@ -211,9 +213,9 @@ export function generateRandomMap(
         // Mark cell as occupied by tree
         treesOccupiedCells.add(`${gridX},${gridY}`);
         // Tree centered in its grid cell (same as grass grid rendering)
-        return { 
-          x: gridX * cellSize + cellSize / 2, 
-          y: gridY * cellSize + cellSize * 0.2
+        return {
+          x: treeX(gridX, cellSize),
+          y: treeY(gridY, cellSize)
         };
       }
       attempts++;
@@ -237,26 +239,26 @@ export function generateRandomMap(
             !treesOccupiedCells.has(cellAboveKey)) {
           treesOccupiedCells.add(cellKey);
           
-          return { 
-            x: x * cellSize + cellSize / 2, 
-            y: y * cellSize + cellSize * 0.2
+          return {
+            x: treeX(x, cellSize),
+            y: treeY(y, cellSize)
           };
         }
       }
     }
-    
+
     // PRIORITÉ 2: Si aucune cellule "idéale" trouvée, accepter une cellule même avec arbre au-dessus (fallback)
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
         const cellKey = `${x},${y}`;
-        
+
         // Vérifie si la cellule n'est PAS occupée par un étang ou un arbre
         if (!occupiedCells.has(cellKey) && !treesOccupiedCells.has(cellKey)) {
           treesOccupiedCells.add(cellKey);
-          
-          return { 
-            x: x * cellSize + cellSize / 2, 
-            y: y * cellSize + cellSize * 0.2
+
+          return {
+            x: treeX(x, cellSize),
+            y: treeY(y, cellSize)
           };
         }
       }
@@ -272,9 +274,9 @@ export function generateRandomMap(
     const centerGridX = Math.floor(cols / 2);
     const centerGridY = Math.floor(rows / 2);
     
-    return { 
-      x: centerGridX * cellSize + cellSize / 2, 
-      y: centerGridY * cellSize + cellSize * 0.2
+    return {
+      x: treeX(centerGridX, cellSize),
+      y: treeY(centerGridY, cellSize)
     };
   }
   

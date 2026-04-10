@@ -34,7 +34,8 @@ interface GameBoardProps {
   selectionCurrent: { x: number; y: number } | null;
   leftHanded?: boolean;
   flashEffect: { x: number; y: number; type: 'small' | 'large' } | null;
-  waterSplashes: Array<{ x: number; y: number; id: string; timestamp: number }>;
+  waterSplashes: Array<{ x: number; y: number; id: string; timestamp: number; pondIdx: number }>;
+  dyingBees: Array<{ id: string; x: number; y: number; timestamp: number; owner: string }>;
   ripples: { id: number; x: number; y: number }[];
   svgRef: React.RefObject<SVGSVGElement>;
   onMouseDown: (e: React.MouseEvent<SVGSVGElement>) => void;
@@ -89,6 +90,7 @@ export function GameBoard({
   leftHanded = false,
   flashEffect,
   waterSplashes,
+  dyingBees,
   ripples,
   svgRef,
   onMouseDown,
@@ -518,37 +520,68 @@ export function GameBoard({
           );
         })}
 
+        {/* Dying bees — fade out + onde de choc blanche */}
+        {dyingBees.map((bee) => {
+          const age = Date.now() - bee.timestamp;
+          const t = age / 300; // 0→1 sur 300ms
+          const opacity = Math.max(0, 1 - t);
+          const shockR = 4 + t * 14; // onde blanche 4→18px
+          return (
+            <g key={bee.id} pointerEvents="none">
+              {/* Onde de choc blanche */}
+              <circle
+                cx={bee.x}
+                cy={bee.y}
+                r={shockR}
+                fill="none"
+                stroke="white"
+                strokeWidth={2}
+                opacity={opacity * 0.9}
+              />
+              {/* Corps abeille qui s'efface */}
+              <circle
+                cx={bee.x}
+                cy={bee.y}
+                r={4}
+                fill={bee.owner === 'player' ? '#FDB022' : bee.owner === 'enemy' ? '#ef4444' : '#9ca3af'}
+                opacity={opacity}
+              />
+            </g>
+          );
+        })}
+
         {/* Water splashes - when bees fall in ponds */}
         {waterSplashes.map((splash) => {
           const age = Date.now() - splash.timestamp;
           const opacity = Math.max(0, 1 - age / 800);
           const scale = 1 + (age / 800) * 0.5;
+          const clipPathId = `pond-clip-${splash.pondIdx}`;
 
           return (
-            <g key={splash.id} opacity={opacity}>
+            <g key={splash.id} opacity={opacity} clipPath={`url(#${clipPathId})`}>
               <circle
                 cx={splash.x}
                 cy={splash.y}
-                r={6 * scale}
+                r={7 * scale}
                 fill="none"
-                stroke="#4A90E2"
+                stroke="#ffffff"
+                strokeWidth={2.5}
+                opacity={0.9}
+              />
+              <circle
+                cx={splash.x}
+                cy={splash.y}
+                r={12 * scale}
+                fill="none"
+                stroke="#a8d8f0"
                 strokeWidth={2}
-                opacity={0.8}
+                opacity={0.7}
               />
               <circle
                 cx={splash.x}
                 cy={splash.y}
-                r={10 * scale}
-                fill="none"
-                stroke="#6CB4EE"
-                strokeWidth={1.5}
-                opacity={0.5}
-              />
-              <circle
-                cx={splash.x}
-                cy={splash.y}
-                r={3}
-                fill="#4A90E2"
+                r={3.5}
+                fill="#ffffff"
                 opacity={1}
               />
             </g>
