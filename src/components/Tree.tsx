@@ -21,8 +21,9 @@ export function Tree({
   playerBeesCount = 0,
 }: TreeProps) {
   const s = cellSize / 80;
+  const treeOffsetY = cellSize * 0.10; // décalage vertical de l'arbre dans sa cellule
   const treeIsColonized = tree.hiveCount > 0;
-  const trunkBottomY = tree.y + cellSize * 0.5;
+  const trunkBottomY = tree.y + cellSize * 0.5 + treeOffsetY;
   const trunkTopY      = trunkBottomY - 20 * s;
   const trunkTopYSmall = trunkBottomY - 18 * s; // petit arbre arrière-droite (bas à -4*s, hauteur 14*s)
   const trunkTopYLarge = trunkBottomY - 22 * s; // grand arbre avant-gauche (hauteur 22*s)
@@ -155,7 +156,7 @@ export function Tree({
               </defs>
               <ellipse
                 cx={tree.x + 55 * s}
-                cy={tree.y + cellSize * 0.5 - 4 * s}
+                cy={trunkBottomY - 4 * s}
                 rx={55 * s}
                 ry={16 * s}
                 fill={`url(#shadow-grad-${tree.id})`}
@@ -173,9 +174,9 @@ export function Tree({
                       fill="#7a5c3a"
                       rx={2 * s}
                     />
-                    <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * s} fill={foliageDark} />
-                    <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * s} fill={foliageDark} />
-                    <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * s} fill={foliageLight} />
+                    <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.10 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.10 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.10 * s} fill={foliageLight} />
                   </g>
 
                   {/* Large front-left tree (rendered second, on top) */}
@@ -187,9 +188,9 @@ export function Tree({
                     fill="#7a5c3a"
                     rx={3 * s}
                   />
-                  <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * s} fill={foliageDark} />
-                  <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * s} fill={foliageDark} />
-                  <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * s} fill={foliageLight} />
+                  <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.10 * s} fill={foliageDark} />
+                  <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.10 * s} fill={foliageDark} />
+                  <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.10 * s} fill={foliageLight} />
                   <ellipse
                     cx={tree.x - 18 * s} cy={trunkTopYLarge - 20 * s}
                     rx={12 * s} ry={10 * s}
@@ -207,9 +208,9 @@ export function Tree({
                     fill="#7a5c3a"
                     rx={2.5 * s}
                   />
-                  <circle cx={tree.x - 9 * s} cy={trunkTopY - 18 * s} r={26 * s} fill={foliageDark} />
-                  <circle cx={tree.x + 11 * s} cy={trunkTopY - 14 * s} r={22 * s} fill={foliageDark} />
-                  <circle cx={tree.x}          cy={trunkTopY - 28 * s} r={22 * s} fill={foliageLight} />
+                  <circle cx={tree.x - 9 * s} cy={trunkTopY - 18 * s} r={26 * 1.10 * s} fill={foliageDark} />
+                  <circle cx={tree.x + 11 * s} cy={trunkTopY - 14 * s} r={22 * 1.10 * s} fill={foliageDark} />
+                  <circle cx={tree.x}          cy={trunkTopY - 28 * s} r={22 * 1.10 * s} fill={foliageLight} />
                   <ellipse
                     cx={tree.x - 14 * s} cy={trunkTopY - 30 * s}
                     rx={9 * s} ry={7 * s}
@@ -347,7 +348,7 @@ export function Tree({
           const r = cellSize * 0.22;
           const isGroup = tree.maxHives === 2;
           const bx = tree.x + cellSize * (isGroup ? 0.52 : 0.38);
-          const by = tree.y - cellSize * (isGroup ? 0.42 : 0.38);
+          const by = tree.y + treeOffsetY - cellSize * (isGroup ? 0.42 : 0.38);
           const gradId = `bee-count-grad-${tree.id}`;
           return (
             <g filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.30))">
