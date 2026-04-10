@@ -430,6 +430,12 @@ src/
 - Audit complet architecture à faire (conditions victoire dans App.tsx, génération abeilles dupliquée ×2, dead code bûcheron, upgradeLocked risque de rester bloqué)
 - 20 abeilles de test accessibles via touche T (à supprimer avant release publique)
 
+### Dette technique (à planifier)
+- Conditions de victoire dans App.tsx → à migrer dans useGameLoop (logique de jeu hors UI)
+- Génération abeilles initiales dupliquée ×2 dans App.tsx → à factoriser en fonction utilitaire
+- State 'fighting' déclaré dans le type Bee mais jamais assigné → à supprimer ou implémenter
+- Dead code bûcheron : 2 useEffect vides dans useGameLoop → à supprimer ou activer
+
 ### Prochaines étapes
 - Audit architecture complet (migration victoire → useGameLoop, nettoyage dead code)
 - Orage gameplay : nuages orageux déciment abeilles et cassent ruches
