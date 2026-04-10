@@ -19,6 +19,7 @@ import {
   resetLevelProgress,
   loadSoundPreference,
   loadTimeOfDayPreference,
+  loadLeftHandedPreference,
 } from './utils/storage';
 import { useStorage } from './hooks/useStorage';
 import { useSolarSystem } from './hooks/useSolarSystem';
@@ -89,6 +90,7 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('menu');
   const [soundEnabled, setSoundEnabled] = useState(() => loadSoundPreference());
   const [globalTimeOfDay, setGlobalTimeOfDay] = useState<'day' | 'night'>(() => loadTimeOfDayPreference());
+  const [leftHanded, setLeftHanded] = useState(() => loadLeftHandedPreference());
   const [gridParams, setGridParams] = useState(() => calculateGridParams());
   const [mapData, setMapData] = useState(() => {
     const params = calculateGridParams();
@@ -230,7 +232,7 @@ export default function App() {
   }, []);
   
   // 🔄 Sauvegarde automatique (progression + préférences)
-  useStorage(levelProgress, soundEnabled, globalTimeOfDay);
+  useStorage(levelProgress, soundEnabled, globalTimeOfDay, leftHanded);
   
   // Maintenir gridParamsRef à jour à chaque render
   gridParamsRef.current = gridParams;
@@ -591,13 +593,13 @@ export default function App() {
   const handleTouchCancel = () => {
     // Si on était en train de sélectionner, sélectionner les abeilles dans le cercle actuel
     if (selectionStart && selectionCurrent) {
-      const diameter = Math.sqrt(
+      const dist = Math.sqrt(
         Math.pow(selectionCurrent.x - selectionStart.x, 2) +
           Math.pow(selectionCurrent.y - selectionStart.y, 2)
       );
-      const centerX = (selectionStart.x + selectionCurrent.x) / 2;
-      const centerY = (selectionStart.y + selectionCurrent.y) / 2;
-      const radius = diameter / 2;
+      const centerX = leftHanded ? selectionStart.x : (selectionStart.x + selectionCurrent.x) / 2;
+      const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
+      const radius = leftHanded ? dist : dist / 2;
 
       if (radius > 5) {
         // Sélectionner toutes les abeilles du joueur dans le cercle
@@ -631,20 +633,20 @@ export default function App() {
       return;
     }
     
-    // Calculate circle selection
-    const diameter = Math.sqrt(
+    // Calculate circle selection (mode gaucher : centre = point de départ, rayon = distance)
+    const dist = Math.sqrt(
       Math.pow(selectionCurrent.x - selectionStart.x, 2) +
         Math.pow(selectionCurrent.y - selectionStart.y, 2)
     );
-    const centerX = (selectionStart.x + selectionCurrent.x) / 2;
-    const centerY = (selectionStart.y + selectionCurrent.y) / 2;
-    const radius = diameter / 2;
+    const centerX = leftHanded ? selectionStart.x : (selectionStart.x + selectionCurrent.x) / 2;
+    const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
+    const radius = leftHanded ? dist : dist / 2;
 
     // Si on a dragger, toujours faire la sélection par cercle
     if (isDragging && radius > 5) {
       // C'est une sélection par cercle
       const selectedBees = gameState.bees.filter((bee) => {
-        if (bee.owner !== 'player') return false; // Permet de sélectionner les abeilles en mouvement aussi
+        if (bee.owner !== 'player') return false;
         const distToBee = Math.sqrt(
           Math.pow(bee.x - centerX, 2) + Math.pow(bee.y - centerY, 2)
         );
@@ -1063,6 +1065,10 @@ export default function App() {
 
   const handleToggleSound = useCallback(() => {
     setSoundEnabled(prev => !prev);
+  }, []);
+
+  const handleToggleLeftHanded = useCallback(() => {
+    setLeftHanded(prev => !prev);
   }, []);
 
   const handleStartGame = () => {
@@ -1560,11 +1566,13 @@ export default function App() {
     return (
       <>
         <OptionsMenu 
-          onBack={handleBackToMenu} 
+          onBack={handleBackToMenu}
           soundEnabled={soundEnabled}
           onToggleSound={handleToggleSound}
           timeOfDay={globalTimeOfDay}
           onToggleTimeOfDay={handleToggleTimeOfDay}
+          leftHanded={leftHanded}
+          onToggleLeftHanded={handleToggleLeftHanded}
           onResetProgress={handleResetProgress}
           onGoToFirstBattle={handleGoToFirstBattle}
         />
@@ -1646,6 +1654,7 @@ export default function App() {
           selectionCircle={selectionCircle}
           selectionStart={selectionStart}
           selectionCurrent={selectionCurrent}
+          leftHanded={leftHanded}
           flashEffect={flashEffect}
           waterSplashes={waterSplashes}
           ripples={ripples}
@@ -1689,6 +1698,8 @@ export default function App() {
           onToggleSound={handleToggleSound}
           timeOfDay={globalTimeOfDay}
           onToggleTimeOfDay={handleToggleTimeOfDay}
+          leftHanded={leftHanded}
+          onToggleLeftHanded={handleToggleLeftHanded}
           onDragStart={handleTreeDragStart}
           isDragging={isDragging}
           hasSelection={!!selectionStart}

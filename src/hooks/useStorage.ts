@@ -4,17 +4,15 @@ import {
   saveLevelProgress,
   saveSoundPreference,
   saveTimeOfDayPreference,
+  saveLeftHandedPreference,
   isStorageAvailable,
 } from '../utils/storage';
 
-/**
- * Sauvegarde automatique des préférences et de la progression dans localStorage.
- * Chaque valeur est persistée dès qu'elle change.
- */
 export function useStorage(
   levelProgress: LevelProgress,
   soundEnabled: boolean,
-  globalTimeOfDay: 'day' | 'night'
+  globalTimeOfDay: 'day' | 'night',
+  leftHanded: boolean,
 ) {
   useEffect(() => {
     if (isStorageAvailable()) saveLevelProgress(levelProgress);
@@ -27,4 +25,8 @@ export function useStorage(
   useEffect(() => {
     if (isStorageAvailable()) saveTimeOfDayPreference(globalTimeOfDay);
   }, [globalTimeOfDay]);
+
+  useEffect(() => {
+    if (isStorageAvailable()) saveLeftHandedPreference(leftHanded);
+  }, [leftHanded]);
 }

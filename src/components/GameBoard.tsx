@@ -32,6 +32,7 @@ interface GameBoardProps {
   selectionCircle: { x: number; y: number; radius: number } | null;
   selectionStart: { x: number; y: number } | null;
   selectionCurrent: { x: number; y: number } | null;
+  leftHanded?: boolean;
   flashEffect: { x: number; y: number; type: 'small' | 'large' } | null;
   waterSplashes: Array<{ x: number; y: number; id: string; timestamp: number }>;
   ripples: { id: number; x: number; y: number }[];
@@ -85,6 +86,7 @@ export function GameBoard({
   selectionCircle,
   selectionStart,
   selectionCurrent,
+  leftHanded = false,
   flashEffect,
   waterSplashes,
   ripples,
@@ -471,13 +473,13 @@ export function GameBoard({
 
         {/* Selection circle (drawing) */}
         {selectionStart && selectionCurrent && (() => {
-          const diameter = Math.sqrt(
+          const dist = Math.sqrt(
             Math.pow(selectionCurrent.x - selectionStart.x, 2) +
               Math.pow(selectionCurrent.y - selectionStart.y, 2)
           );
-          const centerX = (selectionStart.x + selectionCurrent.x) / 2;
-          const centerY = (selectionStart.y + selectionCurrent.y) / 2;
-          const radius = diameter / 2;
+          const centerX = leftHanded ? selectionStart.x : (selectionStart.x + selectionCurrent.x) / 2;
+          const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
+          const radius = leftHanded ? dist : dist / 2;
 
           const isNight = globalTimeOfDay === 'night';
 

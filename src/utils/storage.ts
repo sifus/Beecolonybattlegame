@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   LEVEL_PROGRESS: 'rush_level_progress',
   SOUND_ENABLED: 'rush_sound_enabled',
   TIME_OF_DAY: 'rush_time_of_day',
+  LEFT_HANDED: 'rush_left_handed',
   GAME_VERSION: 'rush_game_version',
 } as const;
 
@@ -151,6 +152,21 @@ export function loadTimeOfDayPreference(): 'day' | 'night' {
   } catch (error) {
     console.error('[Storage] Erreur lors du chargement du mode jour/nuit :', error);
     return 'day';
+  }
+}
+
+export function saveLeftHandedPreference(leftHanded: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LEFT_HANDED, JSON.stringify(leftHanded));
+  } catch {}
+}
+
+export function loadLeftHandedPreference(): boolean {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.LEFT_HANDED);
+    return saved ? JSON.parse(saved) : false;
+  } catch {
+    return false;
   }
 }
 

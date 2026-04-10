@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw, Info, X, Volume2, VolumeX, Axe, Sun, Moon } from 'lucide-react';
+import { Pause, Play, RotateCcw, Info, X, Volume2, VolumeX, Sun, Moon, Hand } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
 interface GameUIProps {
@@ -10,6 +10,8 @@ interface GameUIProps {
   onToggleSound?: () => void;
   timeOfDay?: 'day' | 'night';
   onToggleTimeOfDay?: () => void;
+  leftHanded?: boolean;
+  onToggleLeftHanded?: () => void;
   onDragStart?: (e: React.PointerEvent) => void;
   isDragging?: boolean;
   hasSelection?: boolean;
@@ -129,7 +131,7 @@ function StyledButton({ onClick, title, icon, className = '', onDragStart, isDra
   );
 }
 
-export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, onDragStart, isDragging = false, hasSelection = false }: GameUIProps) {
+export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, leftHanded = false, onToggleLeftHanded, onDragStart, isDragging = false, hasSelection = false }: GameUIProps) {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showPauseMenu, setShowPauseMenu] = useState(false);
   
@@ -276,7 +278,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                         enabled={soundEnabled}
                         onToggle={onToggleSound || (() => {})}
                       />
-                      
+
                       {/* Jour/Nuit */}
                       <SettingToggle
                         icon={timeOfDay === 'day' ? <Sun className="w-4 h-4 text-amber-950" strokeWidth={2.5} /> : <Moon className="w-4 h-4 text-amber-950" strokeWidth={2.5} />}
@@ -285,6 +287,14 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                         onToggle={onToggleTimeOfDay || (() => {})}
                         enabledColors={{ bg: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' }}
                         disabledColors={{ bg: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)' }}
+                      />
+
+                      {/* Gaucher/Droitier */}
+                      <SettingToggle
+                        icon={<Hand className="w-4 h-4 text-amber-950" strokeWidth={2.5} />}
+                        label="Gaucher"
+                        enabled={leftHanded}
+                        onToggle={onToggleLeftHanded || (() => {})}
                       />
                     </div>
                   </div>
@@ -343,7 +353,7 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                       enabled={soundEnabled}
                       onToggle={onToggleSound || (() => {})}
                     />
-                    
+
                     {/* Jour/Nuit */}
                     <SettingToggle
                       icon={timeOfDay === 'day' ? <Sun className="w-5 h-5 text-amber-950" strokeWidth={2.5} /> : <Moon className="w-5 h-5 text-amber-950" strokeWidth={2.5} />}
@@ -352,6 +362,14 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                       onToggle={onToggleTimeOfDay || (() => {})}
                       enabledColors={{ bg: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' }}
                       disabledColors={{ bg: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)' }}
+                    />
+
+                    {/* Gaucher/Droitier */}
+                    <SettingToggle
+                      icon={<Hand className="w-5 h-5 text-amber-950" strokeWidth={2.5} />}
+                      label="Gaucher"
+                      enabled={leftHanded}
+                      onToggle={onToggleLeftHanded || (() => {})}
                     />
                   </div>
                   

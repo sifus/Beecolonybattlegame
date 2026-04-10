@@ -1,4 +1,4 @@
-import { ArrowLeft, Volume2, VolumeX, Axe, Sun, Moon, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Sun, Moon, RotateCcw, Hand, Axe } from 'lucide-react';
 
 interface OptionsMenuProps {
   onBack: () => void;
@@ -6,11 +6,13 @@ interface OptionsMenuProps {
   onToggleSound?: () => void;
   timeOfDay?: 'day' | 'night';
   onToggleTimeOfDay?: () => void;
+  leftHanded?: boolean;
+  onToggleLeftHanded?: () => void;
   onResetProgress?: () => void;
   onGoToFirstBattle?: () => void;
 }
 
-export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, onResetProgress, onGoToFirstBattle }: OptionsMenuProps) {
+export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, leftHanded = false, onToggleLeftHanded, onResetProgress, onGoToFirstBattle }: OptionsMenuProps) {
   // Couleur de fond adaptée au mode jour/nuit
   const bgColor = timeOfDay === 'night' ? '#1a2332' : '#8B7355'; // Bleu foncé nuit, marron taupe jour
 
@@ -171,7 +173,7 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                         Ils coupent les arbres
                       </p>
                     </div>
-                    <div 
+                    <div
                       className="px-3 py-1.5 rounded-full text-center"
                       style={{
                         background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
@@ -182,6 +184,41 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                         Arrive bientôt
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Accessibilité */}
+                <div className="border-b pb-4" style={{ borderColor: 'rgba(120, 53, 15, 0.3)' }}>
+                  <h3 className="mb-3 flex items-center gap-2 text-amber-950" style={{ fontSize: '18px', fontWeight: '700' }}>
+                    <Hand className="w-5 h-5" />
+                    Accessibilité
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="mb-1 text-amber-950" style={{ fontSize: '15px', fontWeight: '700' }}>
+                        Mode Gaucher
+                      </p>
+                      <p className="text-amber-900" style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                        {leftHanded ? 'Cercle : centre = départ, rayon = distance' : 'Cercle : centre = milieu, rayon = moitié'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => onToggleLeftHanded?.()}
+                      className="relative w-14 h-8 rounded-full transition-all"
+                      style={{
+                        background: leftHanded
+                          ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                          : 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      <div
+                        className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all"
+                        style={{
+                          left: leftHanded ? 'calc(100% - 28px)' : '4px',
+                        }}
+                      />
+                    </button>
                   </div>
                 </div>
 
