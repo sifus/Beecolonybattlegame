@@ -67,7 +67,7 @@ export const INITIAL_LEVELS: Level[] = [
         id: '1-3',
         type: 'double_hive',
         title: 'Amélioration',
-        instructions: 'Améliore ta ruche niveau 1 en niveau 2 avec 20 abeilles.',
+        instructions: 'Envoie 20 abeilles sur un groupe d\'arbres pour créer une 2ème ruche.',
         completed: false,
         stars: 0,
       },

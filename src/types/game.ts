@@ -18,6 +18,7 @@ export interface Tree {
   hiveLevel: number[]; // Niveau de chaque ruche (1 ou 2)
   buildingProgress?: number[]; // Abeilles investies pour construction
   lastBuildTick?: number;      // Timestamp du dernier tick de construction (throttle 200ms)
+  lastAttackTick?: number;     // Timestamp du dernier tick d'attaque de ruche (throttle 300ms)
   upgradingProgress?: number; // Abeilles investies pour amélioration niveau 1 → 2
   upgradeLocked?: boolean;   // Bloque l'upgrade automatique — true après construction, false quand le joueur re-cible l'arbre
   isStartingTree?: boolean; // Arbre de départ - ne peut pas être amélioré

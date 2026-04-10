@@ -5,12 +5,13 @@ import { Level } from '../types/levels';
 interface LevelMapProps {
   levels: Level[];
   onLevelClick: (levelId: number) => void;
+  onSubLevelClick?: (levelId: number, subLevelIndex: number) => void;
   onBack: () => void;
   timeOfDay?: 'day' | 'night';
   onUnlockAll?: () => void;
 }
 
-export function LevelMap({ levels, onLevelClick, onBack, timeOfDay = 'day', onUnlockAll }: LevelMapProps) {
+export function LevelMap({ levels, onLevelClick, onSubLevelClick, onBack, timeOfDay = 'day', onUnlockAll }: LevelMapProps) {
   const bgColor = timeOfDay === 'night' ? '#0f1419' : '#8B7355';
   
   // Calculer la largeur totale du chemin
@@ -306,9 +307,10 @@ export function LevelMap({ levels, onLevelClick, onBack, timeOfDay = 'day', onUn
                 const subLevel = level.subLevels[subIndex];
                 
                 return (
-                  <motion.div
+                  <motion.button
                     key={key}
-                    whileHover={{ 
+                    onClick={() => level.unlocked && onSubLevelClick?.(level.id, subIndex)}
+                    whileHover={{
                       scale: 1.2,
                       y: -5,
                       transition: { type: 'spring', damping: 10, stiffness: 400 }
@@ -326,6 +328,10 @@ export function LevelMap({ levels, onLevelClick, onBack, timeOfDay = 'day', onUn
                     style={{
                       left: `${element.x - 20}px`,
                       top: `${element.y - 25}px`,
+                      cursor: level.unlocked ? 'pointer' : 'default',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
                       width: '40px',
                       height: '50px',
                     }}
@@ -381,7 +387,7 @@ export function LevelMap({ levels, onLevelClick, onBack, timeOfDay = 'day', onUn
                         {subIndex + 1}
                       </span>
                     </div>
-                  </motion.div>
+                  </motion.button>
                 );
               }
             })}

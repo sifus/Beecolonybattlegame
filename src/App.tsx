@@ -148,6 +148,7 @@ export default function App() {
   const beeConsumedByPondRef = useRef(false); // Pour détecter quand une abeille tombe dans l'étang (niveau dangers)
   const justSentBeesRef = useRef(false); // Pour éviter de sélectionner les abeilles après avoir envoyé des abeilles
   const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
+  const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
 
   // Helper pour adapter le wording selon le mode jour/nuit
   const getWording = (timeOfDay: 'day' | 'night') => {
@@ -366,10 +367,10 @@ export default function App() {
             break;
 
           case 'double_hive':
-            // Victoire : le joueur a au moins une ruche niveau 2
-            hasWon = gameState.trees.some(t => 
-              t.owner === 'player' && 
-              t.hiveLevel.some(level => level >= 2)
+            // Victoire : le joueur a au moins un arbre avec 2 ruches
+            hasWon = gameState.trees.some(t =>
+              t.owner === 'player' &&
+              t.hiveCount >= 2
             );
             break;
 
@@ -502,9 +503,7 @@ export default function App() {
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
     setIsDragging(false);
-    const id = Date.now();
-    setRipples(prev => [...prev, { id, x, y }]);
-    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+    tapPosRef.current = { x, y };
   };
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -565,9 +564,7 @@ export default function App() {
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
     setIsDragging(false);
-    const id = Date.now();
-    setRipples(prev => [...prev, { id, x, y }]);
-    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+    tapPosRef.current = { x, y };
   };
 
   const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
@@ -627,10 +624,10 @@ export default function App() {
 
   const handleMouseUp = () => {
     if (!selectionStart || !selectionCurrent) {
-      // Réinitialiser même si pas de sélection en cours
       setSelectionStart(null);
       setSelectionCurrent(null);
       setIsDragging(false);
+      tapPosRef.current = null;
       return;
     }
     
@@ -757,6 +754,14 @@ export default function App() {
         justSentBeesRef.current = false;
       }, 100);
     }
+    // Ripple seulement si tap simple (pas de drag)
+    if (!isDragging && tapPosRef.current) {
+      const { x, y } = tapPosRef.current;
+      const id = Date.now();
+      setRipples(prev => [...prev, { id, x, y }]);
+      setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+    }
+    tapPosRef.current = null;
     setSelectionStart(null);
     setSelectionCurrent(null);
     setIsDragging(false);
@@ -982,82 +987,68 @@ export default function App() {
 
   const handleTreeClick = useCallback(
     (treeId: string, e: React.MouseEvent | React.PointerEvent) => {
-      // Si on est en train de dragger, ne pas traiter le clic
-      // Le cercle de sélection sera géré par handleMouseUp
-      if (isDragging) {
-        return;
-      }
-      
-      // Si on vient d'envoyer des abeilles dans handleMouseUp, ne pas traiter le clic
-      // pour éviter de sélectionner les abeilles de l'arbre de destination
-      if (justSentBeesRef.current) {
-        return;
-      }
-      
+      if (isDragging) return;
+      if (justSentBeesRef.current) return;
+
       e.stopPropagation();
       e.preventDefault();
-      
+
       const tree = gameState.trees.find(t => t.id === treeId);
       if (!tree) return;
-      
+
       const now = Date.now();
-      const isDoubleClick = 
-        lastClickedTreeId === treeId && 
-        now - lastClickTime < 400; // 400ms pour détecter le double-clic
-      
+      const isDoubleClick = lastClickedTreeId === treeId && now - lastClickTime < 400;
+
+      // DOUBLE CLIC : sélectionne les abeilles de cet arbre et les envoie construire en place
       if (isDoubleClick && !tree.isCut) {
-        // DOUBLE-CLIC : Créer/réparer une ruche avec toutes les abeilles de l'arbre
-        // (Seulement sur arbres non coupés)
-        createOrRepairHive(treeId);
-        setLastClickedTreeId(null);
-        setLastClickTime(0);
-        return;
-      }
-      
-      // SIMPLE CLIC
-      setLastClickedTreeId(treeId);
-      setLastClickTime(now);
-      
-      // Si des abeilles sont déjà sélectionnées : SEULEMENT envoyer la direction, NE PAS sélectionner les abeilles de l'arbre
-      if (gameState.selectedBeeIds.size > 0) {
-        setGameState(prev => {
-          const updatedBees = prev.bees.map(bee => {
-            if (prev.selectedBeeIds.has(bee.id)) {
-              return { ...bee, state: 'moving' as const, targetTreeId: treeId, targetX: undefined, targetY: undefined, treeId: null };
-            }
-            return bee;
-          });
-          
-          const updatedTrees = prev.trees.map(tree => {
-            const beesLeavingThisTree = prev.bees.filter(
-              b => prev.selectedBeeIds.has(b.id) && b.treeId === tree.id
-            ).length;
-            
-            if (beesLeavingThisTree > 0) {
-              return { ...tree, beeCount: Math.max(0, tree.beeCount - beesLeavingThisTree) };
-            }
-            return tree;
-          });
-          
-          return { ...prev, bees: updatedBees, trees: updatedTrees, selectedBeeIds: new Set() };
-        });
-        // NE PAS sélectionner les abeilles de l'arbre cliqué
-        // Réinitialiser aussi lastClickedTreeId pour éviter les double-clics accidentels
-        setLastClickedTreeId(null);
-        setLastClickTime(0);
-      } else {
-        // Pas de sélection : sélectionner toutes les abeilles du joueur qui tournent autour de cet arbre
+        // Sélection visuelle immédiate
         setGameState(prev => {
           const beesAtThisTree = prev.bees
             .filter(bee => bee.treeId === treeId && bee.owner === 'player')
             .map(bee => bee.id);
-          
-          if (beesAtThisTree.length > 0) {
-            return { ...prev, selectedBeeIds: new Set(beesAtThisTree) };
-          }
-          return prev;
+          return beesAtThisTree.length > 0
+            ? { ...prev, selectedBeeIds: new Set(beesAtThisTree) }
+            : prev;
         });
+        setLastClickedTreeId(null);
+        setLastClickTime(0);
+        // Envoie construire (si impossible, les abeilles restent en orbite)
+        createOrRepairHive(treeId);
+        return;
       }
+
+      setLastClickedTreeId(treeId);
+      setLastClickTime(now);
+
+      // CLIC AVEC SÉLECTION : envoie les abeilles sélectionnées vers cet arbre
+      if (gameState.selectedBeeIds.size > 0) {
+        setGameState(prev => {
+          const updatedBees = prev.bees.map(bee => {
+            if (!prev.selectedBeeIds.has(bee.id)) return bee;
+            return { ...bee, state: 'moving' as const, targetTreeId: treeId, targetX: undefined, targetY: undefined, treeId: null };
+          });
+          const updatedTrees = prev.trees.map(t => {
+            const leaving = prev.bees.filter(b => prev.selectedBeeIds.has(b.id) && b.treeId === t.id).length;
+            return leaving > 0 ? { ...t, beeCount: Math.max(0, t.beeCount - leaving) } : t;
+          });
+          return { ...prev, bees: updatedBees, trees: updatedTrees, selectedBeeIds: new Set() };
+        });
+        justSentBeesRef.current = true;
+        setTimeout(() => { justSentBeesRef.current = false; }, 100);
+        setLastClickedTreeId(null);
+        setLastClickTime(0);
+        return;
+      }
+
+      // CLIC SIMPLE SANS SÉLECTION : sélectionne les abeilles de cet arbre
+      setGameState(prev => {
+        const beesAtThisTree = prev.bees
+          .filter(bee => bee.treeId === treeId && bee.owner === 'player')
+          .map(bee => bee.id);
+        return beesAtThisTree.length > 0
+          ? { ...prev, selectedBeeIds: new Set(beesAtThisTree) }
+          : prev;
+      });
     },
     [gameState, lastClickedTreeId, lastClickTime, isDragging, selectionStart]
   );
@@ -1260,30 +1251,27 @@ export default function App() {
     toast.success('⚔️ Niveau "Premier combat" chargé !');
   };
 
-  const handleLevelClick = (levelId: number) => {
+  const startLevel = (levelId: number, subLevelIndex: number) => {
     const level = levelProgress.levels.find(l => l.id === levelId);
     if (!level || !level.unlocked) return;
-    
-    victoryHandledRef.current = false; // Réinitialiser le flag de victoire
-    setTutorialCompleted(false); // Réinitialiser le statut du tutoriel
-    
-    // Start the first sub-level of this level
+
+    victoryHandledRef.current = false;
+    setTutorialCompleted(false);
+
     setLevelProgress(prev => ({
       ...prev,
       currentLevel: levelId,
-      currentSubLevel: 0,
+      currentSubLevel: subLevelIndex,
     }));
-    
-    // Calculer les gridParams adaptés pour ce niveau
-    const newGridParams = calculateGridParams(levelId, 0);
+
+    const newGridParams = calculateGridParams(levelId, subLevelIndex);
     setGridParams(newGridParams);
-    
-    // Load the level configuration
-    const subLevel = level.subLevels[0];
+
+    const subLevel = level.subLevels[subLevelIndex];
     if (subLevel) {
       const levelConfig = generateStoryLevel(
         levelId,
-        0,
+        subLevelIndex,
         subLevel.type,
         newGridParams.cellSize,
         newGridParams.rows,
@@ -1326,6 +1314,9 @@ export default function App() {
     
     setCurrentScreen('story');
   };
+
+  const handleLevelClick = (levelId: number) => startLevel(levelId, 0);
+  const handleSubLevelClick = (levelId: number, subLevelIndex: number) => startLevel(levelId, subLevelIndex);
 
   const handleLevelComplete = (stars: number, skipModal: boolean = false) => {
     setCurrentStars(stars);
@@ -1595,6 +1586,7 @@ export default function App() {
         <LevelMap
           levels={levelProgress.levels}
           onLevelClick={handleLevelClick}
+          onSubLevelClick={handleSubLevelClick}
           onBack={handleBackToMenu}
           timeOfDay={globalTimeOfDay}
           onUnlockAll={handleUnlockAllLevels}

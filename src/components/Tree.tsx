@@ -255,12 +255,12 @@ export function Tree({
         )}
 
         {/* Ruche fantôme upgrade vers 2ème slot */}
-        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && tree.maxHives === 2 && (
+        {tree.owner !== 'enemy' && tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && tree.maxHives === 2 && (
           renderHive(1, tree.x + 14 * s, trunkTopY - 16 * s, 14 * s)
         )}
 
         {/* Upgrade progress bar */}
-        {tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (() => {
+        {tree.owner !== 'enemy' && tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (() => {
           const upgCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x + 14 * s;
           const upgCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s;
           const barW = 40 * s;
@@ -279,7 +279,7 @@ export function Tree({
         })()}
 
         {/* Construction progress bar */}
-        {!tree.isCut && tree.buildingProgress?.[0] && tree.buildingProgress[0] > 0 && (() => {
+        {tree.owner !== 'enemy' && !tree.isCut && tree.buildingProgress?.[0] && tree.buildingProgress[0] > 0 && (() => {
           const bpCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x - 22 * s;
           const bpCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 10 * s;
           const barW = 40 * s;

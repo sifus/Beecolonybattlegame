@@ -134,13 +134,13 @@ export function generateStoryLevel(
       isStartingTree: true,
     });
 
-    // Arbre neutre proche
+    // Groupe d'arbres neutre proche (maxHives: 2 pour permettre la 2ème ruche)
     config.trees.push({
       x: cellSize * (gameStartCol + 6),
       y: cellSize * safeY,
       owner: 'neutral',
       hiveCount: 0,
-      maxHives: 1,
+      maxHives: 2,
       beeCount: 0,
       hiveHealth: [],
       hiveLevel: [],

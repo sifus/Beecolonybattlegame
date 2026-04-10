@@ -499,82 +499,55 @@ export function useGameLoop({
               }
 
               if (targetType && totalCostToDestroy > 0) {
-                let beesUsed = 0;
+                const now = Date.now();
+                if ((tree.lastAttackTick ?? 0) + 300 <= now) {
+                  tree.lastAttackTick = now;
+                  // Consume 1 bee per tick (gradual attack, visible to player)
+                  const attackingBee = remainingPlayerBees[0];
+                  beesToRemove.add(attackingBee.id);
+                  tree.beeCount--;
 
-                remainingPlayerBees.forEach(bee => {
-                  if (beesUsed < totalCostToDestroy) {
-                    beesToRemove.add(bee.id);
-                    tree.beeCount--;
-                    beesUsed++;
-                  }
-                });
-
-                if (beesUsed >= totalCostToDestroy) {
-                  if (targetType === 'hive-upgrading') {
-                    tree.hiveHealth = [];
-                    tree.hiveLevel = [];
-                    tree.hiveCount = 0;
-                    tree.upgradingProgress = 0;
-                    tree.owner = 'neutral';
-                    toast.success(`Ruche + amélioration détruites ! Arbre neutre (${beesUsed} abeilles utilisées).`);
-                  } else if (targetType === 'hive') {
-                    tree.hiveHealth = [];
-                    tree.hiveLevel = [];
-                    tree.hiveCount = 0;
-                    tree.owner = 'neutral';
-                    toast.success(`Ruche détruite ! Arbre neutre (${beesUsed} abeilles utilisées).`);
-                  } else if (targetType === 'construction') {
-                    tree.buildingProgress = [];
-                    tree.owner = 'neutral';
-                    toast.success(`Construction détruite ! Arbre neutre (${beesUsed} abeilles utilisées).`);
-                  }
-                } else {
                   if (targetType === 'hive-upgrading') {
                     const upgradingProgress = tree.upgradingProgress || 0;
-                    if (beesUsed <= upgradingProgress) {
-                      tree.upgradingProgress = upgradingProgress - beesUsed;
-                      toast.info(`Progression d'amélioration réduite : ${tree.upgradingProgress}/${UPGRADE_HIVE_COST}`);
-                    } else {
-                      const remainingDamage = beesUsed - upgradingProgress;
-                      tree.upgradingProgress = 0;
-                      const newHealth = Math.max(0, tree.hiveHealth[0] - remainingDamage);
-                      const currentLevel = tree.hiveLevel[0] || 1;
-                      tree.hiveHealth = [newHealth];
-                      tree.hiveLevel = [currentLevel];
-
-                      if (newHealth === 0) {
+                    if (upgradingProgress > 0) {
+                      tree.upgradingProgress = upgradingProgress - 1;
+                      if (tree.upgradingProgress === 0 && tree.hiveHealth[0] <= 0) {
                         tree.hiveHealth = [];
                         tree.hiveLevel = [];
                         tree.hiveCount = 0;
                         tree.owner = 'neutral';
-                        toast.success(`Ruche + amélioration détruites ! Arbre neutre (${beesUsed} abeilles).`);
+                      }
+                    } else {
+                      const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
+                      const currentLevel = tree.hiveLevel[0] || 1;
+                      if (newHealth === 0) {
+                        tree.hiveHealth = [];
+                        tree.hiveLevel = [];
+                        tree.hiveCount = 0;
+                        tree.upgradingProgress = 0;
+                        tree.owner = 'neutral';
                       } else {
-                        toast.info(`Amélioration annulée, ruche endommagée : ${newHealth}/${HIVE_L1_HP} HP`);
+                        tree.hiveHealth = [newHealth];
+                        tree.hiveLevel = [currentLevel];
                       }
                     }
                   } else if (targetType === 'hive') {
-                    const newHealth = Math.max(0, tree.hiveHealth[0] - beesUsed);
+                    const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
                     const currentLevel = tree.hiveLevel[0] || 1;
-                    tree.hiveHealth = [newHealth];
-                    tree.hiveLevel = [currentLevel];
-
                     if (newHealth === 0) {
                       tree.hiveHealth = [];
                       tree.hiveLevel = [];
                       tree.hiveCount = 0;
                       tree.owner = 'neutral';
-                      toast.success(`Ruche niveau ${currentLevel} détruite ! Arbre neutre (${beesUsed} abeilles).`);
                     } else {
-                      const maxHP = currentLevel === 2 ? HIVE_L2_HP : HIVE_L1_HP;
-                      toast.info(`Ruche niveau ${currentLevel} endommagée : ${newHealth}/${maxHP} HP (-${beesUsed} HP)`);
+                      tree.hiveHealth = [newHealth];
+                      tree.hiveLevel = [currentLevel];
                     }
                   } else if (targetType === 'construction') {
-                    tree.buildingProgress![0] = Math.max(0, tree.buildingProgress![0] - beesUsed);
-
+                    tree.buildingProgress![0] = Math.max(0, tree.buildingProgress![0] - 1);
                     if (tree.buildingProgress![0] === 0) {
                       tree.buildingProgress = [];
                       tree.owner = 'neutral';
-                      toast.success(`Construction détruite ! Arbre neutre (${beesUsed} abeilles utilisées).`);
                     }
                   }
                 }
@@ -605,82 +578,49 @@ export function useGameLoop({
               }
 
               if (targetType && totalCostToDestroy > 0) {
-                let beesUsed = 0;
+                const now = Date.now();
+                if ((tree.lastAttackTick ?? 0) + 300 <= now) {
+                  tree.lastAttackTick = now;
+                  // Consume 1 enemy bee per tick (gradual siege, visible to player)
+                  const attackingBee = remainingEnemyBees[0];
+                  beesToRemove.add(attackingBee.id);
+                  tree.beeCount--;
 
-                remainingEnemyBees.forEach(bee => {
-                  if (beesUsed < totalCostToDestroy) {
-                    beesToRemove.add(bee.id);
-                    tree.beeCount--;
-                    beesUsed++;
-                  }
-                });
-
-                if (beesUsed >= totalCostToDestroy) {
-                  if (targetType === 'hive-upgrading') {
-                    tree.hiveHealth = [];
-                    tree.hiveLevel = [];
-                    tree.hiveCount = 0;
-                    tree.upgradingProgress = 0;
-                    tree.owner = 'neutral';
-                    toast.error(`Votre ruche + amélioration détruites (${beesUsed} abeilles) !`);
-                  } else if (targetType === 'hive') {
-                    tree.hiveHealth = [];
-                    tree.hiveLevel = [];
-                    tree.hiveCount = 0;
-                    tree.owner = 'neutral';
-                    toast.error(`Votre ruche détruite (${beesUsed} abeilles) !`);
-                  } else if (targetType === 'construction') {
-                    tree.buildingProgress = [];
-                    tree.owner = 'neutral';
-                    toast.error(`Votre construction détruite (${beesUsed} abeilles) !`);
-                  }
-                } else {
                   if (targetType === 'hive-upgrading') {
                     const upgradingProgress = tree.upgradingProgress || 0;
-                    if (beesUsed <= upgradingProgress) {
-                      tree.upgradingProgress = upgradingProgress - beesUsed;
-                      toast.error(`Amélioration attaquée : ${tree.upgradingProgress}/${UPGRADE_HIVE_COST} (-${beesUsed})`);
+                    if (upgradingProgress > 0) {
+                      tree.upgradingProgress = upgradingProgress - 1;
                     } else {
-                      const remainingDamage = beesUsed - upgradingProgress;
-                      tree.upgradingProgress = 0;
-                      const newHealth = Math.max(0, tree.hiveHealth[0] - remainingDamage);
+                      const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
                       const currentLevel = tree.hiveLevel[0] || 1;
-                      tree.hiveHealth = [newHealth];
-                      tree.hiveLevel = [currentLevel];
-
                       if (newHealth === 0) {
                         tree.hiveHealth = [];
                         tree.hiveLevel = [];
                         tree.hiveCount = 0;
+                        tree.upgradingProgress = 0;
                         tree.owner = 'neutral';
-                        toast.error(`Votre ruche + amélioration détruites (${beesUsed} abeilles) !`);
                       } else {
-                        toast.error(`Amélioration annulée, ruche endommagée : ${newHealth}/${HIVE_L1_HP} HP`);
+                        tree.hiveHealth = [newHealth];
+                        tree.hiveLevel = [currentLevel];
                       }
                     }
                   } else if (targetType === 'hive') {
-                    const newHealth = Math.max(0, tree.hiveHealth[0] - beesUsed);
+                    const newHealth = Math.max(0, tree.hiveHealth[0] - 1);
                     const currentLevel = tree.hiveLevel[0] || 1;
-                    tree.hiveHealth = [newHealth];
-                    tree.hiveLevel = [currentLevel];
-
                     if (newHealth === 0) {
                       tree.hiveHealth = [];
                       tree.hiveLevel = [];
                       tree.hiveCount = 0;
                       tree.owner = 'neutral';
-                      toast.error(`Votre ruche niveau ${currentLevel} détruite (${beesUsed} abeilles) !`);
                     } else {
-                      const maxHP = currentLevel === 2 ? HIVE_L2_HP : HIVE_L1_HP;
-                      toast.error(`Ruche niveau ${currentLevel} attaquée : ${newHealth}/${maxHP} HP (-${beesUsed} HP)`);
+                      tree.hiveHealth = [newHealth];
+                      tree.hiveLevel = [currentLevel];
                     }
                   } else if (targetType === 'construction') {
-                    tree.buildingProgress![0] = Math.max(0, tree.buildingProgress![0] - beesUsed);
-
+                    tree.buildingProgress![0] = Math.max(0, tree.buildingProgress![0] - 1);
                     if (tree.buildingProgress![0] === 0) {
                       tree.buildingProgress = [];
                       tree.owner = 'neutral';
-                      toast.error(`Votre construction détruite (${beesUsed} abeilles) !`);
                     }
                   }
                 }
