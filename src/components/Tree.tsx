@@ -345,8 +345,9 @@ export function Tree({
         {/* Bulle compteur abeilles — arbres joueur uniquement */}
         {tree.owner === 'player' && !tree.isCut && (() => {
           const r = cellSize * 0.22;
-          const bx = tree.x + cellSize * 0.25;
-          const by = tree.y - cellSize * 0.25;
+          const isGroup = tree.maxHives === 2;
+          const bx = tree.x + cellSize * (isGroup ? 0.52 : 0.38);
+          const by = tree.y - cellSize * (isGroup ? 0.42 : 0.38);
           const gradId = `bee-count-grad-${tree.id}`;
           return (
             <g filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.30))">
