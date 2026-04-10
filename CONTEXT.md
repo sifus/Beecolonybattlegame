@@ -372,6 +372,75 @@ src/
 
 ---
 
+## Ce qui a été fait — 9-10 avril 2026 (sessions 3-4)
+
+### Abeilles — redesign complet
+- Nouveau design : forme goutte d'eau, corps brun (#7a3a08 joueur / #5a1a08 ennemi), bande colorée clippée jaune (#f0c020) ou rouge (#cc2020), taille sc=0.21
+- Orientation tête en avant : bee.displayAngle = angle tangentiel (rayon + 90°) en orbite, Math.atan2 en déplacement
+- Abeilles initiales espacées aléatoirement sur l'orbite (angle et rayon aléatoires)
+- Halo de naissance : animation unique 800ms, joueur (doré) et ennemi (rouge), pas de repeat infini
+- Raccourci T : spawne 20 abeilles sur l'arbre joueur (dev only)
+- Suppression des 20 abeilles de test hardcodées au démarrage
+
+### Ruches — mécanique et visuels
+- Santé ruche : gradient "liquide montant/descendant" appliqué directement sur le path (fix débordement visuel du clipPath)
+- linearGradient 4 stops corrigé : 0% opaque → buildPct opaque → buildPct transparent → 100% transparent
+- isUnderConstruction ne se déclenche plus sur health === 0
+- Compteurs barres ⬆ X/5 (construction) et ⬆ X/20 (upgrade) positionnés sur la ruche concernée
+- Ruche fantôme grise pendant upgrade vers 2ème slot, liquide monte selon upgradingProgress/20
+- lastBuildTick : délai 200ms entre chaque abeille pour construction et upgrade (animation progressive)
+- Texte health/maxHealth supprimé — santé visible uniquement via le liquide
+
+### Gameplay
+- Combat repensé : attaque graduelle ruche par ruche avec throttle 300ms (plus instantanée)
+- HIVE_L2_HP abaissé de 35 → 30
+- Mode gaucher : toggle dans OptionsMenu, inverse le côté du cercle de sélection, sauvegardé en localStorage
+- Conditions de victoire tutoriel corrigées
+
+### Visuels et UI
+- Marqueur de clic animé (ripple blanc, onde Material Design)
+- Effets étang : abeilles qui meurent dans l'eau avec fade 300ms + onde de choc blanche clippée
+- Bouton Tutoriel ajouté dans MainMenu
+- Flow tutoriel : popup supprimée pour sous-niveaux 0–3, bouton Suivant dans TutorialBanner
+- LevelCompleteModal, GameUI, OptionsMenu, TutorialBanner retravaillés (lucide icons)
+- Nuages : 2 types fair/stormy visuels, forme fluffy écrasée scaleY 0.6
+- Rayon solaire : faisceau 45° concentré, cycle 5s visible / 1.5s fadeout / 10s hidden
+
+### Responsive
+- Grille fixe 13×8, cellSize calculé pour maximiser l'espace dans la fenêtre
+- Fond #c2d040 autour de la carte
+- Resize recalcule gridParams même pendant une partie
+- Meta viewport iOS : user-scalable=no, viewport-fit=cover
+- position: fixed sur html/body pour bloquer le scroll, sauf LevelMap (pan-x)
+
+### Architecture et constantes
+- gridUtils.ts : treeX() et treeY() centralisent le positionnement des arbres
+- gameRules.ts : BEE_ORBIT_RADIUS=38, GRID_COLS=13, GRID_ROWS=8
+- BUILD_HIVE_COST et UPGRADE_HIVE_COST remplacent tous les /5 et /20 hardcodés dans Tree.tsx
+- Suppression des dossiers backup-v1 et backup-v2 (1757 lignes)
+- README ajouté
+
+### Bugs corrigés (architecture)
+- Types Bee complets : buildingTreeId, targetLumberjackId, hoverCenterX/Y ajoutés à l'interface
+- 5 casts (bee as any) → accès typés directs
+- Fireflies corrigées (prev.timeOfDay inexistant supprimé)
+- Deps IA ennemie stabilisées (levelProgress objet → primitives)
+
+### Bugs connus — à corriger
+- Audit complet architecture à faire (conditions victoire dans App.tsx, génération abeilles dupliquée ×2, dead code bûcheron, upgradeLocked risque de rester bloqué)
+- 20 abeilles de test accessibles via touche T (à supprimer avant release publique)
+
+### Prochaines étapes
+- Audit architecture complet (migration victoire → useGameLoop, nettoyage dead code)
+- Orage gameplay : nuages orageux déciment abeilles et cassent ruches
+- Bûcheron trébuche sur cailloux
+- Difficulté configurable en mode Partie Rapide
+- Animations de combat (impact abeilles sur ruches)
+- Effets de particules prise d'arbre
+- Responsive mobile fine-tuning (test iPhone)
+
+---
+
 ## Prochaines étapes
 
 ### Priorité haute
