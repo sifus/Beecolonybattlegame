@@ -91,12 +91,8 @@ export function useGameLoop({
         const maxX = gridParams.cols * gridParams.cellSize - BEE_MARGIN;
         const maxY = gridParams.rows * gridParams.cellSize - BEE_MARGIN;
 
-        // FIX PERFORMANCE : Adapter la vitesse selon le nombre d'abeilles
-        const beeSpeedMultiplier = newState.bees.length > 100
-          ? 1.5
-          : newState.bees.length > 50
-            ? 1.25
-            : 1.0;
+        const cellSizeScale = gridParams.cellSize / 80;
+        const beeSpeedMultiplier = 1.0;
 
         updatedBees.forEach((bee) => {
           if (bee.state === 'idle' && bee.treeId) {
@@ -196,7 +192,7 @@ export function useGameLoop({
                   }
                 }
               } else {
-                const speed = 0.8 * beeSpeedMultiplier;
+                const speed = 0.8 * cellSizeScale * beeSpeedMultiplier;
                 bee.angle = Math.atan2(dy, dx);
                 bee.displayAngle = bee.angle;
                 bee.x += (dx / dist) * speed;
@@ -242,7 +238,7 @@ export function useGameLoop({
               bee.targetY = undefined;
               bee.angle = Math.random() * Math.PI * 2;
             } else {
-              const speed = 0.8 * beeSpeedMultiplier;
+              const speed = 0.8 * cellSizeScale * beeSpeedMultiplier;
               bee.angle = Math.atan2(dy, dx);
               bee.displayAngle = bee.angle;
               bee.x += (dx / dist) * speed;
@@ -414,7 +410,7 @@ export function useGameLoop({
                   if (!bee.angle) bee.angle = Math.random() * Math.PI * 2;
                 }
               } else {
-                const speed = 1.2;
+                const speed = 1.2 * cellSizeScale;
                 bee.angle = Math.atan2(dy, dx);
                 bee.displayAngle = bee.angle;
                 bee.x += (dx / dist) * speed;
