@@ -691,3 +691,46 @@ Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useS
 | `4fc435b` | fix: suppression doublon buildingTreeId dans interface Bee (game.ts) |
 | `5b208ac` | chore: suppression dead code lumberjack + beeSpeedMultiplier dans useGameLoop (-167 lignes) |
 | `322f9d5` | refactor: extraction getWording + toast dans utils partagés, fusion imports gameRules |
+
+---
+
+## Prochaines étapes — Session 5 (todo consolidé)
+
+### Priorité ABSOLUE
+**Design Système dynamique**
+- Créer `src/design/tokens.ts` — couleurs, tailles, typo (source de vérité absolue)
+- Créer `src/design/atoms/` : ColorSwatch, BeeShape, HiveShape, TreeShape, PondShape, RockShape, CloudShape, ButtonShape
+- Créer `src/design/molecules/` : CounterBubble, HealthBar, SelectionCircle, HiveOnTree
+- Créer `scripts/generate-design-system.ts` — rend chaque composant via react-dom/server, génère `design-system.svg`
+- Commande : `npx tsx scripts/generate-design-system.ts`
+
+### Priorité haute
+- **Icône App Store** : convertir `assets/icon-rush-1024.svg` en PNG 1024×1024 sans transparence → `resources/icon.png` → `npx @capacitor/assets generate`
+- **Orientation paysage Capacitor** : `capacitor.config.ts` (`orientation: 'landscape'`) + `Info.plist` iOS
+- **Bug ruche L2 sous attaque (2a)** : clipPath gradient "liquide" déborde hors contour → `Tree.tsx renderHive()`
+- **Arrêt game loop au retour menu (3c)** : vérifier que useEffect/intervals/animations CSS s'arrêtent proprement → `useGameLoop.ts`, `useSolarSystem.ts`, `GameBoard.tsx`, `App.tsx`
+
+### Priorité moyenne
+- **Abeilles hors cadre (3b)** : clamper positions dans les limites de la grille jouable → `useGameLoop.ts`
+- **Point de gravitation au clic (1b)** : case vide cliquée = centre de gravitation, rayon max ~1.5 cellSize → `useGameLoop.ts`, `App.tsx`
+- **Damier étendu hors zone jouable (1a)** : prolonger le damier dans les marges décoratives, masquer le fond #c2d040 uni → `GameBoard.tsx`, `App.tsx`
+
+### Dette technique restante
+- State `'fighting'` déclaré dans `Bee` (game.ts) mais jamais assigné → supprimer ou implémenter
+- Conditions de victoire dans `App.tsx` → migrer dans `useGameLoop`
+- Génération abeilles initiales dupliquée ×2 dans `App.tsx` → factoriser en fonction utilitaire
+- `stars: number` dans `GameState` commenté "non utilisé" → supprimer si confirmé inutile
+- Commentaire `game.ts` dit HIVE_L2_HP = 35, valeur réelle = 30 → corriger le commentaire
+- Bug IA attaque abeilles sur case vide (3d) → réévaluer après observation en jeu
+
+### Roadmap modes de jeu
+- **5a** Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore) : `DifficultySelect.tsx`, `enemyAI.ts`, `gameRules.ts`
+- **5b** Mode Partie Rapide — tableau des scores localStorage par difficulté : `useStorage.ts`, `GameOverScreen.tsx`
+- **5c** Mode Histoire — niveaux manuels, difficulté croissante, mécaniques progressives : `storyLevelGenerator.ts`, `levels.ts`, `LevelMap.tsx`
+
+### Gameplay futur
+- Orage : nuages orageux déciment abeilles et cassent ruches
+- Bûcheron : trébuche sur cailloux (gameplay)
+- Animations de combat (impact abeilles sur ruches)
+- Effets de particules lors de la prise d'un arbre
+- Difficulté configurable en mode Partie Rapide
