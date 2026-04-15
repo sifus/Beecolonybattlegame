@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Star, RotateCcw, ArrowRight, Play } from 'lucide-react';
+import { RotateCcw, ArrowRight, Play } from 'lucide-react';
 
 interface LevelCompleteModalProps {
   stars: number; // 0-3
@@ -89,26 +89,6 @@ export function LevelCompleteModal({ stars, onRestart, onNext, onStartQuickGame,
               Bravo ! Tu maîtrises les bases. Prêt pour de nouveaux défis ?
             </p>
           )}
-
-          {/* Étoiles — toujours 3 pour le tuto */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            {[1, 2, 3].map((starNum) => {
-              const lit = isFinalTutorial ? true : starNum <= stars;
-              return (
-                <Star
-                  key={starNum}
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    color: lit ? '#FBBF24' : '#9CA3AF',
-                    fill: lit ? '#FBBF24' : 'none',
-                    strokeWidth: 2,
-                    filter: lit ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.8))' : 'none',
-                  }}
-                />
-              );
-            })}
-          </div>
 
           {isFinalTutorial ? (
             <>
