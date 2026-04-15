@@ -126,9 +126,9 @@ export function GameBoard({
   const extraBottom = Math.ceil((screenH - marginTop - gameHeight) / cellSize) + 1;
 
   const BORDER_COLORS_DAY   = ['#DADC57','#CAD551','#D9D255','#CDC950','#CFCF51','#D1DA56'];
-  const BORDER_COLORS_NIGHT = ['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044'];
+  const BORDER_COLORS_NIGHT = ['#263444','#283648','#2a3a4e','#2e4054','#304256','#324458'];
   const BORDER_COLORS = globalTimeOfDay === 'night' ? BORDER_COLORS_NIGHT : BORDER_COLORS_DAY;
-  const GRASS_NIGHT   = ['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044'];
+  const GRASS_NIGHT   = ['#263444','#283648','#2a3a4e','#2e4054','#304256','#324458'];
 
   // Coloration greedy row-major : aucune couleur identique côte à côte ou coin à coin,
   // sans pattern visible (seed déterministe par position)
