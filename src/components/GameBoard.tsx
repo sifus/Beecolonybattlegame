@@ -125,7 +125,11 @@ export function GameBoard({
   const extraRight = Math.ceil((screenW - marginLeft - gameWidth) / cellSize) + 1;
   const extraBottom = Math.ceil((screenH - marginTop - gameHeight) / cellSize) + 1;
 
-  const BORDER_COLORS = ['#DADC57','#CAD551','#D9D255','#CDC950','#CFCF51','#D1DA56','#E1E159','#DBDE67','#C8C250'];
+  const BORDER_COLORS_DAY   = ['#DADC57','#CAD551','#D9D255','#CDC950','#CFCF51','#D1DA56','#E1E159','#DBDE67','#C8C250'];
+  const BORDER_COLORS_NIGHT = ['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044'];
+  const BORDER_COLORS = globalTimeOfDay === 'night' ? BORDER_COLORS_NIGHT : BORDER_COLORS_DAY;
+  const GRASS_NIGHT   = ['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044'];
+
   const borderCells: { x: number; y: number; color: string }[] = [];
   for (let row = -extraTop; row < gridParams.rows + extraBottom; row++) {
     for (let col = -extraLeft; col < gridParams.cols + extraRight; col++) {
@@ -200,14 +204,20 @@ export function GameBoard({
         ))}
 
         {/* Grass patchwork pattern */}
-        {mapData.grassGrid.map((grass, idx) => (
+        {mapData.grassGrid.map((grass, idx) => {
+          const col = Math.round(grass.x / cellSize);
+          const row = Math.round(grass.y / cellSize);
+          const grassColor = globalTimeOfDay === 'night'
+            ? GRASS_NIGHT[Math.abs(col * 3 + row * 7) % GRASS_NIGHT.length]
+            : grass.color;
+          return (
           <g key={`grass-${idx}`}>
             <rect
               x={grass.x}
               y={grass.y}
               width={gridParams.cellSize}
               height={gridParams.cellSize}
-              fill={grass.color}
+              fill={grassColor}
               shapeRendering="crispEdges"
             />
             <rect
@@ -218,7 +228,8 @@ export function GameBoard({
               fill="rgba(255,220,220,0.10)"
             />
           </g>
-        ))}
+          );
+        })}
 
         {/* Faisceau solaire directionnel + filtre glow étoiles */}
         <defs>

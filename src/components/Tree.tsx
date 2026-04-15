@@ -28,8 +28,8 @@ export function Tree({
   const trunkTopYSmall = trunkBottomY - 18 * s; // petit arbre arrière-droite (bas à -4*s, hauteur 14*s)
   const trunkTopYLarge = trunkBottomY - 22 * s; // grand arbre avant-gauche (hauteur 22*s)
 
-  const foliageDark = treeIsColonized ? '#5ba832' : '#9aad3a';
-  const foliageLight = treeIsColonized ? '#6dc23c' : '#a8bc40';
+  const foliageDark  = isNightMode ? '#3a6e48' : (treeIsColonized ? '#5ba832' : '#9aad3a');
+  const foliageLight = isNightMode ? '#4a7e55' : (treeIsColonized ? '#6dc23c' : '#a8bc40');
 
   const hiveColors =
     tree.owner === 'enemy'
@@ -62,10 +62,10 @@ export function Tree({
 
     const body = `M ${-10*sc} ${-46*sc} Q ${-6*sc} ${-52*sc} ${6*sc} ${-52*sc} Q ${16*sc} ${-52*sc} ${24*sc} ${-38*sc} Q ${30*sc} ${-20*sc} ${28*sc} ${4*sc} Q ${24*sc} ${22*sc} 0 ${28*sc} Q ${-24*sc} ${22*sc} ${-28*sc} ${4*sc} Q ${-30*sc} ${-20*sc} ${-24*sc} ${-38*sc} Q ${-18*sc} ${-52*sc} ${-10*sc} ${-46*sc} Z`;
 
-    const fillColor   = isUnderConstruction ? '#888888' : tree.owner === 'enemy' ? '#cc2222' : '#e8a020';
-    const strokeColor = isUnderConstruction ? 'rgba(255,255,255,0.75)' : tree.owner === 'enemy' ? '#991111' : '#c4780a';
-    const liquidColor = tree.owner === 'enemy' ? '#cc2222' : '#e8a020';
-    const stripeColor = isUnderConstruction ? 'rgba(187,187,187,0.4)' : tree.owner === 'enemy' ? '#991111' : '#c4780a';
+    const fillColor   = isUnderConstruction ? '#888888' : tree.owner === 'enemy' ? (isNightMode ? '#7a2010' : '#cc2222') : (isNightMode ? '#8a5810' : '#e8a020');
+    const strokeColor = isUnderConstruction ? 'rgba(255,255,255,0.75)' : tree.owner === 'enemy' ? (isNightMode ? '#5a1008' : '#991111') : (isNightMode ? '#6a4008' : '#c4780a');
+    const liquidColor = tree.owner === 'enemy' ? (isNightMode ? '#7a2010' : '#cc2222') : (isNightMode ? '#8a5810' : '#e8a020');
+    const stripeColor = isUnderConstruction ? 'rgba(187,187,187,0.4)' : tree.owner === 'enemy' ? (isNightMode ? '#5a1008' : '#991111') : (isNightMode ? '#6a4008' : '#c4780a');
 
     return (
       <g key={`hive-${index}`} transform={`translate(${cx}, ${cy})`}>
@@ -171,12 +171,17 @@ export function Tree({
                       y={trunkBottomY - 4 * s - 14 * s}
                       width={8 * s}
                       height={14 * s}
-                      fill="#7a5c3a"
+                      fill={isNightMode ? '#4a3018' : '#7a5c3a'}
                       rx={2 * s}
                     />
                     <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.10 * s} fill={foliageDark} />
                     <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.10 * s} fill={foliageDark} />
                     <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.10 * s} fill={foliageLight} />
+                    {isNightMode && <>
+                      <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                      <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                      <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                    </>}
                   </g>
 
                   {/* Large front-left tree (rendered second, on top) */}
@@ -185,12 +190,17 @@ export function Tree({
                     y={trunkBottomY - 22 * s}
                     width={13 * s}
                     height={22 * s}
-                    fill="#7a5c3a"
+                    fill={isNightMode ? '#4a3018' : '#7a5c3a'}
                     rx={3 * s}
                   />
                   <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.10 * s} fill={foliageDark} />
                   <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.10 * s} fill={foliageDark} />
                   <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.10 * s} fill={foliageLight} />
+                  {isNightMode && <>
+                    <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                  </>}
                   <ellipse
                     cx={tree.x - 18 * s} cy={trunkTopYLarge - 20 * s}
                     rx={12 * s} ry={10 * s}
@@ -205,12 +215,17 @@ export function Tree({
                     y={trunkBottomY - 20 * s}
                     width={10 * s}
                     height={20 * s}
-                    fill="#7a5c3a"
+                    fill={isNightMode ? '#4a3018' : '#7a5c3a'}
                     rx={2.5 * s}
                   />
                   <circle cx={tree.x - 9 * s} cy={trunkTopY - 18 * s} r={26 * 1.10 * s} fill={foliageDark} />
                   <circle cx={tree.x + 11 * s} cy={trunkTopY - 14 * s} r={22 * 1.10 * s} fill={foliageDark} />
                   <circle cx={tree.x}          cy={trunkTopY - 28 * s} r={22 * 1.10 * s} fill={foliageLight} />
+                  {isNightMode && <>
+                    <circle cx={tree.x - 9 * s}  cy={trunkTopY - 18 * s} r={26 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x + 11 * s} cy={trunkTopY - 14 * s} r={22 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x}          cy={trunkTopY - 28 * s} r={22 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                  </>}
                   <ellipse
                     cx={tree.x - 14 * s} cy={trunkTopY - 30 * s}
                     rx={9 * s} ry={7 * s}
