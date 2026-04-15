@@ -503,3 +503,66 @@ src/
 
 ### Commit
 - `f203667` — 14 fichiers, +599/-367 lignes
+
+---
+
+## Ce qui a été fait — 15 avril 2026 (suite session)
+
+### Mode nuit — refonte visuelle complète (`GameBoard.tsx`, `Tree.tsx`, `Bee.tsx`)
+
+**Damier nuit — coloration greedy row-major (`GameBoard.tsx`, `grassGenerator.ts`) :**
+- Ancien système `tileIdx 2×3` visible comme un pattern périodique → remplacé par un algorithme **greedy row-major** avec seed déterministe
+- Fonction `greedyColor(row, col, colorMap, palette)` : pour chaque case, exclut les 4 voisins déjà colorés (haut-gauche, haut, haut-droit, gauche) — garantit qu'aucune case adjacente ni diagonale ne partage la même couleur (contrainte king graph)
+- Seed : `Math.abs((row * 31337 + col * 7919)) % pool.length` — résultat aléatoire mais déterministe (pas d'effet de bord entre frames)
+- Palettes nuit restaurées (6 tons bleu-nuit subtils) : `['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044']`
+- Même algorithme appliqué au contour des cases pour les deux modes
+- `grassGenerator.ts` : même contrainte king graph (8 voisins) pour le mode jour aussi
+
+**Cailloux nuit (`GameBoard.tsx`) :**
+- Couleurs conditionnelles : nuit → `['#203448','#22364a','#1e3246']` (plus clair que le damier le plus clair), jour → `['#c8cc3e','#bec432','#d2d644']`
+- Jitter positionnel déterministe : `jitter(n) = sin(i * 7919 + n * 1337) * 0.5 * cellSize * 0.28` — déplace chaque rocher dans son propre carré sans sortir de la cellule
+
+**Lucioles — redesign (`Bee.tsx`) :**
+- Corps réduit : `r=2.2` (au lieu de 3), centre lumineux blanc `r=0.9`
+- Halo SVG localisé (`feGaussianBlur stdDeviation=3`) : petite sphère `r=5` appliquant le flou — pas de glow sur toute la carte
+- Pré-sélection : halo blanc `fill="#ffffff" opacity=0.5` + centre blanc élargi `r=1.8` (au lieu de la couleur de la luciole)
+- Sélection active : anneau pulsant couleur `fireflyColor` (vert joueur `#7FFF00`, bleu ennemi `#00BFFF`)
+- Mode jour : anneau de sélection revenu orange `#FF6600`
+
+**Glow au sol accumulatif des lucioles (`GameBoard.tsx`) :**
+- `<g filter="url(#bee-ground-glow)">` avec un `feGaussianBlur stdDeviation=14` appliqué au groupe entier
+- Un cercle `r=16 opacity=0.10` par luciole, couleur `fireflyColor` — les cercles s'accumulent avant le blur → zones denses naturellement plus lumineuses
+
+**Rayon solaire mis en pause la nuit (`GameBoard.tsx`) :**
+- Rayon + sparkles conditionnels : `{globalTimeOfDay !== 'night' && <> {beam} {sparkles} </>}`
+- Gradient de clair de lune (`moonlight-gradient`) supprimé — le voile nocturne `rgba(0,0,30,0.55)` suffit
+
+**Compteur abeilles — couleur thémée nuit (`Tree.tsx`) :**
+- Cercle de fond du compteur : `fill={isNightMode ? '#1a6aaa' : '#4DA8E8'}` — plus foncé en mode nuit
+- Nuages : opacité `0.42` nuit / `0.80` jour (au lieu de `0.28` — meilleure visibilité nocturne)
+
+### Interaction — drag vide désélectionne (`App.tsx`)
+- Comportement corrigé : un drag terminé sur une zone vide (0 abeilles sélectionnées) **désélectionne toutes les abeilles** au lieu de conserver la sélection précédente
+- Avant : `if (selectedBees.length > 0) setGameState(...)` — Après : `setGameState(...)` sans condition
+
+### MainMenu — titre Rush mobile (`MainMenu.tsx`)
+- Mode jour : SVG `<text>` avec `paintOrder="stroke"` — le stroke est rendu **sous** le fill, donnant un vrai contour extérieur sans l'artefact de `WebkitTextStroke` (centré) ni les 14 drop-shadow qui faisaient crasher Chrome
+  - `stroke="rgba(255,255,255,0.92)" strokeWidth="6" strokeLinejoin="round"`, gradient `url(#title-grad)`
+  - `viewBox="0 0 400 110"`, `width: clamp(160px, 38vw, 320px)`
+- Mode nuit : `h1` CSS conservé (gradient chartreuse + `WebkitTextStroke: '1px rgba(255,255,255,0.6)'`)
+- Abeille emoji supprimée du titre
+- Sous-titre : `transform: 'translateY(-16px)'` pour remonter vers le titre sans décaler les boutons
+- Espacement boutons : `space-y-2` → `space-y-3`, zone boutons `py-2` + `pb-4`
+
+### OptionsMenu — header fixe + scroll interne (`OptionsMenu.tsx`)
+- Conteneur root : `fixed inset-0 overflow-hidden flex flex-col`
+- Header : `flex-shrink-0` — reste toujours visible en haut, ne participe pas au scroll
+- Zone contenu : `flex-1 overflow-y-auto` + `WebkitOverflowScrolling: 'touch'` pour le scroll natif iOS
+
+### Commits de session
+| Hash | Description |
+|---|---|
+| `6c2b298` | fix: mode nuit — lucioles redesign + glow sol + rayon en pause |
+| `174f625` | fix: cailloux nuit + jitter positionnel + greedy coloring damier |
+| `e7fba7f` | fix: drag vide désélectionne + cercles sélection thémés jour/nuit |
+| `bc74d06` | fix: MainMenu SVG title + OptionsMenu scroll + boutons espacés |
