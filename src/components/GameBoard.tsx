@@ -40,7 +40,7 @@ interface GameBoardProps {
   leftHanded?: boolean;
   flashEffect: { x: number; y: number; type: 'small' | 'large' } | null;
   waterSplashes: Array<{ x: number; y: number; id: string; timestamp: number; pondIdx: number }>;
-  dyingBees: Array<{ id: string; x: number; y: number; timestamp: number; owner: string }>;
+  dyingBees: Array<{ id: string; x: number; y: number; timestamp: number; owner: string; angle: number }>;
   ripples: { id: number; x: number; y: number }[];
   svgRef: React.RefObject<SVGSVGElement>;
   onMouseDown: (e: React.MouseEvent<SVGSVGElement>) => void;
@@ -632,70 +632,88 @@ export function GameBoard({
           );
         })()}
 
-        {/* Dying bees — fade out + onde de choc blanche */}
-        {dyingBees.map((bee) => {
-          const age = Date.now() - bee.timestamp;
-          const t = age / 300; // 0→1 sur 300ms
-          const opacity = Math.max(0, 1 - t);
-          const shockR = 4 + t * 14; // onde blanche 4→18px
-          return (
-            <g key={bee.id} pointerEvents="none">
-              {/* Onde de choc blanche */}
-              <circle
-                cx={bee.x}
-                cy={bee.y}
-                r={shockR}
-                fill="none"
-                stroke="white"
-                strokeWidth={2}
-                opacity={opacity * 0.9}
-              />
-              {/* Corps abeille qui s'efface */}
-              <circle
-                cx={bee.x}
-                cy={bee.y}
-                r={4}
-                fill={bee.owner === 'player' ? '#FDB022' : bee.owner === 'enemy' ? '#ef4444' : '#9ca3af'}
-                opacity={opacity}
-              />
-            </g>
-          );
-        })}
-
-        {/* Water splashes - when bees fall in ponds */}
+        {/* Water splashes — rendu AVANT les corps pour rester en dessous */}
         {waterSplashes.map((splash) => {
           const age = Date.now() - splash.timestamp;
-          const opacity = Math.max(0, 1 - age / 800);
-          const scale = 1 + (age / 800) * 0.5;
+          const opacity = Math.max(0, 1 - age / 1400);
+          const scale = 1 + (age / 1400) * 0.4;
           const clipPathId = `pond-clip-${splash.pondIdx}`;
 
           return (
             <g key={splash.id} opacity={opacity} clipPath={`url(#${clipPathId})`}>
-              <circle
-                cx={splash.x}
-                cy={splash.y}
-                r={7 * scale}
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth={2.5}
-                opacity={0.9}
-              />
-              <circle
-                cx={splash.x}
-                cy={splash.y}
-                r={12 * scale}
-                fill="none"
-                stroke="#a8d8f0"
-                strokeWidth={2}
-                opacity={0.7}
-              />
-              <circle
-                cx={splash.x}
-                cy={splash.y}
-                r={3.5}
-                fill="#ffffff"
-                opacity={1}
-              />
+              <circle cx={splash.x} cy={splash.y} r={6 * scale}
+                fill="none" stroke="#1e40af" strokeWidth={1} opacity={0.9} />
+              <circle cx={splash.x} cy={splash.y} r={11 * scale}
+                fill="none" stroke="#3b82f6" strokeWidth={0.8} opacity={0.7} />
+              <circle cx={splash.x} cy={splash.y} r={2.5}
+                fill="#1e40af" opacity={1} />
+            </g>
+          );
+        })}
+
+        {/* Dying bees */}
+        {dyingBees.map((bee) => {
+          const age = Date.now() - bee.timestamp;
+          const isNight = globalTimeOfDay === 'night';
+
+          // ── MODE NUIT ────────────────────────────────────────────────────────
+          if (isNight) {
+            const opacity = Math.max(0, 1 - age / 3000);
+            const bodyColor = bee.owner === 'player' ? '#7FFF00'
+              : bee.owner === 'enemy' ? '#00BFFF' : '#9ca3af';
+
+            // Détecter l'étang sous la luciole
+            const pondIdx = mapData.ponds.findIndex((pond) => {
+              const pondW = pond.width * gridParams.cellSize;
+              const pondH = pond.height * gridParams.cellSize;
+              const cx = pond.x + pondW / 2;
+              const cy = pond.y + pondH / 2;
+              return ((bee.x - cx) / (pondW * 0.42)) ** 2 + ((bee.y - cy) / (pondH * 0.42)) ** 2 <= 1;
+            });
+            const inPond = pondIdx >= 0;
+
+            // Onde bleue simple dans l'étang, s'efface en 800ms
+            const waveT = Math.min(1, age / 800);
+            const waveR = 5 + waveT * 18;
+            const waveOpacity = Math.max(0, 1 - waveT) * 0.85;
+
+            return (
+              <g key={bee.id} pointerEvents="none">
+                {inPond && (
+                  <g clipPath={`url(#pond-clip-${pondIdx})`}>
+                    <circle cx={bee.x} cy={bee.y} r={waveR}
+                      fill="none" stroke="#60a5fa" strokeWidth={2}
+                      opacity={waveOpacity}
+                    />
+                  </g>
+                )}
+                {/* Corps luciole taille réelle (r=2.2), sans glow, fade 3s */}
+                <circle cx={bee.x} cy={bee.y} r={2.2}
+                  fill={bodyColor} opacity={opacity}
+                />
+              </g>
+            );
+          }
+
+          // ── MODE JOUR — skin larme, fade 3s (l'onde vient des waterSplashes) ──
+          const opacity = Math.max(0, 1 - age / 3000);
+          const dropPath = 'M 0,-22 C 0,-22 -18,-9 -18,3 C -18,14 -10,22 0,22 C 10,22 18,14 18,3 C 18,-9 0,-22 0,-22 Z';
+          const sc = (gridParams.cellSize / 80) * 0.21;
+          const angleDeg = ((bee.angle * 180 / Math.PI) + 270) || 0;
+          const bodyFill   = bee.owner === 'player' ? '#7a3a08' : '#5a1a08';
+          const stripeFill = bee.owner === 'player' ? '#f0c020' : '#cc2020';
+          const clipDyingId = `dying-clip-${bee.id}`;
+          return (
+            <g key={bee.id} pointerEvents="none" opacity={opacity}>
+              <g transform={`translate(${bee.x},${bee.y}) rotate(${angleDeg}) scale(${sc})`}>
+                <defs>
+                  <clipPath id={clipDyingId}><path d={dropPath} /></clipPath>
+                </defs>
+                <path d={dropPath} fill={bodyFill} />
+                <rect x={-22} y={-3} width={44} height={16}
+                  fill={stripeFill} clipPath={`url(#${clipDyingId})`} />
+                <ellipse cx={-6} cy={-14} rx={5} ry={4} fill="#fff" opacity={0.18} />
+              </g>
             </g>
           );
         })}

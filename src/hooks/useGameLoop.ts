@@ -103,18 +103,21 @@ export function useGameLoop({
               bee.displayAngle = bee.angle + Math.PI / 2;
 
               // Abeilles idle au-dessus d'un marais — meurent moins vite
-              const idlePondIdx = mapData.ponds.findIndex(pond =>
-                bee.x >= pond.x && bee.x <= pond.x + pond.width * gridParams.cellSize &&
-                bee.y >= pond.y && bee.y <= pond.y + pond.height * gridParams.cellSize
-              );
-              if (idlePondIdx !== -1 && Math.random() < 0.0005) {
+              const idlePondIdx = mapData.ponds.findIndex(pond => {
+                const pw = pond.width * gridParams.cellSize;
+                const ph = pond.height * gridParams.cellSize;
+                const cx = pond.x + pw / 2;
+                const cy = pond.y + ph / 2;
+                return ((bee.x - cx) / (pw * 0.30)) ** 2 + ((bee.y - cy) / (ph * 0.30)) ** 2 <= 1;
+              });
+              if (idlePondIdx !== -1 && Math.random() < 0.0009) {
                 beesToRemove.add(bee.id);
                 const dyingId = `dying-${bee.id}-${Date.now()}`;
-                setDyingBees(prev => [...prev, { id: dyingId, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner }]);
-                setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId)), 300);
+                setDyingBees(prev => [...prev, { id: dyingId, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner, angle: bee.displayAngle ?? bee.angle }]);
+                setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId)), 3000);
                 const splashId = `splash-idle-${Date.now()}-${Math.random()}`;
                 setWaterSplashes(prev => [...prev, { x: bee.x, y: bee.y, id: splashId, timestamp: Date.now(), pondIdx: idlePondIdx }]);
-                setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
+                setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 1400);
               }
             } else if (tree && tree.isCut) {
               bee.treeId = null;
@@ -192,21 +195,22 @@ export function useGameLoop({
                 bee.y += (dy / dist) * speed;
 
                 const pondIdx1 = mapData.ponds.findIndex(pond => {
-                  return bee.x >= pond.x &&
-                         bee.x <= pond.x + pond.width * gridParams.cellSize &&
-                         bee.y >= pond.y &&
-                         bee.y <= pond.y + pond.height * gridParams.cellSize;
+                  const pw = pond.width * gridParams.cellSize;
+                  const ph = pond.height * gridParams.cellSize;
+                  const cx = pond.x + pw / 2;
+                  const cy = pond.y + ph / 2;
+                  return ((bee.x - cx) / (pw * 0.30)) ** 2 + ((bee.y - cy) / (ph * 0.30)) ** 2 <= 1;
                 });
                 const isOverPond = pondIdx1 !== -1;
 
-                if (isOverPond && Math.random() < 0.0015) {
+                if (isOverPond && Math.random() < 0.0025) {
                   beesToRemove.add(bee.id);
 
                   beeConsumedByPondRef.current = true;
 
                   const dyingId = `dying-${bee.id}-${Date.now()}`;
-                  setDyingBees(prev => [...prev, { id: dyingId, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner }]);
-                  setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId)), 300);
+                  setDyingBees(prev => [...prev, { id: dyingId, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner, angle: bee.displayAngle ?? bee.angle }]);
+                  setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId)), 3000);
 
                   const splashId = `splash-${Date.now()}-${Math.random()}`;
                   setWaterSplashes(prev => [...prev, {
@@ -216,7 +220,7 @@ export function useGameLoop({
                     timestamp: Date.now(),
                     pondIdx: pondIdx1,
                   }]);
-                  setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
+                  setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 1400);
                 }
               }
             }
@@ -241,19 +245,20 @@ export function useGameLoop({
               bee.y += (dy / dist) * speed;
 
               const pondIdx2 = mapData.ponds.findIndex(pond => {
-                return bee.x >= pond.x &&
-                       bee.x <= pond.x + pond.width * gridParams.cellSize &&
-                       bee.y >= pond.y &&
-                       bee.y <= pond.y + pond.height * gridParams.cellSize;
+                const pw = pond.width * gridParams.cellSize;
+                const ph = pond.height * gridParams.cellSize;
+                const cx = pond.x + pw / 2;
+                const cy = pond.y + ph / 2;
+                return ((bee.x - cx) / (pw * 0.30)) ** 2 + ((bee.y - cy) / (ph * 0.30)) ** 2 <= 1;
               });
               const isOverPond = pondIdx2 !== -1;
 
-              if (isOverPond && Math.random() < 0.0015) {
+              if (isOverPond && Math.random() < 0.0025) {
                 beesToRemove.add(bee.id);
 
                 const dyingId2 = `dying-${bee.id}-${Date.now()}`;
-                setDyingBees(prev => [...prev, { id: dyingId2, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner }]);
-                setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId2)), 300);
+                setDyingBees(prev => [...prev, { id: dyingId2, x: bee.x, y: bee.y, timestamp: Date.now(), owner: bee.owner, angle: bee.displayAngle ?? bee.angle }]);
+                setTimeout(() => setDyingBees(prev => prev.filter(d => d.id !== dyingId2)), 3000);
 
                 const splashId = `splash-${Date.now()}-${Math.random()}`;
                 setWaterSplashes(prev => [...prev, {
@@ -263,7 +268,7 @@ export function useGameLoop({
                   timestamp: Date.now(),
                   pondIdx: pondIdx2,
                 }]);
-                setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 800);
+                setTimeout(() => setWaterSplashes(prev => prev.filter(s => s.id !== splashId)), 1400);
               }
             }
           } else if (bee.state === 'building' && bee.buildingTreeId) {
