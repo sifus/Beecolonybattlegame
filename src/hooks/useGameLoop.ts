@@ -100,7 +100,6 @@ export function useGameLoop({
         const maxY =  screenH - marginTop - SCREEN_SAFE_MARGIN;
 
         const cellSizeScale = gridParams.cellSize / 80;
-        const beeSpeedMultiplier = 1.0;
 
         updatedBees.forEach((bee) => {
           if (bee.state === 'idle' && bee.treeId) {
@@ -203,7 +202,7 @@ export function useGameLoop({
                   }
                 }
               } else {
-                const speed = 0.8 * cellSizeScale * beeSpeedMultiplier;
+                const speed = 0.8 * cellSizeScale;
                 bee.angle = Math.atan2(dy, dx);
                 bee.displayAngle = bee.angle;
                 bee.x += (dx / dist) * speed;
@@ -252,7 +251,7 @@ export function useGameLoop({
               bee.targetY = undefined;
               bee.angle = Math.random() * Math.PI * 2;
             } else {
-              const speed = 0.8 * cellSizeScale * beeSpeedMultiplier;
+              const speed = 0.8 * cellSizeScale;
               bee.angle = Math.atan2(dy, dx);
               bee.displayAngle = bee.angle;
               bee.x += (dx / dist) * speed;
@@ -767,11 +766,6 @@ export function useGameLoop({
     return () => clearInterval(interval);
   }, [gameState.isPlaying]);
 
-  // RÉSERVÉ POUR FUTURE FONCTIONNALITÉ: Bûcherons spawn
-  useEffect(() => {
-    return;
-  }, [gameState.isPlaying, (gameState as any).lumberjackGameplayEnabled]);
-
   // Fireflies animation loop — 30 FPS (mode nuit uniquement)
   useEffect(() => {
     if (globalTimeOfDay !== 'night') return;
@@ -793,167 +787,6 @@ export function useGameLoop({
 
     return () => clearInterval(interval);
   }, [globalTimeOfDay]);
-
-  // Lumberjack movement and chopping logic
-  useEffect(() => {
-    if (!gameState.isPlaying) return;
-    if (!(gameState as any).lumberjackGameplayEnabled) return;
-
-    const interval = setInterval(() => {
-      setGameState(prev => {
-        if (!(prev as any).lumberjackGameplayEnabled) return prev;
-        const newState = { ...prev };
-        const lumberjacksToRemove = new Set<string>();
-
-        (newState as any).lumberjacks?.forEach((lumberjack: any) => {
-          if (lumberjack.state === 'dead') {
-            lumberjacksToRemove.add(lumberjack.id);
-            return;
-          }
-
-          const targetTree = newState.trees.find(t => t.id === lumberjack.targetTreeId);
-          if (!targetTree || targetTree.isCut) {
-            if (lumberjack.isConverted) {
-              const enemyTrees = newState.trees.filter(t => t.owner === 'enemy' && !t.isCut);
-              if (enemyTrees.length > 0) {
-                lumberjack.targetTreeId = enemyTrees[Math.floor(Math.random() * enemyTrees.length)].id;
-                return;
-              }
-            }
-            lumberjacksToRemove.add(lumberjack.id);
-            return;
-          }
-
-          const attackingBees = newState.bees.filter(bee => {
-            const dx = bee.x - lumberjack.x;
-            const dy = bee.y - lumberjack.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist >= 30) return false;
-            if (bee.targetLumberjackId !== lumberjack.id) return false;
-            if (bee.owner === 'player' && !lumberjack.isConverted) return true;
-            if (bee.owner === 'enemy' && lumberjack.isConverted) return true;
-            return false;
-          });
-
-          if (attackingBees.length > 0 && lumberjack.state !== 'fighting') {
-            lumberjack.state = 'fighting';
-          }
-
-          if (attackingBees.length > 0 && lumberjack.state === 'fighting') {
-            lumberjack.health = Math.max(0, lumberjack.health - attackingBees.length * 0.1);
-            if (lumberjack.health <= 0) {
-              lumberjack.state = 'dead';
-
-              attackingBees.forEach(bee => {
-                bee.targetLumberjackId = null;
-                const friendlyTrees = newState.trees.filter(t => t.owner === bee.owner && !t.isCut);
-                if (friendlyTrees.length > 0) {
-                  let closestTree = friendlyTrees[0];
-                  let minDist = Math.sqrt(Math.pow(bee.x - closestTree.x, 2) + Math.pow(bee.y - closestTree.y, 2));
-
-                  friendlyTrees.forEach(tree => {
-                    const dist = Math.sqrt(Math.pow(bee.x - tree.x, 2) + Math.pow(bee.y - tree.y, 2));
-                    if (dist < minDist) {
-                      minDist = dist;
-                      closestTree = tree;
-                    }
-                  });
-
-                  bee.state = 'moving';
-                  bee.targetTreeId = closestTree.id;
-                } else {
-                  bee.state = 'idle';
-                }
-              });
-
-              toast.success('Bûcheron vaincu !');
-              lumberjacksToRemove.add(lumberjack.id);
-              return;
-            }
-          } else if (lumberjack.state === 'fighting' && attackingBees.length === 0) {
-            lumberjack.state = 'walking';
-          }
-
-          if (lumberjack.state === 'walking') {
-            const dx = targetTree.x - lumberjack.x;
-            const dy = targetTree.y - lumberjack.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist > 60) {
-              const speed = 0.4;
-              lumberjack.x += (dx / dist) * speed;
-              lumberjack.y += (dy / dist) * speed;
-            } else {
-              lumberjack.state = 'chopping';
-            }
-          }
-
-          if (lumberjack.state === 'chopping') {
-            lumberjack.chopProgress += 0.0056;
-
-            if (lumberjack.chopProgress >= 1) {
-              lumberjack.chopProgress = 0;
-
-              if (targetTree.hiveCount > 0) {
-                const lastHiveIndex = targetTree.hiveHealth.length - 1;
-                const newHealth = Math.max(0, targetTree.hiveHealth[lastHiveIndex] - 1);
-                targetTree.hiveHealth = [...targetTree.hiveHealth];
-                targetTree.hiveHealth[lastHiveIndex] = newHealth;
-
-                if (newHealth === 0) {
-                  targetTree.hiveHealth = targetTree.hiveHealth.slice(0, -1);
-                  targetTree.hiveLevel = targetTree.hiveLevel.slice(0, -1);
-                  targetTree.hiveCount--;
-
-                  if (lumberjack.isConverted) {
-                    toast.success('Le bûcheron allié a détruit une ruche ennemie !');
-                  } else {
-                    toast.error('Le bûcheron a détruit une ruche !');
-                  }
-                }
-              } else if (!lumberjack.isConverted) {
-                targetTree.cutProgress = (targetTree.cutProgress || 0) + 1;
-
-                if (targetTree.cutProgress >= 10) {
-                  targetTree.isCut = true;
-                  targetTree.hiveCount = 0;
-                  targetTree.hiveHealth = [];
-                  targetTree.hiveLevel = [];
-                  targetTree.beeCount = 0;
-                  toast.error('Un arbre a été coupé !');
-
-                  newState.bees = newState.bees.map(bee => {
-                    if (bee.treeId === targetTree.id) {
-                      return { ...bee, treeId: null, state: 'idle' as const };
-                    }
-                    return bee;
-                  });
-
-                  lumberjacksToRemove.add(lumberjack.id);
-                }
-              }
-            }
-          }
-        });
-
-        if ((newState as any).lumberjacks) {
-          (newState as any).lumberjacks = (newState as any).lumberjacks.filter(
-            (l: any) => !lumberjacksToRemove.has(l.id)
-          );
-        }
-
-        if (newState.haloEffects) {
-          const now = Date.now();
-          newState.haloEffects = newState.haloEffects.filter(halo => now - halo.timestamp < 2000);
-        }
-
-        return newState;
-      });
-    }, 1000 / 60);
-
-    return () => clearInterval(interval);
-  }, [gameState.isPlaying, (gameState as any).lumberjackGameplayEnabled]);
 
   // Timer — incrémente gameTime toutes les secondes
   useEffect(() => {
