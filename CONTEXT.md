@@ -646,3 +646,48 @@ src/
 | `174f625` | fix: cailloux nuit + jitter positionnel + greedy coloring damier |
 | `e7fba7f` | fix: drag vide désélectionne + cercles sélection thémés jour/nuit |
 | `bc74d06` | fix: MainMenu SVG title + OptionsMenu scroll + boutons espacés |
+
+---
+
+## Ce qui a été fait — 15 avril 2026 (session 4 — audit & nettoyage)
+
+### Audit complet — 8 fichiers analysés
+Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useStorage.ts`, `enemyAI.ts`, `game.ts`, `gameRules.ts`, `quickPlayRules.ts`. Bugs réels, dette technique et dead code identifiés.
+
+### Icône app
+- `assets/icon-rush-1024.svg` créé — 1024×1024, style chartreuse avec arbre, ruche et abeilles
+- Favicon déplacé de `src/public/favicon.svg` vers `/public/favicon.svg` (emplacement correct pour Vite)
+
+### Nettoyage dossiers et fichiers orphelins
+- Dossiers vides supprimés : `src/styles/`, `src/guidelines/`, `src/components/figma/`, `src/LICENSE/`
+- `src/public/` supprimé (favicon au mauvais endroit)
+- `src/utils/useFullscreen.ts` confirmé absent (déjà supprimé lors du nettoyage précédent)
+
+### Fix `enemyAI.ts` — CELL_SIZE hardcodé (bug réel)
+- `const CELL_SIZE = 100` et `const GRID_COLS = 16` locaux supprimés (`GRID_COLS` incohérent avec `gameRules.ts` qui vaut 13)
+- `enemyAITick` et `pathCrossesPond` reçoivent maintenant `cellSize: number` en paramètre
+- Toutes les occurrences `CELL_SIZE` remplacées par `cellSize` (zone de réaction IA + détection étangs)
+- `useGameLoop.ts` mis à jour : `enemyAITick(prev, mapData, gridParams.cellSize)`
+
+### Fix `game.ts` — doublon interface Bee (bug réel)
+- `buildingTreeId?: string | null` déclaré deux fois dans l'interface `Bee` — doublon ligne 51 supprimé
+
+### Dead code supprimé dans `useGameLoop.ts` (−167 lignes, −2 kB gzip)
+- Bloc lumberjack movement/chopping (~160 lignes) conditionné par `lumberjackGameplayEnabled` jamais actif
+- `useEffect` vide réservé aux bûcherons supprimé
+- `const beeSpeedMultiplier = 1.0` supprimé (multipliait par 1, aucun effet)
+
+### Refactor — déduplication `getWording` + `toast`
+- `src/utils/wording.ts` créé — `getWording(timeOfDay)` exporté (source unique de vérité)
+- `src/utils/toast.ts` créé — stub `toast` exporté (toasts désactivés, source unique)
+- Définitions locales supprimées de `App.tsx` et `useGameLoop.ts`
+- Double import `gameRules.ts` dans `App.tsx` fusionné en une seule ligne
+
+### Commits de session
+| Hash | Description |
+|---|---|
+| `78791f8` | chore: nettoyage dossiers vides, favicon déplacé vers /public/, icône app dans assets/ |
+| `3655128` | fix: enemyAI — CELL_SIZE/GRID_COLS hardcodés remplacés par cellSize dynamique |
+| `4fc435b` | fix: suppression doublon buildingTreeId dans interface Bee (game.ts) |
+| `5b208ac` | chore: suppression dead code lumberjack + beeSpeedMultiplier dans useGameLoop (-167 lignes) |
+| `322f9d5` | refactor: extraction getWording + toast dans utils partagés, fusion imports gameRules |
