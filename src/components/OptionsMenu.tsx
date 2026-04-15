@@ -19,14 +19,14 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
   const bgColor = timeOfDay === 'night' ? '#1a2332' : '#8B7355'; // Bleu foncé nuit, marron taupe jour
 
   return (
-    <div className="fixed inset-0 overflow-y-auto overscroll-contain" style={{ backgroundColor: bgColor }}>
+    <div className="fixed inset-0 overflow-hidden flex flex-col" style={{ backgroundColor: bgColor }}>
       {/* Texture hexagonale de ruche */}
       <svg className="absolute inset-0 w-full h-full opacity-[0.20]" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="honeycomb-options" x="0" y="0" width="100" height="86.6" patternUnits="userSpaceOnUse">
-            <polygon 
-              points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" 
-              fill="none" 
+            <polygon
+              points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25"
+              fill="none"
               stroke={timeOfDay === 'night' ? '#4A90E2' : '#FDB022'}
               strokeWidth="3"
             />
@@ -35,11 +35,11 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
         <rect width="100%" height="100%" fill="url(#honeycomb-options)" />
       </svg>
 
-      {/* Header avec bouton retour */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-center">
+      {/* Header fixe — flex-shrink-0 */}
+      <div className="relative z-20 flex-shrink-0 flex items-center justify-center px-4 py-4">
         <button
           onClick={onBack}
-          className="absolute left-0 p-2.5 hover:scale-105 transition-transform rounded-xl"
+          className="absolute left-4 p-2.5 hover:scale-105 transition-transform rounded-xl"
           style={{
             background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
             boxShadow: '0 4px 8px rgba(217, 119, 6, 0.5), inset 0 -2px 4px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.35)',
@@ -48,10 +48,10 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
         >
           <ArrowLeft className="w-5 h-5 text-amber-950" strokeWidth={2.5} />
         </button>
-        
-        <h1 
+
+        <h1
           className="select-none"
-          style={{ 
+          style={{
             fontFamily: 'cursive',
             fontSize: 'clamp(1.5rem, 6vw, 2.5rem)',
             color: timeOfDay === 'night' ? '#7FFF00' : '#FDB022',
@@ -65,9 +65,9 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
         </h1>
       </div>
 
-      {/* Options container */}
-      <div className="relative z-10 flex items-center justify-center min-h-full px-4 pt-20 pb-16">
-        <div className="w-full max-w-4xl">
+      {/* Zone scrollable */}
+      <div className="relative z-10 flex-1 overflow-y-auto px-4 pb-4" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div className="w-full max-w-4xl mx-auto">
 
           {/* Options container */}
           <div 

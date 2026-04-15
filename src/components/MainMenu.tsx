@@ -125,19 +125,10 @@ export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onSho
 
       {/* Contenu du menu */}
       <div className="relative z-10 flex items-center justify-center h-full px-4 overflow-y-auto">
-        <div className="text-center w-full max-w-md py-4 relative">
-          {/* Titre "Rush" avec abeille à gauche */}
+        <div className="text-center w-full max-w-md py-2 relative">
+          {/* Titre "Rush" */}
           <div className="mb-0">
-            <div className="flex flex-col items-center justify-center gap-1 mb-2">
-              {/* Abeille/Luciole */}
-              {timeOfDay === 'night' ? (
-                <div className="relative">
-                  <div className="absolute inset-0 blur-xl bg-green-400 opacity-50 rounded-full" />
-                  <span className="relative text-4xl">✨</span>
-                </div>
-              ) : (
-                <span className="text-4xl">🐝</span>
-              )}
+            <div className="flex flex-col items-center justify-center mb-0">
 
               {/* Titre Rush */}
               {timeOfDay === 'night' ? (
@@ -162,7 +153,7 @@ export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onSho
               ) : (
                 <svg
                   viewBox="0 0 400 110"
-                  style={{ width: 'clamp(200px, 50vw, 400px)', height: 'auto', overflow: 'visible' }}
+                  style={{ width: 'clamp(160px, 38vw, 320px)', height: 'auto', overflow: 'visible' }}
                   aria-label="Rush"
                 >
                   <defs>
@@ -206,7 +197,7 @@ export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onSho
           </div>
 
           {/* Menu buttons */}
-          <div className="space-y-4 pb-20">
+          <div className="space-y-2 pb-4">
             {/* Tutoriel */}
             <MenuButton
               onClick={onStartTutorial}
