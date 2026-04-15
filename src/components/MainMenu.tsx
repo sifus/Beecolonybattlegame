@@ -197,7 +197,7 @@ export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onSho
           </div>
 
           {/* Menu buttons */}
-          <div className="space-y-2 pb-4">
+          <div className="space-y-3 pb-4">
             {/* Tutoriel */}
             <MenuButton
               onClick={onStartTutorial}
