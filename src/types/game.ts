@@ -14,7 +14,7 @@ export interface Tree {
   hiveCount: number; // Nombre de ruches sur cet arbre
   maxHives: number; // Maximum de ruches possibles (toujours 1)
   beeCount: number; // Nombre d'abeilles orbitant autour
-  hiveHealth: number[]; // Santé de chaque ruche (7 pour niveau 1, 35 pour niveau 2)
+  hiveHealth: number[]; // Santé de chaque ruche (7 pour niveau 1, 30 pour niveau 2)
   hiveLevel: number[]; // Niveau de chaque ruche (1 ou 2)
   buildingProgress?: number[]; // Abeilles investies pour construction
   lastBuildTick?: number;      // Timestamp du dernier tick de construction (throttle 200ms)
@@ -44,7 +44,7 @@ export interface Bee {
   hoverCenterY?: number; // Centre fixe pour le hover (wiggle sans arbre)
   buildingTreeId?: string | null; // Arbre ciblé pour construction/réparation/amélioration
   targetLumberjackId?: string | null; // Bûcheron ciblé (future fonctionnalité)
-  state: 'idle' | 'moving' | 'fighting' | 'building';
+  state: 'idle' | 'moving' | 'building';
   angle: number; // Angle de rotation autour de l'arbre
   displayAngle?: number; // Direction tangentielle pour l'orientation visuelle
   createdAt?: number; // Timestamp de création
@@ -83,7 +83,7 @@ export interface GameState {
   selectedBeeIds: Set<string>; // IDs des abeilles sélectionnées
   gameTime: number; // Temps de jeu écoulé
   isPlaying: boolean; // Jeu en pause ou en cours
-  stars: number; // Étoiles gagnées (non utilisé actuellement)
+  stars: number; // Étoiles gagnées (mode histoire)
   haloEffects?: HaloEffect[]; // Effets de halo lumineux actifs
   fireflies?: Firefly[]; // Lucioles d'ambiance (mode nuit uniquement)
 }
