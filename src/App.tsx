@@ -212,6 +212,18 @@ export default function App() {
     }
   }, []);
   
+  // Forcer l'orientation paysage (Android Chrome / PWA — ignoré silencieusement sur iOS)
+  useEffect(() => {
+    const tryLockLandscape = async () => {
+      try {
+        await (screen.orientation as any).lock('landscape');
+      } catch {
+        // Non supporté (iOS Safari) — la rotation CSS prend le relais
+      }
+    };
+    tryLockLandscape();
+  }, []);
+
   // Fix viewport pour iOS en mode standalone (PWA)
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
