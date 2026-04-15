@@ -724,6 +724,7 @@ Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useS
 - Bug IA attaque abeilles sur case vide (3d) → réévaluer après observation en jeu
 
 ### Roadmap modes de jeu
+- **3a** Améliorer l'IA ennemie : meilleure sélection de cibles, timing variable, gestion défensive → `enemyAI.ts`
 - **5a** Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore) : `DifficultySelect.tsx`, `enemyAI.ts`, `gameRules.ts`
 - **5b** Mode Partie Rapide — tableau des scores localStorage par difficulté : `useStorage.ts`, `GameOverScreen.tsx`
 - **5c** Mode Histoire — niveaux manuels, difficulté croissante, mécaniques progressives : `storyLevelGenerator.ts`, `levels.ts`, `LevelMap.tsx`
