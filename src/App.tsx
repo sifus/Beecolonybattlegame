@@ -78,6 +78,30 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   };
 }
 
+/** Crée les abeilles initiales depuis les arbres configurés (beeCount > 0). */
+function buildInitialBees(trees: Array<{ id: string; x: number; y: number; owner: string; beeCount: number; hiveHealth: number[] }>): import('./types/game').Bee[] {
+  const bees: import('./types/game').Bee[] = [];
+  trees.forEach((tree) => {
+    if (tree.beeCount > 0 && tree.hiveHealth.length > 0) {
+      for (let i = 0; i < tree.beeCount; i++) {
+        const angle = (i / tree.beeCount) * Math.PI * 2;
+        bees.push({
+          id: `bee-${tree.id}-${i}-${Date.now()}`,
+          x: tree.x + Math.cos(angle) * BEE_ORBIT_RADIUS,
+          y: tree.y + Math.sin(angle) * BEE_ORBIT_RADIUS,
+          owner: tree.owner as import('./types/game').Owner,
+          treeId: tree.id,
+          targetTreeId: null,
+          state: 'idle',
+          angle,
+          createdAt: undefined,
+        });
+      }
+    }
+  });
+  return bees;
+}
+
 export default function App() {
   // États de navigation et paramètres globaux
   const [currentScreen, setCurrentScreen] = useState<Screen>('menu');
@@ -1375,26 +1399,7 @@ export default function App() {
         id: `tree-${index}`,
       }));
 
-      const initialBees: BeeType[] = [];
-      initialTrees.forEach((tree) => {
-        if (tree.beeCount > 0 && tree.hiveHealth.length > 0) {
-          for (let i = 0; i < tree.beeCount; i++) {
-            const angle = (i / tree.beeCount) * Math.PI * 2;
-            const radius = BEE_ORBIT_RADIUS;
-            initialBees.push({
-              id: `bee-${tree.id}-${i}-${Date.now()}`,
-              x: tree.x + Math.cos(angle) * radius,
-              y: tree.y + Math.sin(angle) * radius,
-              owner: tree.owner,
-              treeId: tree.id,
-              targetTreeId: null,
-              state: 'idle',
-              angle,
-              createdAt: undefined,
-            });
-          }
-        }
-      });
+      const initialBees = buildInitialBees(initialTrees);
 
       setMapData({
         trees: initialTrees,
@@ -1496,13 +1501,14 @@ export default function App() {
         grassGrid: levelConfig.grassGrid,
       });
       
+      const restartTrees = levelConfig.trees.map((tree, index) => ({
+        ...tree,
+        id: `tree-${index}`,
+      }));
       setGameOver(null); setShowGameOverPopup(false);
       setGameState({
-        trees: levelConfig.trees.map((tree, index) => ({
-          ...tree,
-          id: `tree-${index}`,
-        })),
-        bees: [],
+        trees: restartTrees,
+        bees: buildInitialBees(restartTrees),
         selectedBeeIds: new Set(),
         gameTime: 0,
         isPlaying: true,
@@ -1510,7 +1516,7 @@ export default function App() {
         haloEffects: [],
         fireflies: [],
       });
-      
+
       setLastClickedTreeId(null);
       setLastClickTime(0);
     }
@@ -1591,13 +1597,14 @@ export default function App() {
         grassGrid: levelConfig.grassGrid,
       });
       
+      const nextTrees = levelConfig.trees.map((tree, index) => ({
+        ...tree,
+        id: `tree-${index}`,
+      }));
       setGameOver(null); setShowGameOverPopup(false);
       setGameState({
-        trees: levelConfig.trees.map((tree, index) => ({
-          ...tree,
-          id: `tree-${index}`,
-        })),
-        bees: [],
+        trees: nextTrees,
+        bees: buildInitialBees(nextTrees),
         selectedBeeIds: new Set(),
         gameTime: 0,
         isPlaying: true,
@@ -1605,7 +1612,7 @@ export default function App() {
         haloEffects: [],
         fireflies: [],
       });
-      
+
       setLastClickedTreeId(null);
       setLastClickTime(0);
     } else {
