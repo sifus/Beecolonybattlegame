@@ -980,7 +980,7 @@ export function useGameLoop({
 
     const interval = setInterval(() => {
       setGameState((prev) => {
-        return enemyAITick(prev, mapData);
+        return enemyAITick(prev, mapData, gridParams.cellSize);
       });
     }, aiInterval);
 

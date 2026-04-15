@@ -3,10 +3,7 @@ import { MapData } from './mapGenerator';
 
 import { BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP } from '../constants/gameRules';
 
-const GRID_COLS = 16;
-const CELL_SIZE = 100;
-
-export function enemyAITick(gameState: GameState, mapData: MapData): GameState {
+export function enemyAITick(gameState: GameState, mapData: MapData, cellSize: number): GameState {
   const newState = { ...gameState };
   
   // Get all trees by owner (will be recalculated after claiming neutral trees)
@@ -273,7 +270,7 @@ export function enemyAITick(gameState: GameState, mapData: MapData): GameState {
       const sourceTree = treesWithExcess[0];
       const safeTrees = neutralTrees.filter(target => {
         // Check if path crosses a pond
-        return !pathCrossesPond(sourceTree.tree, target, mapData);
+        return !pathCrossesPond(sourceTree.tree, target, mapData, cellSize);
       });
       
       const targetNeutral = safeTrees.length > 0 
@@ -303,7 +300,7 @@ export function enemyAITick(gameState: GameState, mapData: MapData): GameState {
 
     // Ne réagir que si le groupe est proche d'un arbre ennemi (rayon 3 cellules)
     const threatsEnemyTree = enemyTrees.some(tree =>
-      Math.hypot(tree.x - avgX, tree.y - avgY) < CELL_SIZE * 3
+      Math.hypot(tree.x - avgX, tree.y - avgY) < cellSize * 3
     );
 
     if (threatsEnemyTree) {
@@ -351,7 +348,7 @@ export function enemyAITick(gameState: GameState, mapData: MapData): GameState {
         
         // Prefer targets that don't require crossing ponds
         const safeTrees = playerTreesWithBees.filter(({ tree }) => {
-          return !pathCrossesPond(sourceTree.tree, tree, mapData);
+          return !pathCrossesPond(sourceTree.tree, tree, mapData, cellSize);
         });
         
         const targetTree = safeTrees.length > 0 
@@ -417,7 +414,7 @@ export function enemyAITick(gameState: GameState, mapData: MapData): GameState {
 }
 
 // Helper function to check if path crosses a pond
-function pathCrossesPond(from: Tree, to: Tree, mapData: MapData): boolean {
+function pathCrossesPond(from: Tree, to: Tree, mapData: MapData, cellSize: number): boolean {
   // Simple line-rectangle intersection check
   // Check several points along the path
   const steps = 10;
@@ -429,9 +426,9 @@ function pathCrossesPond(from: Tree, to: Tree, mapData: MapData): boolean {
     // Check if this point is in any pond
     const isInPond = mapData.ponds.some(pond => {
       return x >= pond.x && 
-             x <= pond.x + pond.width * CELL_SIZE &&
-             y >= pond.y && 
-             y <= pond.y + pond.height * CELL_SIZE;
+             x <= pond.x + pond.width * cellSize &&
+             y >= pond.y &&
+             y <= pond.y + pond.height * cellSize;
     });
     
     if (isInPond) return true;
