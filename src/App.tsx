@@ -1650,10 +1650,10 @@ export default function App() {
   return (
     <>
       {/* Son d'ambiance — monté une seule fois, jamais interrompu au changement d'écran.
-          Les bruits de nature ne jouent que pendant les parties et tutoriels.
-          Menu et options auront leur propre musique plus tard. */}
+          Pour l'instant le même son joue partout. Plus tard, menu et options
+          auront leur propre fichier audio configurable. */}
       <AmbientSound
-        enabled={soundEnabled && (isAppVisible || sleepModeEnabled) && (currentScreen === 'game' || currentScreen === 'story')}
+        enabled={soundEnabled && (isAppVisible || sleepModeEnabled)}
         volume={0.3}
         soundUrl={soundUrl}
       />
