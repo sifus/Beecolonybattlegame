@@ -127,9 +127,9 @@ export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onSho
       <div className="relative z-10 flex items-center justify-center h-full px-4 overflow-y-auto">
         <div className="text-center w-full max-w-md py-4 relative">
           {/* Titre "Rush" avec abeille à gauche */}
-          <div className="mb-6">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              {/* Abeille/Luciole à gauche */}
+          <div className="mb-0">
+            <div className="flex flex-col items-center justify-center gap-1 mb-2">
+              {/* Abeille/Luciole */}
               {timeOfDay === 'night' ? (
                 <div className="relative">
                   <div className="absolute inset-0 blur-xl bg-green-400 opacity-50 rounded-full" />
@@ -138,39 +138,67 @@ export function MainMenu({ onStartGame, onStartStoryMode, onStartTutorial, onSho
               ) : (
                 <span className="text-4xl">🐝</span>
               )}
-              
+
               {/* Titre Rush */}
-              <h1 
-                className="select-none"
-                style={{
-                  fontFamily: 'cursive',
-                  fontSize: 'clamp(48px, 12vw, 80px)',
-                  fontWeight: '900',
-                  backgroundImage: timeOfDay === 'night' 
-                    ? 'linear-gradient(180deg, #7FFF00 0%, #6FEE00 40%, #5FDD00 70%, #4FCC00 100%)'
-                    : 'linear-gradient(180deg, #FDB022 0%, #F59E0B 40%, #D97706 70%, #B45309 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  textShadow: timeOfDay === 'night' 
-                    ? '0 8px 16px rgba(127, 255, 0, 0.6)'
-                    : '0 8px 16px rgba(217, 119, 6, 0.6)',
-                  filter: timeOfDay === 'night'
-                    ? 'drop-shadow(0 4px 8px rgba(127, 255, 0, 0.4)) drop-shadow(0 0 40px rgba(127, 255, 0, 0.3))'
-                    : 'drop-shadow(0 4px 8px rgba(217, 119, 6, 0.4)) drop-shadow(0 0 40px rgba(253, 176, 34, 0.3))',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                {timeOfDay === 'night' ? 'Rushzzz..' : 'Rush'}
-              </h1>
+              {timeOfDay === 'night' ? (
+                <h1
+                  className="select-none w-full text-center"
+                  style={{
+                    fontFamily: 'cursive',
+                    fontSize: 'clamp(40px, 14vw, 80px)',
+                    fontWeight: '900',
+                    backgroundImage: 'linear-gradient(180deg, #7FFF00 0%, #6FEE00 40%, #5FDD00 70%, #4FCC00 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 8px 16px rgba(127, 255, 0, 0.6)',
+                    filter: 'drop-shadow(0 4px 8px rgba(127, 255, 0, 0.4)) drop-shadow(0 0 40px rgba(127, 255, 0, 0.3))',
+                    letterSpacing: '0.05em',
+                    WebkitTextStroke: '1px rgba(255,255,255,0.6)',
+                  }}
+                >
+                  Rushzzz..
+                </h1>
+              ) : (
+                <svg
+                  viewBox="0 0 400 110"
+                  style={{ width: 'clamp(200px, 50vw, 400px)', height: 'auto', overflow: 'visible' }}
+                  aria-label="Rush"
+                >
+                  <defs>
+                    <linearGradient id="title-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%"   stopColor="#FDB022" />
+                      <stop offset="40%"  stopColor="#F59E0B" />
+                      <stop offset="70%"  stopColor="#D97706" />
+                      <stop offset="100%" stopColor="#B45309" />
+                    </linearGradient>
+                  </defs>
+                  <text
+                    x="200" y="88"
+                    textAnchor="middle"
+                    fontFamily="cursive"
+                    fontSize="96"
+                    fontWeight="900"
+                    stroke="rgba(255,255,255,0.92)"
+                    strokeWidth="6"
+                    strokeLinejoin="round"
+                    fill="url(#title-grad)"
+                    paintOrder="stroke"
+                    letterSpacing="3"
+                  >
+                    Rush
+                  </text>
+                </svg>
+              )}
             </div>
             
-            <p 
+            <p
               className="italic text-white px-4"
-              style={{ 
+              style={{
                 fontSize: 'clamp(16px, 4vw, 19px)',
                 textShadow: '0 2px 6px rgba(0,0,0,0.9)',
-                fontWeight: '700'
+                fontWeight: '700',
+                transform: 'translateY(-16px)',
               }}
             >
               Conquérez la forêt avec vos {timeOfDay === 'night' ? 'lucioles' : 'abeilles'} !
