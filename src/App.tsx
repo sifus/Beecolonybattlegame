@@ -150,6 +150,7 @@ export default function App() {
   const justBuiltHiveRef = useRef(false); // Pour éviter un double appel createOrRepairHive (mouseUp + click)
   const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
   const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
+  const lastTouchEndRef = useRef(0); // Timestamp du dernier touchend — pour ignorer les mousedown synthétiques
 
   // Generate initial bees around trees (only on first mount)
   useEffect(() => {
@@ -543,6 +544,8 @@ export default function App() {
 
   // Mouse handlers for selection
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    // Ignorer les mousedown synthétiques générés par le navigateur après un touchend (~300ms)
+    if (Date.now() - lastTouchEndRef.current < 400) return;
     if (!svgRef.current) return;
     const { x, y } = getGameCoordinates(e.clientX, e.clientY);
     setSelectionStart({ x, y });
@@ -630,6 +633,7 @@ export default function App() {
   };
 
   const handleTouchEnd = () => {
+    lastTouchEndRef.current = Date.now();
     handleMouseUp();
   };
 
@@ -1638,11 +1642,24 @@ export default function App() {
   // L'agrandissement se fait visuellement sur les arbres/abeilles
   const gameScale = 1;
 
-  // Show menu or options screens
-  if (currentScreen === 'menu') {
-    return (
-      <>
-        <MainMenu 
+  // URL du son selon l'heure du jour
+  const soundUrl = globalTimeOfDay === 'night'
+    ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'
+    : 'https://assets.mixkit.co/active_storage/sfx/2466/2466-preview.mp3';
+
+  return (
+    <>
+      {/* Son d'ambiance — monté une seule fois, jamais interrompu au changement d'écran.
+          Les bruits de nature ne jouent que pendant les parties et tutoriels.
+          Menu et options auront leur propre musique plus tard. */}
+      <AmbientSound
+        enabled={soundEnabled && (isAppVisible || sleepModeEnabled) && (currentScreen === 'game' || currentScreen === 'story')}
+        volume={0.3}
+        soundUrl={soundUrl}
+      />
+
+      {currentScreen === 'menu' && (
+        <MainMenu
           onStartGame={handleStartGame}
           onStartStoryMode={handleStartStoryMode}
           onStartTutorial={handleStartTutorial}
@@ -1650,21 +1667,9 @@ export default function App() {
           timeOfDay={globalTimeOfDay}
           onToggleTimeOfDay={handleToggleTimeOfDay}
         />
-        <AmbientSound 
-          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
-          volume={0.3}
-          soundUrl={globalTimeOfDay === 'night' 
-            ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'  // Prairie jour (inversé pour nuit)
-            : 'https://assets.mixkit.co/active_storage/sfx/2466/2466-preview.mp3'  // Grillons + ruisseau (inversé pour jour)
-          }
-        />
-      </>
-    );
-  }
+      )}
 
-  if (currentScreen === 'options') {
-    return (
-      <>
+      {currentScreen === 'options' && (
         <OptionsMenu
           onBack={handleBackToMenu}
           soundEnabled={soundEnabled}
@@ -1678,21 +1683,9 @@ export default function App() {
           onResetProgress={handleResetProgress}
           onGoToFirstBattle={handleGoToFirstBattle}
         />
-        <AmbientSound 
-          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
-          volume={0.3}
-          soundUrl={globalTimeOfDay === 'night' 
-            ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'  // Prairie jour (inversé pour nuit)
-            : 'https://assets.mixkit.co/active_storage/sfx/2466/2466-preview.mp3'  // Grillons + ruisseau (inversé pour jour)
-          }
-        />
-      </>
-    );
-  }
+      )}
 
-  if (currentScreen === 'levelmap') {
-    return (
-      <>
+      {currentScreen === 'levelmap' && (
         <LevelMap
           levels={levelProgress.levels}
           onLevelClick={handleLevelClick}
@@ -1701,23 +1694,11 @@ export default function App() {
           timeOfDay={globalTimeOfDay}
           onUnlockAll={handleUnlockAllLevels}
         />
-        <AmbientSound 
-          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
-          volume={0.3}
-          soundUrl={globalTimeOfDay === 'night' 
-            ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'
-            : 'https://assets.mixkit.co/active_storage/sfx/2466/2466-preview.mp3'
-          }
-        />
-      </>
-    );
-  }
+      )}
 
-  // Game screen (both story and quick play modes)
-  
-  return (
-    <div 
-      className="relative overflow-hidden"
+      {(currentScreen === 'game' || currentScreen === 'story') && (
+      <div
+        className="relative overflow-hidden"
       style={{
         width: '100vw',
         height: '100vh',
@@ -1808,16 +1789,6 @@ export default function App() {
           isDragging={isDragging}
           hasSelection={!!selectionStart}
           isTutorial={currentScreen === 'story' && levelProgress.currentLevel === 1}
-        />
-
-        {/* Ambient Sound */}
-        <AmbientSound 
-          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
-          volume={0.3}
-          soundUrl={globalTimeOfDay === 'night' 
-            ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'  // Prairie jour (inversé pour nuit)
-            : 'https://assets.mixkit.co/active_storage/sfx/2466/2466-preview.mp3'  // Grillons + ruisseau (inversé pour jour)
-          }
         />
 
         {/* Level Complete Modal (Story Mode) */}
@@ -1923,5 +1894,7 @@ export default function App() {
         )}
       </div>
     </div>
+      )}
+    </>
   );
 }
