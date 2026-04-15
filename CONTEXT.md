@@ -691,6 +691,7 @@ Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useS
 | `4fc435b` | fix: suppression doublon buildingTreeId dans interface Bee (game.ts) |
 | `5b208ac` | chore: suppression dead code lumberjack + beeSpeedMultiplier dans useGameLoop (-167 lignes) |
 | `322f9d5` | refactor: extraction getWording + toast dans utils partagés, fusion imports gameRules |
+| `ea3d4cd` | fix: game.ts — suppression 'fighting' du type Bee, correction commentaires stars et HIVE_L2_HP |
 
 ---
 
