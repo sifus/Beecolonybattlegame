@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#d4e048"/>
+  <rect y="700" width="1024" height="324" fill="#b8cc30" opacity="0.5"/>
+  <ellipse cx="512" cy="920" rx="260" ry="42" fill="#7a9008" opacity="0.28"/>
+  <rect x="484" y="720" width="56" height="210" rx="24" fill="#4a2e08"/>
+  <ellipse cx="512" cy="500" rx="290" ry="270" fill="#48981a"/>
+  <ellipse cx="390" cy="420" rx="200" ry="185" fill="#5aaa22"/>
+  <ellipse cx="560" cy="340" rx="140" ry="130" fill="#70c030" opacity="0.65"/>
+  <ellipse cx="670" cy="590" rx="108" ry="128" fill="#c07808" opacity="0.30"/>
+  <ellipse cx="670" cy="590" rx="90" ry="108" fill="#d08010"/>
+  <ellipse cx="670" cy="590" rx="74" ry="90" fill="#e8a820"/>
+  <ellipse cx="670" cy="578" rx="52" ry="62" fill="#f8cc40" opacity="0.55"/>
+  <line x1="580" y1="554" x2="760" y2="554" stroke="#a06008" stroke-width="5" opacity="0.65"/>
+  <line x1="580" y1="582" x2="760" y2="582" stroke="#a06008" stroke-width="5" opacity="0.65"/>
+  <line x1="580" y1="610" x2="760" y2="610" stroke="#a06008" stroke-width="5" opacity="0.65"/>
+  <line x1="580" y1="638" x2="760" y2="638" stroke="#a06008" stroke-width="4" opacity="0.55"/>
+  <ellipse cx="670" cy="692" rx="28" ry="16" fill="#6a3808"/>
+  <rect x="654" y="484" width="32" height="44" rx="14" fill="#a06008"/>
+  <ellipse cx="320" cy="280" rx="36" ry="22" fill="#7a3a08"/>
+  <ellipse cx="320" cy="280" rx="26" ry="16" fill="#f0c020" opacity="0.9"/>
+  <ellipse cx="308" cy="265" rx="20" ry="10" fill="white" opacity="0.35"/>
+  <ellipse cx="332" cy="265" rx="20" ry="10" fill="white" opacity="0.35"/>
+  <ellipse cx="510" cy="200" rx="36" ry="22" fill="#7a3a08"/>
+  <ellipse cx="510" cy="200" rx="26" ry="16" fill="#f0c020" opacity="0.9"/>
+  <ellipse cx="496" cy="185" rx="20" ry="10" fill="white" opacity="0.35"/>
+  <ellipse cx="524" cy="185" rx="20" ry="10" fill="white" opacity="0.35"/>
+  <ellipse cx="740" cy="380" rx="28" ry="18" fill="#7a3a08"/>
+  <ellipse cx="740" cy="380" rx="20" ry="13" fill="#f0c020" opacity="0.85"/>
+  <ellipse cx="729" cy="367" rx="15" ry="8" fill="white" opacity="0.30"/>
+  <ellipse cx="751" cy="367" rx="15" ry="8" fill="white" opacity="0.30"/>
+</svg>
