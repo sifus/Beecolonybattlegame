@@ -601,9 +601,9 @@ export default function App() {
         Math.pow(selectionCurrent.x - selectionStart.x, 2) +
           Math.pow(selectionCurrent.y - selectionStart.y, 2)
       );
-      const centerX = (selectionStart.x + selectionCurrent.x) / 2;
-      const centerY = (selectionStart.y + selectionCurrent.y) / 2;
-      const radius = diameter / 2;
+      const centerX = leftHanded ? selectionStart.x : (selectionStart.x + selectionCurrent.x) / 2;
+      const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
+      const radius = leftHanded ? diameter : diameter / 2;
 
       if (radius > 5) {
         // Sélectionner toutes les abeilles du joueur dans le cercle

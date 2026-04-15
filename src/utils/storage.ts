@@ -68,7 +68,11 @@ export function loadLevelProgress(): LevelProgress {
       // Fusionner les sous-niveaux
       const mergedSubLevels = initialLevel.subLevels.map((initialSub) => {
         const savedSub = savedLevel.subLevels?.find((s: any) => s.id === initialSub.id);
-        return savedSub ? { ...initialSub, ...savedSub } : initialSub;
+        return savedSub ? {
+          ...initialSub,
+          completed: savedSub.completed ?? initialSub.completed,
+          stars: savedSub.stars ?? initialSub.stars,
+        } : initialSub;
       });
       
       return {

@@ -6,66 +6,69 @@ interface AmbientSoundProps {
   soundUrl?: string;
 }
 
-/**
- * Composant son d'ambiance global
- * 
- * Sons disponibles :
- * - Prairie de jour : https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3 (nature, oiseaux, ruisseau)
- * - Forêt nuit : https://assets.mixkit.co/active_storage/sfx/2465/2465-preview.mp3 (grillons, ambiance nocturne)
- */
-export function AmbientSound({ 
-  enabled, 
+export function AmbientSound({
+  enabled,
   volume = 0.3,
-  soundUrl = 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3' // Son prairie jour par défaut
+  soundUrl = 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'
 }: AmbientSoundProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentSoundUrlRef = useRef<string>(soundUrl);
+  const audioRef    = useRef<HTMLAudioElement | null>(null);
+  const urlRef      = useRef<string>(soundUrl);
+  const enabledRef  = useRef<boolean>(enabled);
 
+  // Maintenir enabledRef à jour à chaque render
+  enabledRef.current = enabled;
+
+  // Au premier montage : écouter la 1ère interaction pour débloquer l'autoplay
   useEffect(() => {
-    // Si le soundUrl change, il faut recréer l'audio
-    if (currentSoundUrlRef.current !== soundUrl) {
+    const unlock = () => {
+      if (enabledRef.current && audioRef.current) {
+        audioRef.current.play().catch(() => {});
+      }
+    };
+    document.addEventListener('click',      unlock, { once: true });
+    document.addEventListener('touchstart', unlock, { once: true });
+    document.addEventListener('keydown',    unlock, { once: true });
+    return () => {
+      document.removeEventListener('click',      unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('keydown',    unlock);
+    };
+  }, []);
+
+  // Gérer lecture / pause selon enabled, soundUrl, volume
+  useEffect(() => {
+    if (urlRef.current !== soundUrl) {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
         audioRef.current = null;
       }
-      currentSoundUrlRef.current = soundUrl;
+      urlRef.current = soundUrl;
     }
 
-    // Créer l'élément audio si nécessaire
     if (!audioRef.current) {
       audioRef.current = new Audio(soundUrl);
-      audioRef.current.loop = true;
+      audioRef.current.loop   = true;
       audioRef.current.volume = volume;
     }
 
     const audio = audioRef.current;
 
-    // Gérer la lecture/pause selon si le son est activé
     if (enabled) {
-      audio.play().catch(err => {
-        console.log('Audio playback prevented:', err);
-      });
+      audio.play().catch(() => {});
     } else {
       audio.pause();
     }
 
-    // Cleanup
-    return () => {
-      if (audio) {
-        audio.pause();
-      }
-    };
+    return () => { audio.pause(); };
   }, [enabled, soundUrl, volume]);
 
-  // Mettre à jour le volume
+  // Volume seul, sans relancer l'audio
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
+    if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  // Cleanup final au démontage du composant
+  // Cleanup final
   useEffect(() => {
     return () => {
       if (audioRef.current) {
@@ -76,5 +79,5 @@ export function AmbientSound({
     };
   }, []);
 
-  return null; // Ce composant ne rend rien visuellement
+  return null;
 }

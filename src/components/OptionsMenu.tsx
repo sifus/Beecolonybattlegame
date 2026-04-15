@@ -1,4 +1,4 @@
-import { ArrowLeft, Volume2, VolumeX, Sun, Moon, RotateCcw, Hand, Axe, BedDouble } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Sun, Moon, RotateCcw, PointerIcon, Axe, BedDouble } from 'lucide-react';
 
 interface OptionsMenuProps {
   onBack: () => void;
@@ -193,16 +193,16 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                 {/* Accessibilité */}
                 <div className="border-b pb-4" style={{ borderColor: 'rgba(120, 53, 15, 0.3)' }}>
                   <h3 className="mb-3 flex items-center gap-2 text-amber-950" style={{ fontSize: '18px', fontWeight: '700' }}>
-                    <Hand className="w-5 h-5" />
-                    Accessibilité
+                    <PointerIcon className="w-5 h-5" />
+                    Sélection par le centre
                   </h3>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="mb-1 text-amber-950" style={{ fontSize: '15px', fontWeight: '700' }}>
-                        Sélection inversée
+                        Cercle depuis le centre
                       </p>
                       <p className="text-amber-900" style={{ fontSize: '13px', lineHeight: '1.4' }}>
-                        {leftHanded ? 'Cercle : centre = départ, rayon = distance' : 'Cercle : centre = milieu, rayon = moitié'}
+                        {leftHanded ? 'Pose le doigt au centre, glisse pour agrandir' : 'Glisse du bord au bord du cercle'}
                       </p>
                     </div>
                     <button
