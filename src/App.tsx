@@ -717,13 +717,10 @@ export default function App() {
         return distToBee <= radius;
       });
 
-      if (selectedBees.length > 0) {
-        setGameState((prev) => ({
-          ...prev,
-          selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
-        }));
-      }
-      // Si 0 abeilles encerclées, l'ancienne sélection est conservée
+      setGameState((prev) => ({
+        ...prev,
+        selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
+      }));
       setLastClickedTreeId(null);
     } else if (gameState.selectedBeeIds.size > 0) {
       // C'est un simple clic avec des abeilles sélectionnées

@@ -125,20 +125,45 @@ export function GameBoard({
   const extraRight = Math.ceil((screenW - marginLeft - gameWidth) / cellSize) + 1;
   const extraBottom = Math.ceil((screenH - marginTop - gameHeight) / cellSize) + 1;
 
-  const BORDER_COLORS_DAY   = ['#DADC57','#CAD551','#D9D255','#CDC950','#CFCF51','#D1DA56','#E1E159','#DBDE67','#C8C250'];
+  const BORDER_COLORS_DAY   = ['#DADC57','#CAD551','#D9D255','#CDC950','#CFCF51','#D1DA56'];
   const BORDER_COLORS_NIGHT = ['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044'];
   const BORDER_COLORS = globalTimeOfDay === 'night' ? BORDER_COLORS_NIGHT : BORDER_COLORS_DAY;
   const GRASS_NIGHT   = ['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044'];
 
+  // Coloration greedy row-major : aucune couleur identique côte à côte ou coin à coin,
+  // sans pattern visible (seed déterministe par position)
+  const greedyColor = (row: number, col: number, colorMap: Map<string, string>, palette: string[]): string => {
+    const used = new Set<string>();
+    for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1]] as const) {
+      const c = colorMap.get(`${row+dr},${col+dc}`);
+      if (c) used.add(c);
+    }
+    const available = palette.filter(c => !used.has(c));
+    const pool = available.length > 0 ? available : palette;
+    const seed = Math.abs((row * 31337 + col * 7919)) % pool.length;
+    return pool[seed];
+  };
+
+  // Bordures
+  const borderColorMap = new Map<string, string>();
   const borderCells: { x: number; y: number; color: string }[] = [];
   for (let row = -extraTop; row < gridParams.rows + extraBottom; row++) {
     for (let col = -extraLeft; col < gridParams.cols + extraRight; col++) {
       if (row >= 0 && row < gridParams.rows && col >= 0 && col < gridParams.cols) continue;
-      borderCells.push({
-        x: col * cellSize,
-        y: row * cellSize,
-        color: BORDER_COLORS[Math.abs(col * 3 + row * 7) % BORDER_COLORS.length],
-      });
+      const color = greedyColor(row, col, borderColorMap, BORDER_COLORS);
+      borderColorMap.set(`${row},${col}`, color);
+      borderCells.push({ x: col * cellSize, y: row * cellSize, color });
+    }
+  }
+
+  // Herbe nuit — même algorithme greedy sur la grille principale (grassGrid est en ordre row-major)
+  const nightColorMap = new Map<string, string>();
+  if (globalTimeOfDay === 'night') {
+    for (const grass of mapData.grassGrid) {
+      const c = Math.round(grass.x / cellSize);
+      const r = Math.round(grass.y / cellSize);
+      const color = greedyColor(r, c, nightColorMap, GRASS_NIGHT);
+      nightColorMap.set(`${r},${c}`, color);
     }
   }
 
@@ -208,7 +233,7 @@ export function GameBoard({
           const col = Math.round(grass.x / cellSize);
           const row = Math.round(grass.y / cellSize);
           const grassColor = globalTimeOfDay === 'night'
-            ? GRASS_NIGHT[Math.abs(col * 3 + row * 7) % GRASS_NIGHT.length]
+            ? (nightColorMap.get(`${row},${col}`) ?? GRASS_NIGHT[0])
             : grass.color;
           return (
           <g key={`grass-${idx}`}>
@@ -219,13 +244,6 @@ export function GameBoard({
               height={gridParams.cellSize}
               fill={grassColor}
               shapeRendering="crispEdges"
-            />
-            <rect
-              x={grass.x - 0.5}
-              y={grass.y}
-              width={gridParams.cellSize + 1}
-              height={2}
-              fill="rgba(255,220,220,0.10)"
             />
           </g>
           );
@@ -252,37 +270,39 @@ export function GameBoard({
             </feMerge>
           </filter>
         </defs>
-        {(() => {
-          const SQRT1_2 = Math.SQRT1_2;
-          const diagLen = Math.sqrt(gameWidth * gameWidth + gameHeight * gameHeight);
-          const beamX = gameWidth  / 2 - SQRT1_2 * lateralOffset;
-          const beamY = gameHeight / 2 + SQRT1_2 * lateralOffset;
-          const halfLen = diagLen * 0.6;
-          return (
-            <g transform={`translate(${beamX}, ${beamY}) rotate(45)`} opacity={sunIntensity * 0.9} pointerEvents="none">
-              <rect x={-halfLen} y={-480} width={halfLen * 2} height={960} fill="url(#beam-grad)" />
-            </g>
-          );
-        })()}
-        {sparkles.map(s => {
-          if (s.opacity <= 0) return null;
-          const h = s.size / 2;
-          const t = s.size / 10;
-          const d = `M 0,${-h} L ${t},${-t} L ${h},0 L ${t},${t} L 0,${h} L ${-t},${t} L ${-h},0 L ${-t},${-t} Z`;
-          return (
-            <g
-              key={s.id}
-              transform={`translate(${s.x}, ${s.y})`}
-              opacity={sparkleIntensity <= 0 ? 0 : s.opacity * sparkleIntensity}
-              filter="url(#sparkle-glow)"
-              pointerEvents="none"
-            >
-              <path d={d} fill="rgba(255,255,230,0.9)" />
-            </g>
-          );
-        })}
+        {globalTimeOfDay !== 'night' && <>
+          {(() => {
+            const SQRT1_2 = Math.SQRT1_2;
+            const diagLen = Math.sqrt(gameWidth * gameWidth + gameHeight * gameHeight);
+            const beamX = gameWidth  / 2 - SQRT1_2 * lateralOffset;
+            const beamY = gameHeight / 2 + SQRT1_2 * lateralOffset;
+            const halfLen = diagLen * 0.6;
+            return (
+              <g transform={`translate(${beamX}, ${beamY}) rotate(45)`} opacity={sunIntensity * 0.9} pointerEvents="none">
+                <rect x={-halfLen} y={-480} width={halfLen * 2} height={960} fill="url(#beam-grad)" />
+              </g>
+            );
+          })()}
+          {sparkles.map(s => {
+            if (s.opacity <= 0) return null;
+            const h = s.size / 2;
+            const t = s.size / 10;
+            const d = `M 0,${-h} L ${t},${-t} L ${h},0 L ${t},${t} L 0,${h} L ${-t},${t} L ${-h},0 L ${-t},${-t} Z`;
+            return (
+              <g
+                key={s.id}
+                transform={`translate(${s.x}, ${s.y})`}
+                opacity={sparkleIntensity <= 0 ? 0 : s.opacity * sparkleIntensity}
+                filter="url(#sparkle-glow)"
+                pointerEvents="none"
+              >
+                <path d={d} fill="rgba(255,255,230,0.9)" />
+              </g>
+            );
+          })}
+        </>}
 
-        {/* Night overlay - voile sombre avec lumière de lune bleutée */}
+        {/* Night overlay - voile sombre */}
         {globalTimeOfDay === 'night' && (
           <>
             {/* Voile sombre — couvre tout l'écran */}
@@ -296,22 +316,24 @@ export function GameBoard({
               pointerEvents="none"
             />
 
-            {/* Gradient de lumière de lune depuis le haut-droit */}
+            {/* Lumière portée au sol par les lucioles — s'accumule où elles se regroupent */}
             <defs>
-              <radialGradient id="moonlight" cx="85%" cy="15%" r="70%">
-                <stop offset="0%" stopColor="#a8c5dd" stopOpacity={0.15} />
-                <stop offset="40%" stopColor="#6b8ba3" stopOpacity={0.08} />
-                <stop offset="100%" stopColor="#1a2332" stopOpacity={0} />
-              </radialGradient>
+              <filter id="bee-ground-glow" x="-150%" y="-150%" width="400%" height="400%">
+                <feGaussianBlur stdDeviation="20" />
+              </filter>
             </defs>
-            <rect
-              x={-marginLeft}
-              y={-marginTop}
-              width={screenW}
-              height={screenH}
-              fill="url(#moonlight)"
-              pointerEvents="none"
-            />
+            <g filter="url(#bee-ground-glow)" pointerEvents="none">
+              {gameState.bees.map(bee => (
+                <circle
+                  key={`gnd-${bee.id}`}
+                  cx={bee.x}
+                  cy={bee.y + 6}
+                  r={16}
+                  fill={bee.owner === 'player' ? '#7FFF00' : '#00BFFF'}
+                  opacity={0.10}
+                />
+              ))}
+            </g>
           </>
         )}
 
@@ -374,7 +396,9 @@ export function GameBoard({
 
         {/* Cailloux décoratifs — déterministes */}
         {(() => {
-          const stoneColors = ['#c8cc3e', '#bec432', '#d2d644'];
+          const stoneColors = globalTimeOfDay === 'night'
+            ? ['#203448', '#22364a', '#1e3246']
+            : ['#c8cc3e', '#bec432', '#d2d644'];
           const cellSize = gridParams.cellSize;
           const trees = gameState.trees;
           const ponds = mapData.ponds;
@@ -397,8 +421,9 @@ export function GameBoard({
               if (!onTree && !onPond) { valid = true; break; }
             } while (attempt < 40);
             if (!valid) return null;
-            const cx = col * cellSize + cellSize * 0.5;
-            const cy = row * cellSize + cellSize * 0.7;
+            const jitter = (n: number) => (Math.sin(i * 7919 + n * 1337) * 0.5) * cellSize * 0.28;
+            const cx = col * cellSize + cellSize * 0.5 + jitter(1);
+            const cy = row * cellSize + cellSize * 0.7 + jitter(2);
             const color = stoneColors[i % stoneColors.length];
             return (
               <g key={`stone-${i}`} pointerEvents="none">
@@ -741,7 +766,7 @@ export function GameBoard({
               <g
                 key={`cloud-${cloudIndex}`}
                 transform={`translate(0, ${cloud.cy})`}
-                opacity={isNight ? 0.28 : 0.80}
+                opacity={isNight ? 0.42 : 0.80}
                 pointerEvents="none"
               >
                 <g className={cloud.cls} style={{ animationDuration: cloud.duration }}>

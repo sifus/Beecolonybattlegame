@@ -17,12 +17,23 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
     const fireflyColor = bee.owner === 'player' ? '#7FFF00' : '#00BFFF';
     const glowColor    = bee.owner === 'player' ? '#9FFF00' : '#87CEFA';
 
+    const filterId = `firefly-glow-${bee.id}`;
     return (
       <g style={{ pointerEvents: 'none' }}>
+        <defs>
+          <filter id={filterId} x="-150%" y="-150%" width="400%" height="400%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
         {isSelected && (
           <motion.circle
-            cx={bee.x} cy={bee.y} r={13}
-            fill="none" stroke="#FF6600" strokeWidth={2.5}
+            cx={bee.x} cy={bee.y} r={10}
+            fill="none" stroke={fireflyColor} strokeWidth={2}
             initial={{ scale: 0.8, opacity: 0.8 }}
             animate={{ scale: 1.3, opacity: 0.3 }}
             transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse' }}
@@ -30,29 +41,34 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
         )}
         {isNewBee && (
           <motion.circle
-            cx={bee.x} cy={bee.y} r={12}
-            fill={bee.owner === 'player' ? '#7FFF00' : '#00BFFF'}
+            cx={bee.x} cy={bee.y} r={8}
+            fill={fireflyColor}
             initial={{ scale: 0.5, opacity: 0.6 }}
             animate={{ scale: 2, opacity: 0 }}
             transition={{ duration: 0.8, repeat: 0 }}
           />
         )}
-        <motion.circle cx={bee.x} cy={bee.y} r={9} fill={glowColor} opacity={0.3}
+
+        {/* Halo diffus localisé */}
+        <circle cx={bee.x} cy={bee.y} r={5}
+          fill={isBeingSelected && !isSelected ? '#ffffff' : glowColor}
+          opacity={isBeingSelected && !isSelected ? 0.5 : 0.25}
+          filter={`url(#${filterId})`}
+        />
+
+        {/* Corps de la luciole */}
+        <motion.circle cx={bee.x} cy={bee.y} r={2.2} fill={fireflyColor}
           animate={{ scale: 1 }}
           transition={{ duration: 0.4 }}
         />
-        <motion.circle cx={bee.x} cy={bee.y} r={6} fill={fireflyColor} opacity={0.6}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.4 }}
-        />
-        <motion.circle cx={bee.x} cy={bee.y} r={3.5} fill={fireflyColor}
-          stroke={isBeingSelected && !isSelected ? '#FFFFFF' : fireflyColor}
-          strokeWidth={isBeingSelected && !isSelected ? 7 : 0.8}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.4 }}
-        />
+
+        {/* Centre lumineux vif — s'agrandit en pré-sélection */}
         {!isSelected && (
-          <motion.circle cx={bee.x} cy={bee.y} r={1.5} fill="#ffffff" opacity={0.9}
+          <motion.circle
+            cx={bee.x} cy={bee.y}
+            r={isBeingSelected ? 1.8 : 0.9}
+            fill="#ffffff"
+            opacity={isBeingSelected ? 1 : 0.95}
             animate={{ scale: 1 }}
             transition={{ duration: 0.4 }}
           />

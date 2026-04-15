@@ -38,31 +38,12 @@ export function generateGrassGrid(
       const y = i * cellSize;
 
       const adjacentColors = new Set<string>();
-      if (i > 0 && colorGrid[i - 1][j]) adjacentColors.add(colorGrid[i - 1][j]); // top
-      if (j > 0 && colorGrid[i][j - 1]) adjacentColors.add(colorGrid[i][j - 1]); // left
+      if (i > 0 && colorGrid[i - 1][j])           adjacentColors.add(colorGrid[i - 1][j]);     // top
+      if (j > 0 && colorGrid[i][j - 1])           adjacentColors.add(colorGrid[i][j - 1]);     // left
+      if (i > 0 && j > 0 && colorGrid[i - 1][j - 1])         adjacentColors.add(colorGrid[i - 1][j - 1]); // top-left
+      if (i > 0 && j < cols - 1 && colorGrid[i - 1][j + 1])  adjacentColors.add(colorGrid[i - 1][j + 1]); // top-right
 
-      const diagonalColorCount: { [color: string]: number } = {};
-      const diagonals = [[i - 1, j - 1], [i - 1, j + 1]];
-
-      for (const [di, dj] of diagonals) {
-        if (di >= 0 && di < rows && dj >= 0 && dj < cols && colorGrid[di][dj]) {
-          const dColor = colorGrid[di][dj];
-          diagonalColorCount[dColor] = (diagonalColorCount[dColor] || 0) + 1;
-        }
-      }
-
-      const tooManyDiagonals = new Set<string>(
-        Object.entries(diagonalColorCount)
-          .filter(([_, count]) => count >= 2)
-          .map(([color]) => color)
-      );
-
-      let availableColors = grassColors.filter(
-        c => !adjacentColors.has(c) && !tooManyDiagonals.has(c)
-      );
-      if (availableColors.length === 0) {
-        availableColors = grassColors.filter(c => !adjacentColors.has(c));
-      }
+      let availableColors = grassColors.filter(c => !adjacentColors.has(c));
       if (availableColors.length === 0) {
         availableColors = grassColors;
       }

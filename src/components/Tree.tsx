@@ -373,7 +373,7 @@ export function Tree({
                   <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
                 </radialGradient>
               </defs>
-              <circle cx={bx} cy={by} r={r} fill="#4DA8E8" />
+              <circle cx={bx} cy={by} r={r} fill={isNightMode ? '#1a6aaa' : '#4DA8E8'} />
               <circle cx={bx} cy={by} r={r} fill={`url(#${gradId})`} />
               <text
                 x={bx} y={by}
