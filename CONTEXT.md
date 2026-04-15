@@ -461,3 +461,45 @@ src/
 - Animations de combat (impact abeilles sur ruches)
 - Effets de particules lors de la prise d'un arbre
 - Difficulté configurable en mode Partie Rapide
+
+---
+
+## Ce qui a été fait — 15 avril 2026
+
+### Rayon de soleil — refonte complète (`useSolarSystem.ts`, `GameBoard.tsx`, `App.tsx`)
+- Le rayon traverse désormais **toute la carte** (coin à coin, 45°), longueur = diagonale × 1.2
+- **Position latérale aléatoire** à chaque apparition : offset perpendiculaire à la diagonale, centré sur `(W/2 - offset/√2, H/2 + offset/√2)`
+- `sunPosition {x,y}` remplacé par `lateralOffset: number` dans le hook et les props
+- Durée allongée : phase **visible 7 s** (au lieu de 5 s)
+- Largeur du faisceau doublée : `y=-480, height=960` (au lieu de 480)
+- `sparkleIntensity` distinct de `sunIntensity` :
+  - Montée à t=700 ms (au lieu de 1500 ms), pleine intensité à t=1500 ms
+  - Disparaît synchronisé avec le rayon (fin du fadeout)
+- Animation scintillements fluide : tick **120 ms**, pas ±0.08/0.06 (au lieu de 800 ms / ±0.5)
+- Scintillements strictement sur l'axe du rayon (dispersion perpendiculaire ±80 px)
+
+### Combat abeilles en vol (`useGameLoop.ts`)
+- Suppression du filtre `atLeastOneIdle`
+- Toute abeille (`moving` ou `idle`) combat une ennemie à portée (rayon 15 px)
+- Les abeilles envoyées vers des ennemis en route se battent dès qu'elles les croisent
+
+### Mode veille + pause arrière-plan (`App.tsx`, `OptionsMenu.tsx`, `useStorage.ts`, `storage.ts`)
+- Option "Mode veille" ajoutée dans le menu Options (icône BedDouble)
+- `document.visibilitychange` : musique coupée quand l'app passe en arrière-plan
+- Si mode veille activé : musique maintenue même écran verrouillé
+- Préférence sauvegardée en `localStorage` (`rush_sleep_mode`)
+
+### Génération de carte (`mapGenerator.ts`)
+- Arbres uniquement en zone jouable (`gameStartRow..gameEndRow`, `gameStartCol..gameEndCol`)
+- Distance Chebyshev ≥ 2 entre arbres respectée dans **tous** les fallbacks (plus de bypass)
+- Cailloux décoratifs générés en dernier, placés partout sur la carte (zone décorative incluse)
+- Abeilles ennemies meurent aussi en traversant les étangs
+
+### UI — couches SVG (`GameBoard.tsx`)
+- Trees TOP layer (ruches + compteur abeilles) rendu **après** les abeilles → compteur toujours lisible au premier plan
+
+### Popup fin de partie (`App.tsx`)
+- Délai 1 s avant affichage popup game over / victoire en partie rapide
+
+### Commit
+- `f203667` — 14 fichiers, +599/-367 lignes
