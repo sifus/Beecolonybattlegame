@@ -1,3 +1,84 @@
+# 📋 CHANGELOG - Session du 15 Avril 2026
+
+## ✨ MODIFICATIONS
+
+### 🌞 Rayon de Soleil — Refonte complète
+
+- Rayon traverse maintenant toute la carte (coin à coin, 45°)
+- Position latérale aléatoire à chaque apparition (offset perpendiculaire à la diagonale)
+- Un seul rayon visible à la fois (inchangé)
+- Durée allongée : visible **7 s** (au lieu de 5 s)
+- Largeur perpendiculaire doublée (height 480 → 960 px)
+- `sparkleIntensity` séparé de `sunIntensity` :
+  - Scintillements apparaissent ~700 ms après le rayon
+  - Disparaissent en même temps que le rayon (fin du fadeout)
+- Animation des scintillements fluide : tick **120 ms**, pas d'opacité **±0.08/0.06** (au lieu de 800 ms / ±0.5)
+- Scintillements positionnés strictement le long de l'axe du rayon
+
+**Fichiers modifiés** : `src/hooks/useSolarSystem.ts`, `src/components/GameBoard.tsx`, `src/App.tsx`
+
+---
+
+### ⚔️ Combat abeilles en vol
+
+- Suppression du filtre `atLeastOneIdle` dans la boucle de collision bee vs bee
+- Désormais, toute abeille (moving ou idle) combat une ennemie à portée (rayon 15 px)
+- Envoyer ses abeilles vers des ennemis en route déclenche le combat immédiatement
+
+**Fichier modifié** : `src/hooks/useGameLoop.ts`
+
+---
+
+### 💤 Mode veille + pause arrière-plan
+
+- Nouvelle option "Mode veille" dans le menu options (icône BedDouble)
+- Musique coupée quand l'app passe en arrière-plan (visibilitychange API)
+- Si mode veille activé : musique maintenue même écran verrouillé
+- Préférence sauvegardée en localStorage
+
+**Fichiers modifiés** : `src/App.tsx`, `src/components/OptionsMenu.tsx`, `src/hooks/useStorage.ts`, `src/utils/storage.ts`
+
+---
+
+### 🗺️ Génération de carte — Arbres et cailloux
+
+- Arbres générés uniquement en zone jouable (gameStartRow..gameEndRow / Col)
+- Distance Chebyshev ≥ 2 entre arbres (1 case libre tout autour), respectée dans tous les fallbacks
+- Cailloux décoratifs générés en dernier, n'importe où sur la carte
+- Abeilles ennemies meurent aussi en traversant les étangs
+
+**Fichier modifié** : `src/utils/mapGenerator.ts`
+
+---
+
+### 🎨 UI — Compteur abeilles au-dessus des abeilles
+
+- Trees TOP layer (ruches, compteurs) rendu après les abeilles dans le SVG interactif
+- Le compteur bleu sur les arbres est maintenant toujours lisible au premier plan
+
+**Fichier modifié** : `src/components/GameBoard.tsx`
+
+---
+
+### ⏱️ Popup fin de partie rapide
+
+- Délai de 1 seconde avant l'affichage de la popup game over / victoire en partie rapide
+
+**Fichier modifié** : `src/App.tsx`
+
+---
+
+## 📊 RÉSUMÉ TECHNIQUE
+
+**Fichiers modifiés** : 14
+`App.tsx`, `Bee.tsx`, `GameBoard.tsx`, `GameUI.tsx`, `OptionsMenu.tsx`, `Tree.tsx`,
+`gameRules.ts`, `useGameLoop.ts`, `useSolarSystem.ts`, `useStorage.ts`,
+`enemyAI.ts`, `mapGenerator.ts`, `storage.ts`, `vite.config.ts`
+
+**Commit** : `f203667`
+
+---
+
 # 📋 CHANGELOG - Session du 25 Octobre 2025
 
 ## ✨ NOUVELLES FONCTIONNALITÉS
