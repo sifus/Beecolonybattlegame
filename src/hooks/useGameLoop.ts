@@ -3,6 +3,8 @@ import { GameState, Bee as BeeType } from '../types/game';
 import { LevelProgress } from '../types/levels';
 import { PondShape } from '../utils/mapGenerator';
 import { enemyAITick } from '../utils/enemyAI';
+import { toast } from '../utils/toast';
+import { getWording } from '../utils/wording';
 import {
   BUILD_HIVE_COST,
   UPGRADE_HIVE_COST,
@@ -11,25 +13,6 @@ import {
   MAX_BEES,
   BEE_ORBIT_RADIUS,
 } from '../constants/gameRules';
-
-const toast = {
-  info: () => {},
-  success: () => {},
-  error: () => {},
-  warning: () => {},
-};
-
-function getWording(timeOfDay: 'day' | 'night') {
-  const isNight = timeOfDay === 'night';
-  return {
-    bee: isNight ? 'luciole' : 'abeille',
-    bees: isNight ? 'lucioles' : 'abeilles',
-    beesCapital: isNight ? 'Lucioles' : 'Abeilles',
-    hive: isNight ? 'cocon' : 'ruche',
-    hives: isNight ? 'cocons' : 'ruches',
-    hiveCapital: isNight ? 'Cocon' : 'Ruche',
-  };
-}
 
 interface GridParams {
   cols: number;

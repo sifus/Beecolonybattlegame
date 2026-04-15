@@ -27,22 +27,14 @@ import { useSolarSystem } from './hooks/useSolarSystem';
 import { useGameLoop } from './hooks/useGameLoop';
 import { GameBoard } from './components/GameBoard';
 import { motion } from 'motion/react';
-import { BEE_ORBIT_RADIUS, GRID_COLS, GRID_ROWS } from './constants/gameRules';
-
-// Désactiver les toasts
-const toast = {
-  info: () => {},
-  success: () => {},
-  error: () => {},
-  warning: () => {},
-};
+import { BEE_ORBIT_RADIUS, GRID_COLS, GRID_ROWS, BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP, MAX_BEES } from './constants/gameRules';
+import { toast } from './utils/toast';
+import { getWording } from './utils/wording';
 
 /**
  * RÈGLES DU JEU "RUSH"
  * Version: 5.7 - Mode jour/nuit avec lucioles et ambiance sonore
  */
-
-import { BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP, MAX_BEES } from './constants/gameRules';
 
 type Screen = 'menu' | 'options' | 'game' | 'levelmap' | 'story';
 
@@ -158,19 +150,6 @@ export default function App() {
   const justBuiltHiveRef = useRef(false); // Pour éviter un double appel createOrRepairHive (mouseUp + click)
   const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
   const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
-
-  // Helper pour adapter le wording selon le mode jour/nuit
-  const getWording = (timeOfDay: 'day' | 'night') => {
-    const isNight = timeOfDay === 'night';
-    return {
-      bee: isNight ? 'luciole' : 'abeille',
-      bees: isNight ? 'lucioles' : 'abeilles',
-      beesCapital: isNight ? 'Lucioles' : 'Abeilles',
-      hive: isNight ? 'cocon' : 'ruche',
-      hives: isNight ? 'cocons' : 'ruches',
-      hiveCapital: isNight ? 'Cocon' : 'Ruche',
-    };
-  };
 
   // Generate initial bees around trees (only on first mount)
   useEffect(() => {
