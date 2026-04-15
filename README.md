@@ -19,20 +19,24 @@ Un jeu de stratégie en temps réel dans lequel tu diriges une colonie d'abeille
 |---|---|
 | Glisser | Dessiner un cercle de sélection autour des abeilles |
 | Clic sur un arbre | Envoyer les abeilles sélectionnées |
-| `T` (clavier) | Spawner 20 abeilles de test |
+| Double-clic sur un arbre allié | Construire / Réparer / Améliorer une ruche |
 
 ---
 
 ## Fonctionnalités
 
 - **Mode Histoire** — niveaux progressifs avec tutoriel intégré
+- **Partie Rapide** — carte générée aléatoirement, une seule partie
 - **Mode Droitier / Gaucher** — le cercle de sélection s'adapte : centre au point de départ (gaucher) ou au milieu du geste (droitier)
-- **Mode Jour / Nuit** — ambiance visuelle et sonore distincte
+- **Mode Jour / Nuit** — ambiance visuelle et sonore distincte (lucioles la nuit)
 - **Son d'ambiance** — musique de fond activable / désactivable
+- **Mode veille** — la musique peut rester active quand l'écran est verrouillé
+- **Pause automatique** — musique et jeu suspendus quand l'app passe en arrière-plan
 - **Menu Pause** en jeu avec accès aux paramètres
 - **Sauvegarde automatique** de la progression via `localStorage`
-- **Abeilles bornées** — les abeilles ne sortent jamais de la zone de jeu
-- Décor SVG animé : nuages, étangs avec ripples, herbe avec effet soleil
+- **Combat en vol** — les abeilles se battent dès qu'elles se croisent, même en déplacement
+- **Étangs mortels** — les abeilles qui survolent un étang risquent de tomber (joueur et IA)
+- Décor SVG animé : nuages flottants, étangs organiques, rayon de soleil directionnel 45° avec scintillements
 
 ---
 
@@ -100,4 +104,7 @@ src/
 | HP Ruche L2 | 30 |
 | Coût construction L1 | 5 abeilles |
 | Coût upgrade L2 | 20 abeilles |
-| Cadence attaque | 1 abeille / 300ms |
+| Cadence attaque | 1 abeille / 300 ms |
+| Rayon de collision bee vs bee | 15 px |
+| Arbres | Zone jouable uniquement, Chebyshev ≥ 2 |
+| Étangs / Cailloux | Toute la carte |

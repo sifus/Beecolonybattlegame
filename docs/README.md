@@ -2,7 +2,7 @@
 
 > Conquérez la forêt avec vos abeilles ! Construisez des ruches, gérez vos ressources et détruisez les ruches ennemies dans ce jeu de stratégie en temps réel.
 
-![Version](https://img.shields.io/badge/version-6.1-blue)
+![Version](https://img.shields.io/badge/version-6.2-blue)
 ![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4.0-38BDF8?logo=tailwindcss)
@@ -25,16 +25,24 @@
 - ⚡ Sélection intuitive (clic simple + sélection circulaire)
 - 🏗️ Construction et amélioration de ruches (L1 → L2)
 - 🔧 Système de réparation des ruches endommagées
-- ⚔️ Combat automatique avec système de priorité
-- 🌊 Dangers environnementaux (étangs)
-- 🤖 IA ennemie évolutive
+- ⚔️ Combat en vol — les abeilles se battent dès qu'elles se croisent, même en déplacement
+- 🌊 Étangs mortels — danger pour les abeilles joueur ET ennemies
+- 🤖 IA ennemie évolutive avec priorités tactiques
+
+### 🎨 Système visuel
+- 🌞 Rayon de soleil directionnel 45° traversant toute la carte, position aléatoire à chaque apparition
+- ✨ Scintillements synchronisés avec le rayon (apparaissent et disparaissent avec lui)
+- ☁️ Nuages flottants animés
+- 🌿 Étangs organiques avec reflets
+- 🌓 Mode jour / nuit avec lucioles la nuit
 
 ### 📱 Interface & Accessibilité
 - 📱 **Responsive** : Desktop, tablette et mobile
 - 🎯 **Touch-friendly** : Contrôles optimisés pour écrans tactiles
-- ♿ **Accessible** : Conforme aux standards WCAG
 - 💾 **Sauvegarde automatique** de la progression (localStorage)
-- 🔊 **Son ambiant** optionnel
+- 🔊 **Son ambiant** activable / désactivable
+- 💤 **Mode veille** : musique maintenue même écran verrouillé
+- ⏸️ **Pause automatique** quand l'app passe en arrière-plan
 
 ---
 
@@ -184,13 +192,16 @@ cat GUIDE_TEST_GRILLE.md
 
 ## 🗺️ Roadmap
 
-### ✅ Implémenté (Version 6.1)
-- [x] Mode histoire avec 10 niveaux
-- [x] Système jour/nuit complet
+### ✅ Implémenté (Version 6.2)
+- [x] Mode histoire avec niveaux progressifs
+- [x] Mode Partie Rapide
+- [x] Système jour/nuit complet (lucioles la nuit)
 - [x] Grille optimisée avec bordure décorative
 - [x] Sauvegarde de progression
-- [x] Son ambiant
-- [x] Animations organiques
+- [x] Son ambiant + mode veille + pause arrière-plan
+- [x] Rayon de soleil directionnel animé avec scintillements
+- [x] Combat en vol entre abeilles
+- [x] Arbres en zone jouable uniquement, espacement garanti
 - [x] Responsive complet
 
 ### 🔜 À venir
