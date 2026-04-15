@@ -511,6 +511,86 @@ src/
 ### Mode nuit — refonte visuelle complète (`GameBoard.tsx`, `Tree.tsx`, `Bee.tsx`)
 
 **Damier nuit — coloration greedy row-major (`GameBoard.tsx`, `grassGenerator.ts`) :**
+- Algorithme **greedy row-major** avec seed déterministe remplace `tileIdx 2×3` (visible comme pattern périodique)
+- Fonction `greedyColor(row, col, colorMap, palette)` : exclut les 4 voisins déjà colorés (haut-gauche, haut, haut-droit, gauche) — contrainte king graph, aucune case adjacente ni diagonale ne partage la même couleur
+- Seed : `Math.abs((row * 31337 + col * 7919)) % pool.length` — déterministe, pas d'effet de bord entre frames
+- Palettes nuit (6 tons bleu-nuit subtils) : `['#122030','#142234','#16263a','#1a2c40','#1c2e42','#1e3044']`
+- `grassGenerator.ts` : même contrainte king graph (8 voisins) pour le mode jour
+
+**Cailloux nuit (`GameBoard.tsx`) :**
+- Couleurs conditionnelles : nuit → `['#203448','#22364a','#1e3246']`, jour → `['#c8cc3e','#bec432','#d2d644']`
+- Jitter positionnel déterministe : `sin(i * 7919 + n * 1337) * 0.5 * cellSize * 0.28`
+
+**Lucioles — redesign (`Bee.tsx`) :**
+- Corps `r=2.2`, centre blanc `r=0.9`, halo localisé `feGaussianBlur stdDeviation=3` sur sphère `r=5`
+- Pré-sélection : halo blanc `fill="#ffffff" opacity=0.5` + centre élargi `r=1.8`
+- Sélection active : anneau pulsant couleur `fireflyColor` (vert joueur / bleu ennemi)
+- Mode jour : anneau de sélection orange `#FF6600` restauré
+
+**Glow au sol accumulatif (`GameBoard.tsx`) :**
+- `<g filter="url(#bee-ground-glow)">` avec `feGaussianBlur stdDeviation=14` — cercles `r=16 opacity=0.10` par luciole, accumulation naturelle dans les zones denses
+
+**Rayon solaire pausé la nuit, clair de lune supprimé (`GameBoard.tsx`) :**
+- `{globalTimeOfDay !== 'night' && <> {beam} {sparkles} </>}`
+- Gradient `moonlight-gradient` supprimé
+
+**Compteur abeilles thémé nuit (`Tree.tsx`) :**
+- `fill={isNightMode ? '#1a6aaa' : '#4DA8E8'}` — nuages opacité `0.42` nuit / `0.80` jour
+
+### Interaction — drag vide désélectionne (`App.tsx`)
+- Un drag sur zone vide désélectionne toutes les abeilles (suppression du `if (selectedBees.length > 0)`)
+
+### MainMenu — titre Rush mobile (`MainMenu.tsx`)
+- Mode jour : SVG `<text>` avec `paintOrder="stroke"` — vrai contour extérieur sans crash Chrome
+- Abeille emoji supprimée, sous-titre `transform: 'translateY(-16px)'`, `space-y-3`, `pb-4`
+
+### OptionsMenu — header fixe + scroll interne (`OptionsMenu.tsx`)
+- `flex-shrink-0` header + `flex-1 overflow-y-auto` + `WebkitOverflowScrolling: 'touch'`
+
+### Commits de session
+| Hash | Description |
+|---|---|
+| `6c2b298` | fix: mode nuit — lucioles redesign + glow sol + rayon en pause |
+| `174f625` | fix: cailloux nuit + jitter positionnel + greedy coloring damier |
+| `e7fba7f` | fix: drag vide désélectionne + cercles sélection thémés jour/nuit |
+| `bc74d06` | fix: MainMenu SVG title + OptionsMenu scroll + boutons espacés |
+
+---
+
+## Ce qui a été fait — 15 avril 2026 (audit et nettoyage)
+
+### Audit complet du projet
+- Inventaire de 101 fichiers (hors `node_modules`, `.git`, `build`)
+- 53 fichiers identifiés SAFE À SUPPRIMER, 13 À VÉRIFIER, 35 GARDER
+
+### Suppression des fichiers obsolètes (commit `0247d69`)
+**src/ (8 fichiers) :**
+- `src/utils/useFullscreen.ts` — hook jamais importé
+- `src/components/figma/ImageWithFallback.tsx` — vestige template Figma
+- `src/LICENSE/Code-component-53-72.tsx` + `53-81.tsx` — doublons MIT License exacts
+- `src/styles/globals.css` — CSS jamais importé nulle part
+- `src/guidelines/Guidelines.md` — template Claude vide non complété
+- `src/public/favicon-preview.html` + `FAVICON_INFO.md` — fichiers dev-only
+
+**docs/ (45 fichiers) :** tous les `CHANGELOG_*`, `FIX_*`, `GUIDE_TEST_*`, `SESSION_*`, résumés et archives superseded par `CONTEXT.md`. −14 206 lignes, 0 ligne de code fonctionnel touché.
+
+### Nettoyage vite.config.ts (commit `0876139`)
+- Suppression des 39 alias versionnés fantômes (`@radix-ui/*`, `recharts`, `sonner`, `vaul`, `cmdk`, etc.) — vestige template Shadcn/UI, packages absents de `package.json`
+- Seul `'@': path.resolve(__dirname, './src')` conservé
+
+### Migration index.html (commit `c2874cf`)
+- `src/index.html` n'était **pas** le point d'entrée Vite (ignoré au build)
+- Contenu migré vers `/index.html` racine : meta `apple-mobile-web-app-*`, `viewport-fit=cover minimal-ui`, `theme-color`, favicon links, loading screen inline, styles base iOS (`position:fixed`, `-webkit-fill-available`, `overscroll-behavior:none`)
+- `build/index.html` passe de 0.49 kB à 2.88 kB — loading screen désormais actif en prod
+- `src/index.html` supprimé
+
+---
+
+## Ce qui a été fait — 15 avril 2026 (suite session)
+
+### Mode nuit — refonte visuelle complète (`GameBoard.tsx`, `Tree.tsx`, `Bee.tsx`)
+
+**Damier nuit — coloration greedy row-major (`GameBoard.tsx`, `grassGenerator.ts`) :**
 - Ancien système `tileIdx 2×3` visible comme un pattern périodique → remplacé par un algorithme **greedy row-major** avec seed déterministe
 - Fonction `greedyColor(row, col, colorMap, palette)` : pour chaque case, exclut les 4 voisins déjà colorés (haut-gauche, haut, haut-droit, gauche) — garantit qu'aucune case adjacente ni diagonale ne partage la même couleur (contrainte king graph)
 - Seed : `Math.abs((row * 31337 + col * 7919)) % pool.length` — résultat aléatoire mais déterministe (pas d'effet de bord entre frames)
