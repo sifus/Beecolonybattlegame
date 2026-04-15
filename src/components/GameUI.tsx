@@ -82,19 +82,25 @@ function StyledButton({ onClick, title, icon, className = '', onDragStart, isDra
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const size = isMobile ? 'w-10 h-10' : 'w-14 h-14'; // 40px mobile, 56px desktop
   
-  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-    // Si on est en train de dragger ou qu'on a une sélection en cours, ne pas déclencher le bouton
-    if (isDragging || hasSelection) {
-      return;
-    }
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging || hasSelection) return;
     onClick();
   };
-  
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isDragging || hasSelection) return;
+    // Vérifier que le doigt est encore au-dessus du bouton au moment du lâcher
+    const touch = e.changedTouches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!e.currentTarget.contains(el)) return;
+    onClick();
+  };
+
   const handlePointerDown = (e: React.PointerEvent) => {
     // Empêcher le cercle de sélection de commencer sur les boutons
     e.stopPropagation();
   };
-  
+
   return (
     <div
       className={`relative ${size} rounded-full hover:scale-110 transition-transform ${className}`}
@@ -103,16 +109,16 @@ function StyledButton({ onClick, title, icon, className = '', onDragStart, isDra
         pointerEvents: 'none',
       }}
     >
-      <svg 
-        className="absolute inset-0 w-full h-full" 
-        viewBox="0 0 100 100" 
-        style={{ 
+      <svg
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 100 100"
+        style={{
           pointerEvents: 'auto',
           cursor: 'pointer',
         }}
-        onClick={handleClick as any}
+        onClick={handleClick}
         onPointerDown={handlePointerDown}
-        onTouchEnd={handleClick as any}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Fond blanc 5% opacité */}
         <circle cx="50" cy="50" r="48" fill="#fff" opacity="0.05" />

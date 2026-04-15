@@ -518,13 +518,13 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [currentScreen, levelProgress]);
 
-  // Raccourci clavier T — spawn 20 abeilles de test sur l'arbre joueur
+  // Raccourci clavier T — spawn 10 abeilles de test sur l'arbre joueur
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 't' || e.key === 'T') {
         const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
         if (!playerTree) return;
-        const testBees = Array.from({ length: 20 }, (_, i) => ({
+        const testBees = Array.from({ length: 10 }, (_, i) => ({
           id: `bee-test-${i}-${Date.now()}`,
           x: playerTree.x + Math.cos(Math.random() * Math.PI * 2) * (30 + Math.random() * 16),
           y: playerTree.y + Math.sin(Math.random() * Math.PI * 2) * (30 + Math.random() * 16),

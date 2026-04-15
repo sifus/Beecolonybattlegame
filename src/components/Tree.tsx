@@ -21,15 +21,29 @@ export function Tree({
   playerBeesCount = 0,
 }: TreeProps) {
   const s = cellSize / 80;
-  const treeOffsetY = cellSize * 0.05; // décalage vertical de l'arbre dans sa cellule
-  const treeIsColonized = tree.hiveCount > 0;
+  const treeOffsetY = cellSize * 0.19; // décalage vertical de l'arbre dans sa cellule
+  // Polinisé = toutes les ruches prévues sont construites (1 pour simple, 2 pour groupe)
+  const treeIsColonized = tree.hiveCount >= tree.maxHives;
   const trunkBottomY = tree.y + cellSize * 0.5 + treeOffsetY;
   const trunkTopY      = trunkBottomY - 20 * s;
   const trunkTopYSmall = trunkBottomY - 18 * s; // petit arbre arrière-droite (bas à -4*s, hauteur 14*s)
   const trunkTopYLarge = trunkBottomY - 22 * s; // grand arbre avant-gauche (hauteur 22*s)
 
-  const foliageDark  = isNightMode ? '#3a6e48' : (treeIsColonized ? '#5ba832' : '#9aad3a');
-  const foliageLight = isNightMode ? '#4a7e55' : (treeIsColonized ? '#6dc23c' : '#a8bc40');
+  const foliageDark  = isNightMode
+    ? (treeIsColonized ? '#3a6e48' : '#4a4e42')
+    : (treeIsColonized ? '#5ba832' : '#706a2c');
+  const foliageLight = isNightMode
+    ? (treeIsColonized ? '#4a7e55' : '#585d4e')
+    : (treeIsColonized ? '#6dc23c' : '#7e7830');
+
+  // Couleurs individuelles pour groupe d'arbres (maxHives=2)
+  // Petit arbre (devant) = ruche 0 ; grand arbre (derrière) = ruche 1
+  const colSmall = tree.hiveCount >= 1;
+  const colLarge = tree.hiveCount >= 2;
+  const foliageDarkSmall  = isNightMode ? (colSmall ? '#3a6e48' : '#4a4e42') : (colSmall ? '#5ba832' : '#706a2c');
+  const foliageLightSmall = isNightMode ? (colSmall ? '#4a7e55' : '#585d4e') : (colSmall ? '#6dc23c' : '#7e7830');
+  const foliageDarkLarge  = isNightMode ? (colLarge ? '#3a6e48' : '#4a4e42') : (colLarge ? '#5ba832' : '#706a2c');
+  const foliageLightLarge = isNightMode ? (colLarge ? '#4a7e55' : '#585d4e') : (colLarge ? '#6dc23c' : '#7e7830');
 
   const hiveColors =
     tree.owner === 'enemy'
@@ -164,7 +178,8 @@ export function Tree({
 
               {tree.maxHives === 2 ? (
                 <>
-                  {/* Small back-right tree (rendered first) */}
+                  {/* Grand arbre derrière (rendu en 1er = derrière) */}
+                  {/* Petit arbre arrière-droite (rendu en 1er = derrière) */}
                   <g opacity={0.82}>
                     <rect
                       x={tree.x + 18 * s}
@@ -174,17 +189,17 @@ export function Tree({
                       fill={isNightMode ? '#4a3018' : '#7a5c3a'}
                       rx={2 * s}
                     />
-                    <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.10 * s} fill={foliageDark} />
-                    <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.10 * s} fill={foliageDark} />
-                    <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.10 * s} fill={foliageLight} />
+                    <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.20 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.20 * s} fill={foliageDark} />
+                    <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.20 * s} fill={foliageLight} />
                     {isNightMode && <>
-                      <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
-                      <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
-                      <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                      <circle cx={tree.x + 14 * s} cy={trunkTopYSmall - 12 * s} r={14 * 1.20 * s} fill="#1a3a6a" opacity={0.30} />
+                      <circle cx={tree.x + 32 * s} cy={trunkTopYSmall - 9 * s}  r={13 * 1.20 * s} fill="#1a3a6a" opacity={0.30} />
+                      <circle cx={tree.x + 22 * s} cy={trunkTopYSmall - 22 * s} r={16 * 1.20 * s} fill="#1a3a6a" opacity={0.30} />
                     </>}
                   </g>
 
-                  {/* Large front-left tree (rendered second, on top) */}
+                  {/* Grand arbre avant-gauche (rendu en 2ème = devant) */}
                   <rect
                     x={tree.x - 14.5 * s}
                     y={trunkBottomY - 22 * s}
@@ -193,13 +208,13 @@ export function Tree({
                     fill={isNightMode ? '#4a3018' : '#7a5c3a'}
                     rx={3 * s}
                   />
-                  <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.10 * s} fill={foliageDark} />
-                  <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.10 * s} fill={foliageDark} />
-                  <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.10 * s} fill={foliageLight} />
+                  <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.20 * s} fill={foliageDark} />
+                  <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.20 * s} fill={foliageDark} />
+                  <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.20 * s} fill={foliageLight} />
                   {isNightMode && <>
-                    <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
-                    <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
-                    <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.10 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x - 20 * s} cy={trunkTopYLarge - 14 * s} r={22 * 1.20 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x + 4 * s}  cy={trunkTopYLarge - 10 * s} r={19 * 1.20 * s} fill="#1a3a6a" opacity={0.30} />
+                    <circle cx={tree.x - 8 * s}  cy={trunkTopYLarge - 26 * s} r={28 * 1.20 * s} fill="#1a3a6a" opacity={0.30} />
                   </>}
                   <ellipse
                     cx={tree.x - 18 * s} cy={trunkTopYLarge - 20 * s}
@@ -268,21 +283,21 @@ export function Tree({
             renderHive(0, tree.x, trunkTopY - 14 * s, 11 * s)
           ) : (
             <>
-              {renderHive(0, tree.x - 16 * s, trunkTopY - 10 * s, 10 * s)}
-              {renderHive(1, tree.x + 14 * s, trunkTopY - 16 * s, 14 * s)}
+              {renderHive(0, tree.x + 14 * s, trunkTopY - 4 * s, 10 * s)}
+              {renderHive(1, tree.x - 22 * s, trunkTopY - 10 * s, 14 * s)}
             </>
           )
         )}
 
         {/* Ruche fantôme upgrade vers 2ème slot */}
         {tree.owner !== 'enemy' && tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && tree.maxHives === 2 && (
-          renderHive(1, tree.x + 14 * s, trunkTopY - 16 * s, 14 * s)
+          renderHive(1, tree.x - 22 * s, trunkTopY - 10 * s, 14 * s)
         )}
 
         {/* Upgrade progress bar */}
         {tree.owner !== 'enemy' && tree.upgradingProgress && tree.upgradingProgress > 0 && tree.hiveCount === 1 && tree.hiveLevel[0] === 1 && (() => {
-          const upgCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x + 14 * s;
-          const upgCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 16 * s;
+          const upgCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x - 22 * s;
+          const upgCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 10 * s;
           const barW = 40 * s;
           const barH = 6 * s;
           const barX = upgCx - barW / 2;
@@ -300,8 +315,8 @@ export function Tree({
 
         {/* Construction progress bar */}
         {tree.owner !== 'enemy' && !tree.isCut && tree.buildingProgress?.[0] && tree.buildingProgress[0] > 0 && (() => {
-          const bpCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x - 22 * s;
-          const bpCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 10 * s;
+          const bpCx = tree.maxHives === 1 ? tree.x - 8 * s : tree.x + 14 * s;
+          const bpCy = tree.maxHives === 1 ? trunkTopY - 14 * s : trunkTopY - 4 * s;
           const barW = 40 * s;
           const barH = 6 * s;
           const barX = bpCx - barW / 2;
@@ -326,8 +341,8 @@ export function Tree({
           const hivePos = tree.maxHives === 1
             ? { cx: tree.x, cy: trunkTopY - 14 * s }
             : index === 0
-              ? { cx: tree.x - 16 * s, cy: trunkTopY - 10 * s }
-              : { cx: tree.x + 14 * s, cy: trunkTopY - 16 * s };
+              ? { cx: tree.x + 14 * s, cy: trunkTopY - 4 * s }
+              : { cx: tree.x - 22 * s, cy: trunkTopY - 10 * s };
           return (
             <text key={`dmg-${index}`} x={hivePos.cx} y={hivePos.cy - 18 * s} textAnchor="middle" dominantBaseline="middle" fill="#fff" stroke="#000" strokeWidth={3 * s} paintOrder="stroke" fontSize={11 * s} fontWeight="bold">
               {health}/{maxHealth}
@@ -361,9 +376,8 @@ export function Tree({
         {/* Bulle compteur abeilles — visible dès qu'il y a des abeilles joueur, même sans ruche */}
         {!tree.isCut && (tree.owner === 'player' || playerBeesCount > 0) && (() => {
           const r = cellSize * 0.22;
-          const isGroup = tree.maxHives === 2;
-          const bx = tree.x + cellSize * (isGroup ? 0.52 : 0.38);
-          const by = tree.y + treeOffsetY - cellSize * (isGroup ? 0.42 : 0.38);
+          const bx = tree.x + cellSize * 0.38;
+          const by = tree.y + treeOffsetY - cellSize * 0.38;
           const gradId = `bee-count-grad-${tree.id}`;
           return (
             <g filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.30))">
