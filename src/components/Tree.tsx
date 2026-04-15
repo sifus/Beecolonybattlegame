@@ -343,8 +343,8 @@ export function Tree({
           );
         })()}
 
-        {/* Bulle compteur abeilles — arbres joueur uniquement */}
-        {tree.owner === 'player' && !tree.isCut && (() => {
+        {/* Bulle compteur abeilles — visible dès qu'il y a des abeilles joueur, même sans ruche */}
+        {!tree.isCut && (tree.owner === 'player' || playerBeesCount > 0) && (() => {
           const r = cellSize * 0.22;
           const isGroup = tree.maxHives === 2;
           const bx = tree.x + cellSize * (isGroup ? 0.52 : 0.38);

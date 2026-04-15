@@ -5,6 +5,7 @@ import {
   saveSoundPreference,
   saveTimeOfDayPreference,
   saveLeftHandedPreference,
+  saveSleepModePreference,
   isStorageAvailable,
 } from '../utils/storage';
 
@@ -13,6 +14,7 @@ export function useStorage(
   soundEnabled: boolean,
   globalTimeOfDay: 'day' | 'night',
   leftHanded: boolean,
+  sleepModeEnabled: boolean,
 ) {
   useEffect(() => {
     if (isStorageAvailable()) saveLevelProgress(levelProgress);
@@ -29,4 +31,8 @@ export function useStorage(
   useEffect(() => {
     if (isStorageAvailable()) saveLeftHandedPreference(leftHanded);
   }, [leftHanded]);
+
+  useEffect(() => {
+    if (isStorageAvailable()) saveSleepModePreference(sleepModeEnabled);
+  }, [sleepModeEnabled]);
 }

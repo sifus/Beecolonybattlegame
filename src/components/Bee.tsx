@@ -4,11 +4,12 @@ import { motion } from 'motion/react';
 interface BeeProps {
   bee: BeeType;
   isSelected: boolean;
+  isBeingSelected?: boolean;
   isNightMode?: boolean;
   cellSize: number;
 }
 
-export function Bee({ bee, isSelected, isNightMode = false, cellSize }: BeeProps) {
+export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = false, cellSize }: BeeProps) {
   const isNewBee = bee.createdAt && Date.now() - bee.createdAt < 800;
 
   // ─── NIGHT MODE : lucioles ────────────────────────────────────────────────
@@ -44,7 +45,9 @@ export function Bee({ bee, isSelected, isNightMode = false, cellSize }: BeeProps
           animate={{ scale: 1 }}
           transition={{ duration: 0.4 }}
         />
-        <motion.circle cx={bee.x} cy={bee.y} r={3.5} fill={fireflyColor} stroke={fireflyColor} strokeWidth={0.8}
+        <motion.circle cx={bee.x} cy={bee.y} r={3.5} fill={fireflyColor}
+          stroke={isBeingSelected && !isSelected ? '#FFFFFF' : fireflyColor}
+          strokeWidth={isBeingSelected && !isSelected ? 7 : 0.8}
           animate={{ scale: 1 }}
           transition={{ duration: 0.4 }}
         />
@@ -98,7 +101,10 @@ export function Bee({ bee, isSelected, isNightMode = false, cellSize }: BeeProps
             <path d={dropPath} />
           </clipPath>
         </defs>
-        <path d={dropPath} fill={bodyColor} />
+        <path d={dropPath} fill={bodyColor}
+          stroke={isBeingSelected && !isSelected ? '#FFFFFF' : 'none'}
+          strokeWidth={isBeingSelected && !isSelected ? 10 : 0}
+        />
         <rect x={-22} y={-3} width={44} height={16} fill={stripeColor} clipPath={`url(#${clipId})`} />
         <ellipse cx={-6} cy={-14} rx={5} ry={4} fill="#fff" opacity={0.18} />
       </g>

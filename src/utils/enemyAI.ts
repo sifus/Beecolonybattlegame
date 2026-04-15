@@ -291,39 +291,41 @@ export function enemyAITick(gameState: GameState, mapData: MapData): GameState {
     }
   }
   
-  // 9. ATTACK IDLE PLAYER BEES (not attached to trees)
-  // Les abeilles du joueur qui sont dans un coin de la carte sont vulnérables
+  // 9. ATTACK IDLE PLAYER BEES — uniquement si elles menacent un arbre ennemi
+  // (évite que l'IA réagisse systématiquement quand le joueur envoie des abeilles en terrain neutre)
   const idlePlayerBees = newState.bees.filter(
     b => b.owner === 'player' && b.state === 'idle' && !b.treeId
   );
-  
-  if (idlePlayerBees.length > 0) {
-    // Find enemy trees with bees
-    const treesWithBees = enemyTrees
-      .map(tree => ({
-        tree,
-        idleBees: newState.bees.filter(b => b.treeId === tree.id && b.owner === 'enemy' && b.state === 'idle')
-      }))
-      .filter(t => t.idleBees.length >= 5);
-    
-    if (treesWithBees.length > 0) {
-      // Trouver le groupe d'abeilles idle le plus proche
-      const sourceTree = treesWithBees[0];
-      
-      // Calculer le centre de masse des abeilles idle du joueur
-      const avgX = idlePlayerBees.reduce((sum, b) => sum + b.x, 0) / idlePlayerBees.length;
-      const avgY = idlePlayerBees.reduce((sum, b) => sum + b.y, 0) / idlePlayerBees.length;
-      
-      // Envoyer 6 abeilles vers ce point
-      const beesToSend = sourceTree.idleBees.slice(0, 6);
-      beesToSend.forEach(bee => {
-        bee.state = 'moving';
-        bee.targetTreeId = null;
-        bee.targetX = avgX;
-        bee.targetY = avgY;
-        bee.treeId = null;
-        sourceTree.tree.beeCount--;
-      });
+
+  if (idlePlayerBees.length >= 6) {
+    const avgX = idlePlayerBees.reduce((sum, b) => sum + b.x, 0) / idlePlayerBees.length;
+    const avgY = idlePlayerBees.reduce((sum, b) => sum + b.y, 0) / idlePlayerBees.length;
+
+    // Ne réagir que si le groupe est proche d'un arbre ennemi (rayon 3 cellules)
+    const threatsEnemyTree = enemyTrees.some(tree =>
+      Math.hypot(tree.x - avgX, tree.y - avgY) < CELL_SIZE * 3
+    );
+
+    if (threatsEnemyTree) {
+      const treesWithBees = enemyTrees
+        .map(tree => ({
+          tree,
+          idleBees: newState.bees.filter(b => b.treeId === tree.id && b.owner === 'enemy' && b.state === 'idle')
+        }))
+        .filter(t => t.idleBees.length >= 5);
+
+      if (treesWithBees.length > 0) {
+        const sourceTree = treesWithBees[0];
+        const beesToSend = sourceTree.idleBees.slice(0, 6);
+        beesToSend.forEach(bee => {
+          bee.state = 'moving';
+          bee.targetTreeId = null;
+          bee.targetX = avgX;
+          bee.targetY = avgY;
+          bee.treeId = null;
+          sourceTree.tree.beeCount--;
+        });
+      }
     }
   }
   

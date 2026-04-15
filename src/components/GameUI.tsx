@@ -191,21 +191,9 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
 
   return (
     <>
-      {/* Pause - Haut Gauche */}
-      <div className={`absolute ${positioning} z-20`} style={{ pointerEvents: 'none' }}>
-        <StyledButton
-          onClick={handlePauseClick}
-          onDragStart={onDragStart}
-          isDragging={isDragging}
-          hasSelection={hasSelection}
-          title={isPlaying ? 'Pause' : 'Reprendre'}
-          icon={isPlaying ? <Pause className={`${iconSize} text-white`} strokeWidth={2.5} /> : <Play className={`${iconSize} text-white`} strokeWidth={2.5} />}
-        />
-      </div>
-
-      {/* Recommencer - Haut Droite (masqué en mode tutoriel) */}
+      {/* Recommencer - Haut Gauche (masqué en mode tutoriel) */}
       {!isTutorial && (
-        <div className={`absolute ${positioningRight} z-20`} style={{ pointerEvents: 'none' }}>
+        <div className={`absolute ${positioning} z-20`} style={{ pointerEvents: 'none' }}>
           <StyledButton
             onClick={onRestart}
             onDragStart={onDragStart}
@@ -216,6 +204,18 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
           />
         </div>
       )}
+
+      {/* Pause - Haut Droite */}
+      <div className={`absolute ${positioningRight} z-20`} style={{ pointerEvents: 'none' }}>
+        <StyledButton
+          onClick={handlePauseClick}
+          onDragStart={onDragStart}
+          isDragging={isDragging}
+          hasSelection={hasSelection}
+          title={isPlaying ? 'Pause' : 'Reprendre'}
+          icon={isPlaying ? <Pause className={`${iconSize} text-white`} strokeWidth={2.5} /> : <Play className={`${iconSize} text-white`} strokeWidth={2.5} />}
+        />
+      </div>
 
       {/* Menu Pause */}
       {showPauseMenu && (

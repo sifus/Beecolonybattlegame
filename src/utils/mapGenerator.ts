@@ -72,10 +72,9 @@ export function generateRandomMap(
       const gridX = gameStartCol + Math.floor(Math.random() * (gameCols - pondWidth - 2)) + 1;
       const gridY = gameStartRow + Math.floor(Math.random() * (gameRows - pondHeight - 2)) + 1;
       
-      // Check if cells are available (including safety margin)
-      // Sur petites grilles : pas de marge de sécurité (juste les cellules de l'étang)
-      // Sur grandes grilles : marge de 1 cellule autour
-      const margin = isSmallGrid ? 0 : 1;
+      // Marge de sécurité de 2 cellules autour de chaque étang :
+      // garantit que les arbres (et leurs abeilles en orbite ~46px max) ne touchent jamais l'eau
+      const margin = 2;
       let canPlace = true;
       for (let dy = -margin; dy <= pondHeight - 1 + margin; dy++) {
         for (let dx = -margin; dx <= pondWidth - 1 + margin; dx++) {
@@ -87,9 +86,9 @@ export function generateRandomMap(
         }
         if (!canPlace) break;
       }
-      
+
       if (canPlace) {
-        // Mark cells as occupied (pond cells + safety margin if large grid)
+        // Marquer les cellules étang + marge de 2
         for (let dy = -margin; dy <= pondHeight - 1 + margin; dy++) {
           for (let dx = -margin; dx <= pondWidth - 1 + margin; dx++) {
             occupiedCells.add(`${gridX + dx},${gridY + dy}`);
@@ -113,7 +112,7 @@ export function generateRandomMap(
   
   // Generate trees on grid cells
   const trees: Tree[] = [];
-  // Distance minimale entre arbres : toujours au moins 2 cellules pour éviter qu'ils soient côte à côte
+  // Distance minimale entre arbres : 2 cellules en Chebyshev → pas d'adjacence orthogonale ni diagonale
   const minDistanceCells = 2;
   const treesOccupiedCells = new Set<string>(); // Track cells with trees
   
@@ -141,55 +140,24 @@ export function generateRandomMap(
   console.log(`🌳 Placement arbres: 1 joueur + 1 ennemi + ${numNeutralTrees} neutres (zone jeu ${gameCols}x${gameRows}=${totalCells} cellules, verySmall=${isVerySmallGrid})`);
   
   function isValidTreeCell(gridX: number, gridY: number): boolean {
-    // ZONE DE JEU : L'arbre DOIT être dans la zone de jeu (pas dans la bordure)
+    // ZONE DE JEU : l'arbre doit être dans la zone jouable (pas dans la bordure écran)
     if (gridX < gameStartCol || gridX > gameEndCol || gridY < gameStartRow || gridY > gameEndRow) return false;
-    
-    // SAFE ZONES : Laisser une marge de 1 cellule à l'intérieur de la zone de jeu
-    if (gridX <= gameStartCol || gridX >= gameEndCol || gridY <= gameStartRow || gridY >= gameEndRow) return false;
-    
-    // ZONE D'EXCLUSION : Éviter les arbres près des boutons UI (coins haut de la zone de jeu)
-    // Sur très petites grilles (8x5 ou moins), réduire au minimum
-    const uiMarginCols = isVerySmallGrid ? 1 : (isSmallGrid ? 1 : 2);
-    const uiMarginRows = isVerySmallGrid ? 0 : (isSmallGrid ? 1 : 2);
-    
-    // Relatif à la zone de jeu
-    const relX = gridX - gameStartCol;
-    const relY = gridY - gameStartRow;
-    
-    // Haut-gauche de la zone de jeu
-    if (relX <= uiMarginCols && relY <= uiMarginRows) return false;
-    // Haut-droite de la zone de jeu
-    if (relX >= gameCols - uiMarginCols - 1 && relY <= uiMarginRows) return false;
-    
-    // RÈGLE STRICTE : Un arbre ne peut JAMAIS être sur un carré étang OU adjacent à un étang
-    // occupiedCells contient les cases d'étang + une marge de sécurité d'1 case autour
+
+    // ZONE ÉTANG : occupiedCells contient toutes les cellules étang + marge 2
     const cellKey = `${gridX},${gridY}`;
-    if (occupiedCells.has(cellKey)) {
-      return false; // Carré occupé par un étang ou dans sa zone de sécurité
-    }
-    
-    // Check if there's already a tree on this exact cell
+    if (occupiedCells.has(cellKey)) return false;
+
+    // Cellule déjà prise par un autre arbre
     if (treesOccupiedCells.has(cellKey)) return false;
-    
-    // NOUVELLE RÈGLE : Pas d'arbre si la cellule au-dessus a déjà un arbre
-    // Mais seulement sur les grilles moyennes/grandes pour éviter trop de contraintes
-    if (!isVerySmallGrid) {
-      const cellAboveKey = `${gridX},${gridY - 1}`;
-      if (treesOccupiedCells.has(cellAboveKey)) return false;
-    }
-    
-    // Check minimum distance from other trees (Chebyshev distance - distance en cases)
+
+    // Chebyshev ≥ 2 : garantit exactement 1 carré libre autour de chaque arbre
+    // (les cellules bord comptent comme libres — règle explicite)
     for (const tree of trees) {
-      // Calculate grid position from tree position (tree.x/y = grid * cellSize + offset)
-      const treeGridX = Math.floor(tree.x / cellSize);
-      const treeGridY = Math.floor(tree.y / cellSize);
-      const distX = Math.abs(treeGridX - gridX);
-      const distY = Math.abs(treeGridY - gridY);
-      // Les deux distances doivent être >= minDistanceCells (distance de Chebyshev)
-      const maxDist = Math.max(distX, distY);
-      if (maxDist < minDistanceCells) return false;
+      const tgx = Math.floor(tree.x / cellSize);
+      const tgy = Math.floor(tree.y / cellSize);
+      if (Math.max(Math.abs(tgx - gridX), Math.abs(tgy - gridY)) < minDistanceCells) return false;
     }
-    
+
     return true;
   }
   
@@ -199,14 +167,15 @@ export function generateRandomMap(
       let gridX: number;
       let gridY: number;
       
-      // Borner sur la zone de jeu avec marge de 1 cellule (abeilles restent dans la zone visible)
-      gridY = Math.floor(Math.random() * (gameEndRow - gameStartRow - 1)) + gameStartRow + 1;
+      // Zone jouable complète (gameStartCol..gameEndCol, gameStartRow..gameEndRow)
+      gridY = Math.floor(Math.random() * (gameEndRow - gameStartRow + 1)) + gameStartRow;
+      const halfCols = Math.floor(gameCols / 2);
       if (preferLeft) {
-        gridX = Math.floor(Math.random() * Math.floor(cols / 2 - 1)) + 1;
+        gridX = Math.floor(Math.random() * halfCols) + gameStartCol;
       } else if (preferRight) {
-        gridX = Math.floor(Math.random() * Math.floor(cols / 2 - 1)) + Math.ceil(cols / 2);
+        gridX = Math.floor(Math.random() * (gameCols - halfCols)) + gameStartCol + halfCols;
       } else {
-        gridX = Math.floor(Math.random() * (cols - 2)) + 1;
+        gridX = Math.floor(Math.random() * gameCols) + gameStartCol;
       }
       
       if (isValidTreeCell(gridX, gridY)) {
@@ -221,63 +190,52 @@ export function generateRandomMap(
       attempts++;
     }
     
-    // Fallback: cherche une cellule libre en balayant toute la grille
-    // Respecte la marge gameStartRow+1 / gameEndRow-1 pour garder les abeilles dans la zone visible
-    const startY = gameStartRow + 1;
-    const endY = gameEndRow;
-    const startX = gameStartCol + 1;
-    const endX = gameEndCol;
-    
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
-        const cellKey = `${x},${y}`;
-        const cellAboveKey = `${x},${y - 1}`; // Cellule au-dessus
-        
-        // PRIORITÉ 1: Chercher d'abord une cellule sans arbre au-dessus (idéal)
-        if (!occupiedCells.has(cellKey) && 
-            !treesOccupiedCells.has(cellKey) && 
-            !treesOccupiedCells.has(cellAboveKey)) {
-          treesOccupiedCells.add(cellKey);
-          
-          return {
-            x: treeX(x, cellSize),
-            y: treeY(y, cellSize)
-          };
+    // Fallback: scanner toute la zone jouable en respectant isValidTreeCell (distance min incluse)
+    for (let y = gameStartRow; y <= gameEndRow; y++) {
+      for (let x = gameStartCol; x <= gameEndCol; x++) {
+        if (isValidTreeCell(x, y)) {
+          treesOccupiedCells.add(`${x},${y}`);
+          return { x: treeX(x, cellSize), y: treeY(y, cellSize) };
         }
       }
     }
 
-    // PRIORITÉ 2: Si aucune cellule "idéale" trouvée, accepter une cellule même avec arbre au-dessus (fallback)
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
+    // Dernier recours : scan zone jouable en relâchant les contraintes DOUCES (UI coins, preferLeft/Right)
+    // mais en gardant TOUJOURS : zone jouable + zones étang + distance Chebyshev entre arbres
+    for (let y = gameStartRow; y <= gameEndRow; y++) {
+      for (let x = gameStartCol; x <= gameEndCol; x++) {
         const cellKey = `${x},${y}`;
+        if (occupiedCells.has(cellKey)) continue;
+        if (treesOccupiedCells.has(cellKey)) continue;
+        // Chebyshev distance : contrainte DURE, jamais relâchée
+        let tooClose = false;
+        for (const tree of trees) {
+          const tgx = Math.floor(tree.x / cellSize);
+          const tgy = Math.floor(tree.y / cellSize);
+          if (Math.max(Math.abs(tgx - x), Math.abs(tgy - y)) < minDistanceCells) { tooClose = true; break; }
+        }
+        if (tooClose) continue;
+        treesOccupiedCells.add(cellKey);
+        console.warn(`⚠️ Fallback élargi: arbre placé en (${x},${y}) — contraintes UI/côté relâchées`);
+        return { x: treeX(x, cellSize), y: treeY(y, cellSize) };
+      }
+    }
 
-        // Vérifie si la cellule n'est PAS occupée par un étang ou un arbre
-        if (!occupiedCells.has(cellKey) && !treesOccupiedCells.has(cellKey)) {
-          treesOccupiedCells.add(cellKey);
-
-          return {
-            x: treeX(x, cellSize),
-            y: treeY(y, cellSize)
-          };
+    // Ultime recours absolu : zone jouable, hors étang, même si adjacent à un autre arbre
+    console.error(`❌ ERREUR CRITIQUE: Aucune cellule respectant Chebyshev trouvée — placement forcé hors étang`);
+    for (let y = gameStartRow; y <= gameEndRow; y++) {
+      for (let x = gameStartCol; x <= gameEndCol; x++) {
+        const ck = `${x},${y}`;
+        if (!occupiedCells.has(ck) && !treesOccupiedCells.has(ck)) {
+          treesOccupiedCells.add(ck);
+          return { x: treeX(x, cellSize), y: treeY(y, cellSize) };
         }
       }
     }
-    
-    // Si vraiment aucune cellule n'est disponible (très improbable)
-    console.error(`❌ ERREUR CRITIQUE: Aucune cellule libre trouvée sur toute la grille!
-      Grille: ${cols}x${rows} (${totalCells} cellules)
-      Étangs: ${ponds.length}, Arbres déjà placés: ${trees.length}
-      Cellules occupées (étangs): ${occupiedCells.size}
-      Cellules occupées (arbres): ${treesOccupiedCells.size}`);
-    
-    const centerGridX = Math.floor(cols / 2);
-    const centerGridY = Math.floor(rows / 2);
-    
-    return {
-      x: treeX(centerGridX, cellSize),
-      y: treeY(centerGridY, cellSize)
-    };
+    // Vraiment aucune cellule libre du tout (situation impossible en pratique)
+    const cx = gameStartCol + Math.floor(gameCols / 2);
+    const cy = gameStartRow + Math.floor(gameRows / 2);
+    return { x: treeX(cx, cellSize), y: treeY(cy, cellSize) };
   }
   
   // Generate player tree (left side) - always 1 with 1 hive (level 1 = 7 HP) - Starting tree cannot be upgraded

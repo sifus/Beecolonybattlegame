@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   SOUND_ENABLED: 'rush_sound_enabled',
   TIME_OF_DAY: 'rush_time_of_day',
   LEFT_HANDED: 'rush_left_handed',
+  SLEEP_MODE: 'rush_sleep_mode',
   GAME_VERSION: 'rush_game_version',
 } as const;
 
@@ -164,6 +165,21 @@ export function saveLeftHandedPreference(leftHanded: boolean): void {
 export function loadLeftHandedPreference(): boolean {
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.LEFT_HANDED);
+    return saved ? JSON.parse(saved) : false;
+  } catch {
+    return false;
+  }
+}
+
+export function saveSleepModePreference(enabled: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.SLEEP_MODE, JSON.stringify(enabled));
+  } catch {}
+}
+
+export function loadSleepModePreference(): boolean {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.SLEEP_MODE);
     return saved ? JSON.parse(saved) : false;
   } catch {
     return false;

@@ -1,4 +1,4 @@
-import { ArrowLeft, Volume2, VolumeX, Sun, Moon, RotateCcw, Hand, Axe } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Sun, Moon, RotateCcw, Hand, Axe, BedDouble } from 'lucide-react';
 
 interface OptionsMenuProps {
   onBack: () => void;
@@ -8,11 +8,13 @@ interface OptionsMenuProps {
   onToggleTimeOfDay?: () => void;
   leftHanded?: boolean;
   onToggleLeftHanded?: () => void;
+  sleepModeEnabled?: boolean;
+  onToggleSleepMode?: () => void;
   onResetProgress?: () => void;
   onGoToFirstBattle?: () => void;
 }
 
-export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, leftHanded = false, onToggleLeftHanded, onResetProgress, onGoToFirstBattle }: OptionsMenuProps) {
+export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOfDay = 'day', onToggleTimeOfDay, leftHanded = false, onToggleLeftHanded, sleepModeEnabled = false, onToggleSleepMode, onResetProgress, onGoToFirstBattle }: OptionsMenuProps) {
   // Couleur de fond adaptée au mode jour/nuit
   const bgColor = timeOfDay === 'night' ? '#1a2332' : '#8B7355'; // Bleu foncé nuit, marron taupe jour
 
@@ -118,6 +120,36 @@ export function OptionsMenu({ onBack, soundEnabled = true, onToggleSound, timeOf
                         style={{
                           left: soundEnabled ? 'calc(100% - 28px)' : '4px',
                         }}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mode veille */}
+                <div className="border-b pb-4" style={{ borderColor: 'rgba(120, 53, 15, 0.3)' }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="mb-1 text-amber-950 flex items-center gap-2" style={{ fontSize: '15px', fontWeight: '700' }}>
+                        <BedDouble className="w-4 h-4" />
+                        Mode veille
+                      </p>
+                      <p className="text-amber-900" style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                        Garder la musique quand l'écran est verrouillé
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => onToggleSleepMode?.()}
+                      className="relative w-14 h-8 rounded-full transition-all"
+                      style={{
+                        background: sleepModeEnabled
+                          ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                          : 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      <div
+                        className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all"
+                        style={{ left: sleepModeEnabled ? 'calc(100% - 28px)' : '4px' }}
                       />
                     </button>
                   </div>

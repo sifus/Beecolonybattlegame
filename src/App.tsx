@@ -20,6 +20,7 @@ import {
   loadSoundPreference,
   loadTimeOfDayPreference,
   loadLeftHandedPreference,
+  loadSleepModePreference,
 } from './utils/storage';
 import { useStorage } from './hooks/useStorage';
 import { useSolarSystem } from './hooks/useSolarSystem';
@@ -61,15 +62,14 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   const totalCols = GRID_COLS;
   const totalRows = GRID_ROWS;
 
-  const cellSizeByWidth  = Math.floor(availW / totalCols);
-  const cellSizeByHeight = Math.floor(availH / totalRows);
-  const cellSize = Math.min(cellSizeByWidth, cellSizeByHeight);
+  // Division exacte (float) : la dimension contraignante remplit parfaitement l'écran
+  const cellSize = Math.min(availW / totalCols, availH / totalRows);
 
   const gridW = totalCols * cellSize;
   const gridH = totalRows * cellSize;
 
-  const marginLeft = Math.round((availW - gridW) / 2);
-  const marginTop = Math.round((availH - gridH) / 2);
+  const marginLeft = (availW - gridW) / 2;
+  const marginTop  = (availH - gridH) / 2;
 
   return {
     cols: totalCols,
@@ -104,7 +104,7 @@ export default function App() {
   });
   const [scale, setScale] = useState(1);
 
-  const { sunIntensity, sunPosition, sparkles } = useSolarSystem(gridParams);
+  const { sunIntensity, sparkleIntensity, lateralOffset, sparkles } = useSolarSystem(gridParams);
 
   // État du mode histoire - Charger depuis localStorage
   const [levelProgress, setLevelProgress] = useState<LevelProgress>(() => loadLevelProgress());
@@ -133,6 +133,10 @@ export default function App() {
   }));
 
   const [gameOver, setGameOver] = useState<'won' | 'lost' | null>(null);
+  const [showGameOverPopup, setShowGameOverPopup] = useState(false);
+  const [isAppVisible, setIsAppVisible] = useState(true);
+  const [sleepModeEnabled, setSleepModeEnabled] = useState(() => loadSleepModePreference());
+  const wasPlayingRef = useRef(false);
   const [tutorialCompleted, setTutorialCompleted] = useState(false);
 
   const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
@@ -151,6 +155,7 @@ export default function App() {
   const victoryHandledRef = useRef(false); // Pour éviter les boucles infinies de victoire
   const beeConsumedByPondRef = useRef(false); // Pour détecter quand une abeille tombe dans l'étang (niveau dangers)
   const justSentBeesRef = useRef(false); // Pour éviter de sélectionner les abeilles après avoir envoyé des abeilles
+  const justBuiltHiveRef = useRef(false); // Pour éviter un double appel createOrRepairHive (mouseUp + click)
   const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
   const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
 
@@ -234,8 +239,34 @@ export default function App() {
   }, []);
   
   // 🔄 Sauvegarde automatique (progression + préférences)
-  useStorage(levelProgress, soundEnabled, globalTimeOfDay, leftHanded);
-  
+  useStorage(levelProgress, soundEnabled, globalTimeOfDay, leftHanded, sleepModeEnabled);
+
+  // ⏸ Pause quand l'app passe en arrière-plan (onglet caché, écran verrouillé, autre appli)
+  useEffect(() => {
+    const handleVisibility = () => {
+      const hidden = document.hidden;
+      setIsAppVisible(!hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!isAppVisible) {
+      // Passage en arrière-plan : mémoriser l'état de jeu, puis suspendre
+      wasPlayingRef.current = gameState.isPlaying;
+      if (gameState.isPlaying) {
+        setGameState(prev => ({ ...prev, isPlaying: false }));
+      }
+    } else {
+      // Retour au premier plan : reprendre si le jeu était en cours
+      if (wasPlayingRef.current) {
+        setGameState(prev => ({ ...prev, isPlaying: true }));
+        wasPlayingRef.current = false;
+      }
+    }
+  }, [isAppVisible]);
+
   // Maintenir gridParamsRef à jour à chaque render
   gridParamsRef.current = gridParams;
 
@@ -422,9 +453,11 @@ export default function App() {
       if (hasEnemyTrees && enemyAliveHives === 0 && gameState.gameTime > 2 && gameOver === null) {
         setGameOver('won');
         setGameState((prev) => ({ ...prev, isPlaying: false }));
+        setTimeout(() => setShowGameOverPopup(true), 1000);
       } else if (playerAliveHives === 0 && gameState.gameTime > 2 && gameOver === null) {
         setGameOver('lost');
         setGameState((prev) => ({ ...prev, isPlaying: false }));
+        setTimeout(() => setShowGameOverPopup(true), 1000);
       }
     }
   }, [gameState.trees, gameState.isPlaying, gameState.gameTime, gameOver, currentScreen, levelProgress]);
@@ -522,10 +555,10 @@ export default function App() {
     const scaleX = rect.width / viewBox.width;
     const scaleY = rect.height / viewBox.height;
     
-    // Convertir les coordonnées écran en coordonnées viewBox
-    const x = relativeX / scaleX;
-    const y = relativeY / scaleY;
-    
+    // Convertir les coordonnées écran en coordonnées grille (origine = coin haut-gauche de la grille)
+    const x = relativeX / scaleX - (gridParams.marginLeft || 0);
+    const y = relativeY / scaleY - (gridParams.marginTop || 0);
+
     return { x, y };
   };
 
@@ -684,10 +717,13 @@ export default function App() {
         return distToBee <= radius;
       });
 
-      setGameState((prev) => ({
-        ...prev,
-        selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
-      }));
+      if (selectedBees.length > 0) {
+        setGameState((prev) => ({
+          ...prev,
+          selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
+        }));
+      }
+      // Si 0 abeilles encerclées, l'ancienne sélection est conservée
       setLastClickedTreeId(null);
     } else if (gameState.selectedBeeIds.size > 0) {
       // C'est un simple clic avec des abeilles sélectionnées
@@ -695,13 +731,17 @@ export default function App() {
       const clickX = selectionCurrent.x;
       const clickY = selectionCurrent.y;
       
-      // Chercher si on a cliqué sur un arbre (rayon de détection = 70px)
-      const clickedTree = gameState.trees.find(tree => {
-        const dist = Math.sqrt(
-          Math.pow(tree.x - clickX, 2) + Math.pow(tree.y - clickY, 2)
-        );
-        return dist <= 70;
-      });
+      // Trouver l'arbre le plus proche du clic (rayon proportionnel à la cellSize)
+      const clickRadius = gridParams.cellSize * 0.6;
+      let clickedTree = null;
+      let closestDist = Infinity;
+      for (const tree of gameState.trees) {
+        const d = Math.sqrt(Math.pow(tree.x - clickX, 2) + Math.pow(tree.y - clickY, 2));
+        if (d <= clickRadius && d < closestDist) {
+          closestDist = d;
+          clickedTree = tree;
+        }
+      }
       
       // Vérifier si toutes les abeilles sélectionnées gravitent autour du même arbre cliqué
       if (clickedTree) {
@@ -714,6 +754,8 @@ export default function App() {
         // Si toutes les abeilles sélectionnées gravitent déjà autour de cet arbre, créer une ruche
         if (allBeesOnClickedTree && selectedBeesArray.length > 0) {
           createOrRepairHive(clickedTree.id);
+          justBuiltHiveRef.current = true;
+          setTimeout(() => { justBuiltHiveRef.current = false; }, 200);
           setSelectionStart(null);
           setSelectionCurrent(null);
           return;
@@ -727,11 +769,22 @@ export default function App() {
         
         const updatedBees = prev.bees.map(bee => {
           if (prev.selectedBeeIds.has(bee.id)) {
-            // Créer un offset aléatoire pour chaque abeille (nuage)
-            const radius = Math.sqrt(numBees) * 8; // Le nuage grandit avec le nombre d'abeilles
+            // Rayon d'orbite autour d'un arbre (même formule que le game loop)
+            const baseOrbit = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80);
             const angle = Math.random() * Math.PI * 2;
-            const offsetX = Math.cos(angle) * Math.random() * radius;
-            const offsetY = Math.sin(angle) * Math.random() * radius;
+            let offsetX: number, offsetY: number;
+            if (clickedTree) {
+              // Cible exactement sur le cercle d'orbite individuel de cette abeille
+              // (même variation déterministe que le game loop : ±8px selon bee.id)
+              const variation = ((parseInt(bee.id.slice(-5), 36) % 16) - 8);
+              const individualRadius = baseOrbit + variation;
+              offsetX = Math.cos(angle) * individualRadius;
+              offsetY = Math.sin(angle) * individualRadius;
+            } else {
+              const cloudRadius = Math.sqrt(numBees) * 8;
+              offsetX = Math.cos(angle) * Math.random() * cloudRadius;
+              offsetY = Math.sin(angle) * Math.random() * cloudRadius;
+            }
             
             if (clickedTree) {
               // Clic sur un arbre - envoyer vers cet arbre
@@ -1021,7 +1074,6 @@ export default function App() {
   const handleTreeClick = useCallback(
     (treeId: string, e: React.MouseEvent | React.PointerEvent) => {
       if (isDragging) return;
-      if (justSentBeesRef.current) return;
 
       e.stopPropagation();
       e.preventDefault();
@@ -1032,23 +1084,17 @@ export default function App() {
       const now = Date.now();
       const isDoubleClick = lastClickedTreeId === treeId && now - lastClickTime < 400;
 
-      // DOUBLE CLIC : sélectionne les abeilles de cet arbre et les envoie construire en place
+      // DOUBLE CLIC : envoie toutes les abeilles en orbite tenter de créer/réparer une ruche
       if (isDoubleClick && !tree.isCut) {
-        // Sélection visuelle immédiate
-        setGameState(prev => {
-          const beesAtThisTree = prev.bees
-            .filter(bee => bee.treeId === treeId && bee.owner === 'player')
-            .map(bee => bee.id);
-          return beesAtThisTree.length > 0
-            ? { ...prev, selectedBeeIds: new Set(beesAtThisTree) }
-            : prev;
-        });
         setLastClickedTreeId(null);
         setLastClickTime(0);
-        // Envoie construire (si impossible, les abeilles restent en orbite)
-        createOrRepairHive(treeId);
+        if (!justBuiltHiveRef.current) {
+          createOrRepairHive(treeId);
+        }
         return;
       }
+
+      if (justSentBeesRef.current) return;
 
       setLastClickedTreeId(treeId);
       setLastClickTime(now);
@@ -1068,8 +1114,7 @@ export default function App() {
         });
         justSentBeesRef.current = true;
         setTimeout(() => { justSentBeesRef.current = false; }, 100);
-        setLastClickedTreeId(null);
-        setLastClickTime(0);
+        // On garde lastClickedTreeId pour permettre un double-clic même après envoi
         return;
       }
 
@@ -1102,6 +1147,10 @@ export default function App() {
     setLeftHanded(prev => !prev);
   }, []);
 
+  const handleToggleSleepMode = useCallback(() => {
+    setSleepModeEnabled(prev => !prev);
+  }, []);
+
   const handleStartGame = () => {
     setCurrentScreen('game');
     victoryHandledRef.current = false; // Réinitialiser le flag de victoire
@@ -1115,7 +1164,7 @@ export default function App() {
     });
     setMapData(randomMap);
     
-    setGameOver(null);
+    setGameOver(null); setShowGameOverPopup(false);
     setGameState({
       trees: randomMap.trees.map(tree => ({
         ...tree,
@@ -1286,7 +1335,7 @@ export default function App() {
       grassGrid: levelConfig.grassGrid,
     });
     
-    setGameOver(null);
+    setGameOver(null); setShowGameOverPopup(false);
     setGameState({
       trees: levelConfig.trees.map((tree, index) => ({
         ...tree,
@@ -1373,7 +1422,7 @@ export default function App() {
         grassGrid: levelConfig.grassGrid,
       });
 
-      setGameOver(null);
+      setGameOver(null); setShowGameOverPopup(false);
       setGameState({
         trees: initialTrees,
         bees: initialBees,
@@ -1467,7 +1516,7 @@ export default function App() {
         grassGrid: levelConfig.grassGrid,
       });
       
-      setGameOver(null);
+      setGameOver(null); setShowGameOverPopup(false);
       setGameState({
         trees: levelConfig.trees.map((tree, index) => ({
           ...tree,
@@ -1562,7 +1611,7 @@ export default function App() {
         grassGrid: levelConfig.grassGrid,
       });
       
-      setGameOver(null);
+      setGameOver(null); setShowGameOverPopup(false);
       setGameState({
         trees: levelConfig.trees.map((tree, index) => ({
           ...tree,
@@ -1626,7 +1675,7 @@ export default function App() {
           onToggleTimeOfDay={handleToggleTimeOfDay}
         />
         <AmbientSound 
-          enabled={soundEnabled} 
+          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
           volume={0.3}
           soundUrl={globalTimeOfDay === 'night' 
             ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'  // Prairie jour (inversé pour nuit)
@@ -1640,7 +1689,7 @@ export default function App() {
   if (currentScreen === 'options') {
     return (
       <>
-        <OptionsMenu 
+        <OptionsMenu
           onBack={handleBackToMenu}
           soundEnabled={soundEnabled}
           onToggleSound={handleToggleSound}
@@ -1648,11 +1697,13 @@ export default function App() {
           onToggleTimeOfDay={handleToggleTimeOfDay}
           leftHanded={leftHanded}
           onToggleLeftHanded={handleToggleLeftHanded}
+          sleepModeEnabled={sleepModeEnabled}
+          onToggleSleepMode={handleToggleSleepMode}
           onResetProgress={handleResetProgress}
           onGoToFirstBattle={handleGoToFirstBattle}
         />
         <AmbientSound 
-          enabled={soundEnabled} 
+          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
           volume={0.3}
           soundUrl={globalTimeOfDay === 'night' 
             ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'  // Prairie jour (inversé pour nuit)
@@ -1675,7 +1726,7 @@ export default function App() {
           onUnlockAll={handleUnlockAllLevels}
         />
         <AmbientSound 
-          enabled={soundEnabled} 
+          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
           volume={0.3}
           soundUrl={globalTimeOfDay === 'night' 
             ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'
@@ -1696,7 +1747,7 @@ export default function App() {
         height: '100vh',
         minHeight: '100vh',
         maxHeight: '100vh',
-        backgroundColor: globalTimeOfDay === 'night' ? '#2a3d1a' : '#c2d040', // Couleur du damier
+        backgroundColor: '#D9D255', // fallback si SVG non encore peint
         userSelect: 'none',
         WebkitUserSelect: 'none',
         MozUserSelect: 'none',
@@ -1723,7 +1774,8 @@ export default function App() {
           gridParams={gridParams}
           mapData={mapData}
           sunIntensity={sunIntensity}
-          sunPosition={sunPosition}
+          sparkleIntensity={sparkleIntensity}
+          lateralOffset={lateralOffset}
           sparkles={sparkles}
           globalTimeOfDay={globalTimeOfDay}
           selectionCircle={selectionCircle}
@@ -1784,7 +1836,7 @@ export default function App() {
 
         {/* Ambient Sound */}
         <AmbientSound 
-          enabled={soundEnabled} 
+          enabled={soundEnabled && (isAppVisible || sleepModeEnabled)} 
           volume={0.3}
           soundUrl={globalTimeOfDay === 'night' 
             ? 'https://assets.mixkit.co/active_storage/sfx/2464/2464-preview.mp3'  // Prairie jour (inversé pour nuit)
@@ -1804,8 +1856,8 @@ export default function App() {
           />
         )}
 
-        {/* Game Over */}
-        {gameOver && (
+        {/* Game Over — affiché avec 1s de délai après la fin de partie */}
+        {showGameOverPopup && gameOver && (
           <div className="absolute inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
             {/* Fond hexagonal */}
             <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
@@ -1847,7 +1899,7 @@ export default function App() {
                     fontWeight: '900'
                   }}
                 >
-                  {gameOver === 'won' ? '🎉 Victoire!' : '💀 Défaite'}
+                  {gameOver === 'won' ? 'Victoire!' : 'Défaite'}
                 </h2>
                 <p 
                   className="mb-8 text-amber-950"
@@ -1863,19 +1915,6 @@ export default function App() {
                 </p>
                 <div className="flex gap-4 justify-center">
                   <button
-                    onClick={handleRestart}
-                    className="px-8 py-4 hover:scale-105 transition-transform rounded-2xl"
-                    style={{
-                      background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                      boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
-                      border: '4px solid rgba(120, 53, 15, 0.4)',
-                    }}
-                  >
-                    <span className="text-amber-950" style={{ fontSize: 'clamp(1.125rem, 4vw, 1.25rem)', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>
-                      🔄 Rejouer
-                    </span>
-                  </button>
-                  <button
                     onClick={handleBackToMenu}
                     className="px-8 py-4 hover:scale-105 transition-transform rounded-2xl"
                     style={{
@@ -1885,7 +1924,20 @@ export default function App() {
                     }}
                   >
                     <span className="text-amber-950" style={{ fontSize: 'clamp(1.125rem, 4vw, 1.25rem)', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>
-                      🏠 Menu
+                      Menu
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleRestart}
+                    className="px-8 py-4 hover:scale-105 transition-transform rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
+                      boxShadow: '0 10px 20px rgba(217, 119, 6, 0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.35)',
+                      border: '4px solid rgba(120, 53, 15, 0.4)',
+                    }}
+                  >
+                    <span className="text-amber-950" style={{ fontSize: 'clamp(1.125rem, 4vw, 1.25rem)', textShadow: '0 2px 4px rgba(0,0,0,0.2)', fontWeight: '700' }}>
+                      Rejouer
                     </span>
                   </button>
                 </div>

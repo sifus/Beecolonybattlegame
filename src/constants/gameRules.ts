@@ -11,4 +11,4 @@ export const MAX_BEES = 250;           // Nombre maximum d'abeilles sur la carte
 export const BEE_ORBIT_RADIUS = 38;   // Rayon d'orbite de base des abeilles autour d'un arbre (px)
 
 export const GRID_COLS = 13;          // Nombre de colonnes de la grille
-export const GRID_ROWS = 8;           // Nombre de lignes de la grille
+export const GRID_ROWS = 7;           // Nombre de lignes de la grille

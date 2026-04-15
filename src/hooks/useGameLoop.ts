@@ -86,10 +86,18 @@ export function useGameLoop({
         const updatedBees = [...newState.bees];
         const beesToRemove = new Set<string>();
 
-        // Limites de la zone de jeu (marge de 10px pour que les abeilles restent sélectionnables)
-        const BEE_MARGIN = 10;
-        const maxX = gridParams.cols * gridParams.cellSize - BEE_MARGIN;
-        const maxY = gridParams.rows * gridParams.cellSize - BEE_MARGIN;
+        // Zone safe abeilles : accessible quel que soit l'écran, avec marge du bord physique
+        const SCREEN_SAFE_MARGIN = 22;
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        const gameWidth  = gridParams.cols * gridParams.cellSize;
+        const gameHeight = gridParams.rows * gridParams.cellSize;
+        const marginLeft = Math.round((screenW - gameWidth) / 2);
+        const marginTop  = Math.round((screenH - gameHeight) / 2);
+        const minX = -marginLeft + SCREEN_SAFE_MARGIN;
+        const maxX =  screenW - marginLeft - SCREEN_SAFE_MARGIN;
+        const minY = -marginTop + SCREEN_SAFE_MARGIN;
+        const maxY =  screenH - marginTop - SCREEN_SAFE_MARGIN;
 
         const cellSizeScale = gridParams.cellSize / 80;
         const beeSpeedMultiplier = 1.0;
@@ -99,9 +107,14 @@ export function useGameLoop({
             const tree = newState.trees.find((t) => t.id === bee.treeId);
 
             if (tree && !tree.isCut) {
-              bee.angle += 0.01;
+              // Direction et vitesse orbitale individuelles — space feel
+              const idHash = parseInt(bee.id.slice(-5), 36);
+              const orbitDir = idHash % 2 === 0 ? 1 : -1;
+              const orbitSpeed = 0.007 + (idHash % 9) * 0.0008;
+              bee.angle += orbitSpeed * orbitDir;
+
               const baseRadius = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80);
-              const radiusVariation = ((parseInt(bee.id.slice(-5), 36) % 16) - 8);
+              const radiusVariation = ((idHash % 16) - 8);
               const radius = baseRadius + radiusVariation;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
               bee.y = tree.y + Math.sin(bee.angle) * radius;
@@ -151,8 +164,9 @@ export function useGameLoop({
             } else if (target) {
               const offsetX = bee.offsetX || 0;
               const offsetY = bee.offsetY || 0;
-              const targetX = target.x + offsetX;
-              const targetY = target.y + offsetY;
+              // Cible clampée dans la zone safe : l'abeille s'arrête avant le mur
+              const targetX = Math.max(minX + 2, Math.min(maxX - 2, target.x + offsetX));
+              const targetY = Math.max(minY + 2, Math.min(maxY - 2, target.y + offsetY));
 
               const dx = targetX - bee.x;
               const dy = targetY - bee.y;
@@ -170,9 +184,8 @@ export function useGameLoop({
                     bee.offsetX = undefined;
                     bee.offsetY = undefined;
                   } else if (tree.owner === 'neutral' || tree.owner === bee.owner) {
-                    if (bee.angle === undefined || bee.angle === null) {
-                      bee.angle = Math.atan2(bee.y - tree.y, bee.x - tree.x);
-                    }
+                    // Angle depuis le centre de l'arbre → entrée en orbite sans saut
+                    bee.angle = Math.atan2(bee.y - tree.y, bee.x - tree.x);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
@@ -180,9 +193,7 @@ export function useGameLoop({
                     bee.offsetY = undefined;
                     tree.beeCount++;
                   } else {
-                    if (bee.angle === undefined || bee.angle === null) {
-                      bee.angle = Math.atan2(bee.y - tree.y, bee.x - tree.x);
-                    }
+                    bee.angle = Math.atan2(bee.y - tree.y, bee.x - tree.x);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
@@ -228,8 +239,11 @@ export function useGameLoop({
               }
             }
           } else if (bee.state === 'moving' && bee.targetX !== undefined && bee.targetY !== undefined) {
-            const dx = bee.targetX - bee.x;
-            const dy = bee.targetY - bee.y;
+            // Cible clampée dans la zone safe avant tout calcul de mouvement
+            const effTargetX = Math.max(minX + 2, Math.min(maxX - 2, bee.targetX));
+            const effTargetY = Math.max(minY + 2, Math.min(maxY - 2, bee.targetY));
+            const dx = effTargetX - bee.x;
+            const dy = effTargetY - bee.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 5) {
@@ -437,8 +451,8 @@ export function useGameLoop({
               }
             } else {
               if (!bee.hoverCenterX) {
-                bee.hoverCenterX = bee.x;
-                bee.hoverCenterY = bee.y;
+                bee.hoverCenterX = Math.max(minX + 4, Math.min(maxX - 4, bee.x));
+                bee.hoverCenterY = Math.max(minY + 4, Math.min(maxY - 4, bee.y));
               }
               bee.angle += 0.02;
               const wiggleRadius = 3;
@@ -447,10 +461,10 @@ export function useGameLoop({
             }
           }
 
-          // Clamping : empêcher les abeilles de sortir de la zone de jeu
+          // Garde-fou hard clamp : les cibles étant déjà clampées, ce cas ne devrait pas arriver
           if (!beesToRemove.has(bee.id)) {
-            bee.x = Math.max(BEE_MARGIN, Math.min(maxX, bee.x));
-            bee.y = Math.max(BEE_MARGIN, Math.min(maxY, bee.y));
+            bee.x = Math.max(minX, Math.min(maxX, bee.x));
+            bee.y = Math.max(minY, Math.min(maxY, bee.y));
           }
         });
 

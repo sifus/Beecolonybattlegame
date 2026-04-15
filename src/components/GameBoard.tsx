@@ -14,6 +14,10 @@ interface GridParams {
   gridHeight?: number;
   marginLeft?: number;
   marginTop?: number;
+  gameStartCol?: number;
+  gameEndCol?: number;
+  gameStartRow?: number;
+  gameEndRow?: number;
 }
 
 interface MapData {
@@ -26,7 +30,8 @@ interface GameBoardProps {
   gridParams: GridParams;
   mapData: MapData;
   sunIntensity: number;
-  sunPosition: { x: number; y: number };
+  sparkleIntensity: number;
+  lateralOffset: number;
   sparkles: Sparkle[];
   globalTimeOfDay: 'day' | 'night';
   selectionCircle: { x: number; y: number; radius: number } | null;
@@ -81,7 +86,8 @@ export function GameBoard({
   gridParams,
   mapData,
   sunIntensity,
-  sunPosition,
+  sparkleIntensity,
+  lateralOffset,
   sparkles,
   globalTimeOfDay,
   selectionCircle,
@@ -109,6 +115,47 @@ export function GameBoard({
   const marginLeft = gridParams.marginLeft || 0;
   const marginTop = gridParams.marginTop || 0;
 
+  const cellSize = gridParams.cellSize;
+  const screenW = window.innerWidth;
+  const screenH = window.innerHeight;
+
+  // Cases de bordure : remplir les marges avec le même damier
+  const extraLeft  = Math.ceil(marginLeft / cellSize) + 1;
+  const extraTop   = Math.ceil(marginTop / cellSize) + 1;
+  const extraRight = Math.ceil((screenW - marginLeft - gameWidth) / cellSize) + 1;
+  const extraBottom = Math.ceil((screenH - marginTop - gameHeight) / cellSize) + 1;
+
+  const BORDER_COLORS = ['#DADC57','#CAD551','#D9D255','#CDC950','#CFCF51','#D1DA56','#E1E159','#DBDE67','#C8C250'];
+  const borderCells: { x: number; y: number; color: string }[] = [];
+  for (let row = -extraTop; row < gridParams.rows + extraBottom; row++) {
+    for (let col = -extraLeft; col < gridParams.cols + extraRight; col++) {
+      if (row >= 0 && row < gridParams.rows && col >= 0 && col < gridParams.cols) continue;
+      borderCells.push({
+        x: col * cellSize,
+        y: row * cellSize,
+        color: BORDER_COLORS[Math.abs(col * 3 + row * 7) % BORDER_COLORS.length],
+      });
+    }
+  }
+
+  // Calcul des abeilles en cours d'encerclement pendant le drag
+  const beingSelectedIds = new Set<string>();
+  if (selectionStart && selectionCurrent) {
+    const dist = Math.sqrt(
+      Math.pow(selectionCurrent.x - selectionStart.x, 2) +
+      Math.pow(selectionCurrent.y - selectionStart.y, 2)
+    );
+    const centerX = leftHanded ? selectionStart.x : (selectionStart.x + selectionCurrent.x) / 2;
+    const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
+    const radius = leftHanded ? dist : dist / 2;
+    gameState.bees.forEach(b => {
+      if (b.owner !== 'player') return;
+      const dx = b.x - centerX;
+      const dy = b.y - centerY;
+      if (Math.sqrt(dx * dx + dy * dy) <= radius) beingSelectedIds.add(b.id);
+    });
+  }
+
   return (
     <div
       style={{
@@ -131,35 +178,26 @@ export function GameBoard({
         className="absolute"
         style={{
           zIndex: 0,
-          left: `${marginLeft}px`,
-          top: `${marginTop}px`,
-          width: `${gameWidth}px`,
-          height: `${gameHeight}px`,
+          left: 0,
+          top: 0,
+          width: '100vw',
+          height: '100vh',
         }}
-        viewBox={`0 0 ${gameWidth} ${gameHeight}`}
-        preserveAspectRatio="none"
       >
-        {/* Faisceau directionnel + filtre glow étoiles */}
-        <defs>
-          <linearGradient id="beam-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stopColor="#ffffaa" stopOpacity={0}/>
-            <stop offset="15%"  stopColor="#ffffaa" stopOpacity={0}/>
-            <stop offset="35%"  stopColor="#ffffcc" stopOpacity={0.08}/>
-            <stop offset="45%"  stopColor="#ffffdd" stopOpacity={0.28}/>
-            <stop offset="50%"  stopColor="#ffffee" stopOpacity={0.35}/>
-            <stop offset="55%"  stopColor="#ffffdd" stopOpacity={0.28}/>
-            <stop offset="65%"  stopColor="#ffffcc" stopOpacity={0.08}/>
-            <stop offset="85%"  stopColor="#ffffaa" stopOpacity={0}/>
-            <stop offset="100%" stopColor="#ffffaa" stopOpacity={0}/>
-          </linearGradient>
-          <filter id="sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+        <g transform={`translate(${marginLeft}, ${marginTop})`}>
+
+        {/* Cases de bordure — damier étendu jusqu'aux bords de l'écran */}
+        {borderCells.map((cell, idx) => (
+          <rect
+            key={`border-${idx}`}
+            x={cell.x}
+            y={cell.y}
+            width={cellSize}
+            height={cellSize}
+            fill={cell.color}
+            shapeRendering="crispEdges"
+          />
+        ))}
 
         {/* Grass patchwork pattern */}
         {mapData.grassGrid.map((grass, idx) => (
@@ -182,18 +220,39 @@ export function GameBoard({
           </g>
         ))}
 
-        {/* Faisceau solaire directionnel 45° */}
+        {/* Faisceau solaire directionnel + filtre glow étoiles */}
+        <defs>
+          <linearGradient id="beam-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   stopColor="#ffffaa" stopOpacity={0}/>
+            <stop offset="20%"  stopColor="#ffffaa" stopOpacity={0}/>
+            <stop offset="35%"  stopColor="#ffffcc" stopOpacity={0.10}/>
+            <stop offset="44%"  stopColor="#ffffdd" stopOpacity={0.38}/>
+            <stop offset="50%"  stopColor="#ffffee" stopOpacity={0.50}/>
+            <stop offset="56%"  stopColor="#ffffdd" stopOpacity={0.38}/>
+            <stop offset="65%"  stopColor="#ffffcc" stopOpacity={0.10}/>
+            <stop offset="80%"  stopColor="#ffffaa" stopOpacity={0}/>
+            <stop offset="100%" stopColor="#ffffaa" stopOpacity={0}/>
+          </linearGradient>
+          <filter id="sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         {(() => {
-          const sunX = sunPosition.x * gameWidth / 100;
-          const sunY = sunPosition.y * gameHeight / 100;
+          const SQRT1_2 = Math.SQRT1_2;
+          const diagLen = Math.sqrt(gameWidth * gameWidth + gameHeight * gameHeight);
+          const beamX = gameWidth  / 2 - SQRT1_2 * lateralOffset;
+          const beamY = gameHeight / 2 + SQRT1_2 * lateralOffset;
+          const halfLen = diagLen * 0.6;
           return (
-            <g transform={`translate(${sunX}, ${sunY}) rotate(45)`} opacity={sunIntensity * 0.9} pointerEvents="none">
-              <rect x={-1000} y={-240} width={2000} height={480} fill="url(#beam-grad)" />
+            <g transform={`translate(${beamX}, ${beamY}) rotate(45)`} opacity={sunIntensity * 0.9} pointerEvents="none">
+              <rect x={-halfLen} y={-480} width={halfLen * 2} height={960} fill="url(#beam-grad)" />
             </g>
           );
         })()}
-
-        {/* Étoiles scintillantes à 4 branches */}
         {sparkles.map(s => {
           if (s.opacity <= 0) return null;
           const h = s.size / 2;
@@ -203,7 +262,7 @@ export function GameBoard({
             <g
               key={s.id}
               transform={`translate(${s.x}, ${s.y})`}
-              opacity={sunIntensity < 0.3 ? 0 : s.opacity * Math.min((sunIntensity - 0.3) / 0.4, 1)}
+              opacity={sparkleIntensity <= 0 ? 0 : s.opacity * sparkleIntensity}
               filter="url(#sparkle-glow)"
               pointerEvents="none"
             >
@@ -215,12 +274,12 @@ export function GameBoard({
         {/* Night overlay - voile sombre avec lumière de lune bleutée */}
         {globalTimeOfDay === 'night' && (
           <>
-            {/* Voile sombre */}
+            {/* Voile sombre — couvre tout l'écran */}
             <rect
-              x={0}
-              y={0}
-              width={gameWidth}
-              height={gameHeight}
+              x={-marginLeft}
+              y={-marginTop}
+              width={screenW}
+              height={screenH}
               fill="#0a0e27"
               opacity={0.65}
               pointerEvents="none"
@@ -235,10 +294,10 @@ export function GameBoard({
               </radialGradient>
             </defs>
             <rect
-              x={0}
-              y={0}
-              width={gameWidth}
-              height={gameHeight}
+              x={-marginLeft}
+              y={-marginTop}
+              width={screenW}
+              height={screenH}
               fill="url(#moonlight)"
               pointerEvents="none"
             />
@@ -311,6 +370,7 @@ export function GameBoard({
           return Array.from({ length: 5 }, (_, i) => {
             let col = 0, row = 0;
             let attempt = 0;
+            let valid = false;
             do {
               const s = i * 7919 + attempt * 1337;
               col = Math.floor((Math.sin(s) * 0.5 + 0.5) * gridParams.cols);
@@ -320,10 +380,12 @@ export function GameBoard({
               const onPond = !ponds.every(p => {
                 const pondCol = Math.floor(p.x / cellSize);
                 const pondRow = Math.floor(p.y / cellSize);
-                return col < pondCol || col >= pondCol + p.width || row < pondRow || row >= pondRow + p.height;
+                // marge d'1 case autour de l'étang
+                return col < pondCol - 1 || col >= pondCol + p.width + 1 || row < pondRow - 1 || row >= pondRow + p.height + 1;
               });
-              if (!onTree && !onPond) break;
-            } while (attempt < 20);
+              if (!onTree && !onPond) { valid = true; break; }
+            } while (attempt < 40);
+            if (!valid) return null;
             const cx = col * cellSize + cellSize * 0.5;
             const cy = row * cellSize + cellSize * 0.7;
             const color = stoneColors[i % stoneColors.length];
@@ -345,6 +407,7 @@ export function GameBoard({
             );
           });
         })()}
+        </g>
       </svg>
 
       {/* Game SVG - Interactive layer */}
@@ -353,13 +416,12 @@ export function GameBoard({
         className="absolute"
         style={{
           zIndex: 10,
-          left: `${marginLeft}px`,
-          top: `${marginTop}px`,
-          width: `${gameWidth}px`,
-          height: `${gameHeight}px`,
+          left: 0,
+          top: 0,
+          width: '100vw',
+          height: '100vh',
         }}
-        viewBox={`0 0 ${gameWidth} ${gameHeight}`}
-        preserveAspectRatio="none"
+        viewBox={`0 0 ${screenW} ${screenH}`}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
@@ -369,6 +431,7 @@ export function GameBoard({
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchCancel}
       >
+        <g transform={`translate(${marginLeft}, ${marginTop})`}>
         {/* Trees - BASE LAYER (trunks and foliage) */}
         {gameState.trees.map((tree) => {
           const playerBeesAtTree = gameState.bees.filter(
@@ -485,40 +548,53 @@ export function GameBoard({
 
           const isNight = globalTimeOfDay === 'night';
 
+          const selectedCount = gameState.bees.filter(b => {
+            if (b.owner !== 'player') return false;
+            const dx = b.x - centerX;
+            const dy = b.y - centerY;
+            return Math.sqrt(dx * dx + dy * dy) <= radius;
+          }).length;
+
+          const fontSize = Math.round(gridParams.cellSize * 0.28);
+          const badgeR = fontSize * 0.78;
+          const badgeX = centerX;
+          const badgeY = Math.max(badgeR + 4, centerY - radius);
+
           return (
             <>
+              <defs>
+                {/* Trou dans le cercle à l'emplacement de la pastille */}
+                <mask id="sel-circle-mask">
+                  <rect x={-99999} y={-99999} width={199999} height={199999} fill="white" />
+                  {selectedCount > 0 && <circle cx={badgeX} cy={badgeY} r={badgeR + 1} fill="black" />}
+                </mask>
+                {/* Emporte-pièce sur la pastille */}
+                {selectedCount > 0 && (
+                  <mask id="sel-badge-mask">
+                    <circle cx={badgeX} cy={badgeY} r={badgeR} fill="white" />
+                    <text
+                      x={badgeX} y={badgeY}
+                      textAnchor="middle" dominantBaseline="central"
+                      fill="black" fontSize={fontSize} fontWeight="700"
+                    >
+                      {selectedCount}
+                    </text>
+                  </mask>
+                )}
+              </defs>
+
               <circle
-                cx={centerX}
-                cy={centerY}
-                r={radius}
+                cx={centerX} cy={centerY} r={radius}
                 fill="rgba(255,255,255,0.10)"
-                stroke="white"
-                strokeWidth={3}
-                opacity={0.9}
+                stroke="white" strokeWidth={3} opacity={0.9}
+                mask="url(#sel-circle-mask)"
               />
+              {selectedCount > 0 && (
+                <circle cx={badgeX} cy={badgeY} r={badgeR} fill="white" mask="url(#sel-badge-mask)" style={{ pointerEvents: 'none' }} />
+              )}
             </>
           );
         })()}
-
-        {/* Trees - TOP LAYER (hives, indicators, counters) */}
-        {gameState.trees.map((tree) => {
-          const playerBeesAtTree = gameState.bees.filter(
-            b => b.treeId === tree.id && b.owner === 'player' && b.state === 'idle'
-          ).length;
-
-          return (
-            <Tree
-              key={`${tree.id}-top`}
-              tree={tree}
-              onClick={(e) => onTreeClick(tree.id, e)}
-              onDragStart={onTreeDragStart}
-              playerBeesCount={playerBeesAtTree}
-              cellSize={gridParams.cellSize}
-              renderLayer="top"
-              isNightMode={globalTimeOfDay === 'night'}
-            />
-          );
-        })}
 
         {/* Dying bees — fade out + onde de choc blanche */}
         {dyingBees.map((bee) => {
@@ -588,16 +664,37 @@ export function GameBoard({
           );
         })}
 
-        {/* Bees - rendered last to be on top of everything */}
+        {/* Bees */}
         {gameState.bees.map((bee) => {
           if (bee.x < -50 || bee.x > gameWidth + 50 || bee.y < -50 || bee.y > gameHeight + 50) return null;
           return (
             <Bee
               key={bee.id}
               bee={bee}
-              isSelected={gameState.selectedBeeIds.has(bee.id)}
+              isSelected={gameState.selectedBeeIds.has(bee.id) && !(selectionStart && selectionCurrent)}
+              isBeingSelected={beingSelectedIds.has(bee.id)}
               isNightMode={globalTimeOfDay === 'night'}
               cellSize={gridParams.cellSize}
+            />
+          );
+        })}
+
+        {/* Trees - TOP LAYER (hives, indicators, compteurs) — au-dessus des abeilles */}
+        {gameState.trees.map((tree) => {
+          const playerBeesAtTree = gameState.bees.filter(
+            b => b.treeId === tree.id && b.owner === 'player' && b.state === 'idle'
+          ).length;
+
+          return (
+            <Tree
+              key={`${tree.id}-top`}
+              tree={tree}
+              onClick={(e) => onTreeClick(tree.id, e)}
+              onDragStart={onTreeDragStart}
+              playerBeesCount={playerBeesAtTree}
+              cellSize={gridParams.cellSize}
+              renderLayer="top"
+              isNightMode={globalTimeOfDay === 'night'}
             />
           );
         })}
@@ -664,6 +761,7 @@ export function GameBoard({
             isNightMode={globalTimeOfDay === 'night'}
           />
         ))}
+        </g>
       </svg>
     </div>
   );
