@@ -778,3 +778,21 @@ git push origin main
 - Méthode actuelle : drag & drop du dossier `build/` sur netlify.com
 - À migrer plus tard : connexion GitHub automatique (chaque push = déploiement auto)
 - Build command : `npm run build` — output : dossier `build/` à la racine
+
+---
+
+## Priorité 1 — Session 6 (ajouts 16 avril)
+
+- **Orbite fluide** : quand une abeille atteint le feuillage d'un arbre, elle doit changer de direction fluidement pour prendre la direction de l'orbite. Elle ne doit pas aller jusqu'au centre de l'arbre comme actuellement.
+
+- **Ease in / Ease out abeilles** : quand des abeilles sont envoyées sur la carte, elles ne doivent pas s'arrêter d'un coup (ease out) ni démarrer brutalement (ease in).
+
+- **Bug double clic ruche** : le double clic sur un arbre pour créer une ruche fait disparaître les abeilles mais n'incrémente pas la ruche. À corriger.
+
+- **Transition régénération partie rapide** : au lieu d'une translation visuelle de la carte lors d'une nouvelle partie sur mobile, faire un effet de fondu (fade in/out).
+
+- **Sélection abeille à la sortie de ruche** : dès qu'une abeille sort de la ruche elle doit être sélectionnable même si elle n'est pas encore en orbite.
+
+- **Parité graphique lucioles** : vérifier que les lucioles ennemies et joueur ont la même priorité graphique (taille du centre vif notamment) — seule la couleur doit différer.
+
+- **Zone morte drag** : le clic est trop souvent interprété comme un drag. Ajouter une zone morte au début du drag (1/5 de la largeur d'un arbre) en dessous de laquelle le geste est considéré comme un clic et non un drag.
