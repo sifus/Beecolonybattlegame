@@ -27,7 +27,7 @@ import { useSolarSystem } from './hooks/useSolarSystem';
 import { useGameLoop } from './hooks/useGameLoop';
 import { GameBoard } from './components/GameBoard';
 import { motion } from 'motion/react';
-import { BEE_ORBIT_RADIUS, GRID_COLS, GRID_ROWS, BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP, MAX_BEES } from './constants/gameRules';
+import { BEE_ORBIT_RADIUS_SOLO, BEE_ORBIT_RADIUS_GROUP, GRID_COLS, GRID_ROWS, BUILD_HIVE_COST, UPGRADE_HIVE_COST, HIVE_L1_HP, HIVE_L2_HP, MAX_BEES } from './constants/gameRules';
 import { toast } from './utils/toast';
 import { getWording } from './utils/wording';
 
@@ -87,8 +87,8 @@ function buildInitialBees(trees: Array<{ id: string; x: number; y: number; owner
         const angle = (i / tree.beeCount) * Math.PI * 2;
         bees.push({
           id: `bee-${tree.id}-${i}-${Date.now()}`,
-          x: tree.x + Math.cos(angle) * BEE_ORBIT_RADIUS,
-          y: tree.y + Math.sin(angle) * BEE_ORBIT_RADIUS,
+          x: tree.x + Math.cos(angle) * BEE_ORBIT_RADIUS_SOLO,
+          y: tree.y + Math.sin(angle) * BEE_ORBIT_RADIUS_SOLO,
           owner: tree.owner as import('./types/game').Owner,
           treeId: tree.id,
           targetTreeId: null,
@@ -187,7 +187,7 @@ export default function App() {
         // Position bees from the first hive
         for (let i = 0; i < tree.beeCount; i++) {
           const angle = (i / tree.beeCount) * Math.PI * 2;
-          const radius = BEE_ORBIT_RADIUS;
+          const radius = tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO;
           initialBees.push({
             id: `bee-${tree.id}-${i}-${Date.now()}`,
             x: tree.x + Math.cos(angle) * radius,
@@ -774,7 +774,7 @@ export default function App() {
         const updatedBees = prev.bees.map(bee => {
           if (prev.selectedBeeIds.has(bee.id)) {
             // Rayon d'orbite autour d'un arbre (même formule que le game loop)
-            const baseOrbit = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80);
+            const baseOrbit = (clickedTree?.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
             const angle = Math.random() * Math.PI * 2;
             let offsetX: number, offsetY: number;
             if (clickedTree) {
