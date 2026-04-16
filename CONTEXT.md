@@ -769,3 +769,12 @@ Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useS
 git add CONTEXT.md
 git commit -m "docs: CONTEXT.md — session 5, reset f0981cc, commits 16 avril"
 git push origin main
+
+---
+
+## Déploiement
+
+- Le jeu est déployé sur Netlify pour les tests (amis/beta testeurs)
+- Méthode actuelle : drag & drop du dossier `build/` sur netlify.com
+- À migrer plus tard : connexion GitHub automatique (chaque push = déploiement auto)
+- Build command : `npm run build` — output : dossier `build/` à la racine
