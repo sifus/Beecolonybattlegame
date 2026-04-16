@@ -723,6 +723,7 @@ Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useS
 - `stars: number` dans `GameState` commenté "non utilisé" → supprimer si confirmé inutile
 - Commentaire `game.ts` dit HIVE_L2_HP = 35, valeur réelle = 30 → corriger le commentaire
 - Bug IA attaque abeilles sur case vide (3d) → réévaluer après observation en jeu
+- Compteur abeilles affiché baisse brièvement quand les abeilles partent en `building` vers un arbre impossible (construction déjà présente) — acceptable pour l'instant. Amélioration possible : vérifier la faisabilité AVANT d'envoyer les abeilles dans `createOrRepairHive`, et si impossible, ne pas les envoyer (juste toast d'erreur) pour que le compteur reste stable.
 
 ### Roadmap modes de jeu
 - **3a** Améliorer l'IA ennemie : meilleure sélection de cibles, timing variable, gestion défensive → `enemyAI.ts`
