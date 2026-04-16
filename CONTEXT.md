@@ -736,3 +736,36 @@ Audit ligne par ligne de `App.tsx`, `useGameLoop.ts`, `useSolarSystem.ts`, `useS
 - Animations de combat (impact abeilles sur ruches)
 - Effets de particules lors de la prise d'un arbre
 - Difficulté configurable en mode Partie Rapide
+
+---
+
+## Ce qui a été fait — 16 avril 2026 (session 5)
+
+### Reset — commit f0981cc annulé
+- Commit `f0981cc` (mode histoire niv.1 — animations curseur main + bouton histoire activé) **annulé** via `git reset --hard d7f6846`
+- Raison : comportement du tutoriel cassé par les modifications
+- `f0981cc` est conservé dans le reflog Git — récupérable via `git cherry-pick f0981cc` si besoin
+
+### Commits actifs depuis la session 4
+| Hash | Description |
+|---|---|
+| `eaed63f` | style: arbres fanés éclairés + orbite abeilles centrée sur le feuillage |
+| `d7f6846` | feat: arbres fanés/pollinisés, groupe d'arbres revu, touche T=10 abeilles |
+| `33e92c9` | fix: mort des abeilles dans l'eau — onde bleue, skin correct, mortalité |
+| `894faa8` | fix: correction textes tuto, autoplay son, sélection par le centre |
+| `4c5ccd8` | style: suppression des étoiles dans les modals de tutoriel |
+| `3cec974` | style: damier nuit légèrement plus clair (+20 RGB par canal) |
+| `a02cdcd` | fix: abeilles initiales absentes dans handleNextLevel / handleRestartLevel |
+| `e5f212b` | config: ajustement abeilles initiales tuto 3 (20) et tuto 4 (15) |
+| `1f4eb09` | fix: son d'ambiance actif sur tout l'app (menu inclus) |
+| `f46fd76` | fix: musique continue + ghost-click touch sur sélection |
+
+### État actuel du projet
+- Bouton "Mode Histoire" : **désactivé** (disabled, opacité 0.4) — intentionnel
+- Mode tutoriel : fonctionnel jusqu'au niveau 4
+- Arbres fanés : éclairés correctement, orbite abeilles centrée sur le feuillage
+- Mort abeilles dans l'eau : onde bleue + mortalité active
+
+git add CONTEXT.md
+git commit -m "docs: CONTEXT.md — session 5, reset f0981cc, commits 16 avril"
+git push origin main
