@@ -95,11 +95,11 @@ export function useGameLoop({
               const orbitSpeed = 0.007 + (idHash % 9) * 0.0008;
               bee.angle += orbitSpeed * orbitDir;
 
-              const baseRadius = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80);
+              const baseRadius = BEE_ORBIT_RADIUS * (gridParams.cellSize / 80) * (tree.maxHives === 2 ? 1.4 : 1);
               const radiusVariation = ((idHash % 16) - 8);
               const radius = baseRadius + radiusVariation;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
-              bee.y = tree.y + Math.sin(bee.angle) * radius;
+              bee.y = (tree.y - gridParams.cellSize * 0.50) + Math.sin(bee.angle) * radius;
               bee.displayAngle = bee.angle + Math.PI / 2;
 
               // Abeilles idle au-dessus d'un marais — meurent moins vite
@@ -169,8 +169,8 @@ export function useGameLoop({
                     bee.offsetX = undefined;
                     bee.offsetY = undefined;
                   } else if (tree.owner === 'neutral' || tree.owner === bee.owner) {
-                    // Angle depuis le centre de l'arbre → entrée en orbite sans saut
-                    bee.angle = Math.atan2(bee.y - tree.y, bee.x - tree.x);
+                    // Angle depuis le centre orbital de l'arbre → entrée en orbite sans saut
+                    bee.angle = Math.atan2(bee.y - (tree.y - gridParams.cellSize * 0.50), bee.x - tree.x);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
@@ -178,7 +178,7 @@ export function useGameLoop({
                     bee.offsetY = undefined;
                     tree.beeCount++;
                   } else {
-                    bee.angle = Math.atan2(bee.y - tree.y, bee.x - tree.x);
+                    bee.angle = Math.atan2(bee.y - (tree.y + gridParams.cellSize * 0.19), bee.x - tree.x);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
@@ -721,7 +721,7 @@ export function useGameLoop({
                   const radiusVariation = ((parseInt(beeId.slice(-5), 36) % 16) - 8);
                   const radius = baseRadius + radiusVariation;
                   const targetX = tree.x + Math.cos(angle) * radius;
-                  const targetY = tree.y + Math.sin(angle) * radius;
+                  const targetY = (tree.y + gridParams.cellSize * 0.19) + Math.sin(angle) * radius;
 
                   newBees.push({
                     id: beeId,

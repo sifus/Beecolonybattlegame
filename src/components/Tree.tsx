@@ -30,20 +30,20 @@ export function Tree({
   const trunkTopYLarge = trunkBottomY - 22 * s; // grand arbre avant-gauche (hauteur 22*s)
 
   const foliageDark  = isNightMode
-    ? (treeIsColonized ? '#3a6e48' : '#4a4e42')
-    : (treeIsColonized ? '#5ba832' : '#706a2c');
+    ? (treeIsColonized ? '#3a6e48' : '#5e6256')
+    : (treeIsColonized ? '#5ba832' : '#8e8848');
   const foliageLight = isNightMode
-    ? (treeIsColonized ? '#4a7e55' : '#585d4e')
-    : (treeIsColonized ? '#6dc23c' : '#7e7830');
+    ? (treeIsColonized ? '#4a7e55' : '#6c7162')
+    : (treeIsColonized ? '#6dc23c' : '#9c964e');
 
   // Couleurs individuelles pour groupe d'arbres (maxHives=2)
   // Petit arbre (devant) = ruche 0 ; grand arbre (derrière) = ruche 1
   const colSmall = tree.hiveCount >= 1;
   const colLarge = tree.hiveCount >= 2;
-  const foliageDarkSmall  = isNightMode ? (colSmall ? '#3a6e48' : '#4a4e42') : (colSmall ? '#5ba832' : '#706a2c');
-  const foliageLightSmall = isNightMode ? (colSmall ? '#4a7e55' : '#585d4e') : (colSmall ? '#6dc23c' : '#7e7830');
-  const foliageDarkLarge  = isNightMode ? (colLarge ? '#3a6e48' : '#4a4e42') : (colLarge ? '#5ba832' : '#706a2c');
-  const foliageLightLarge = isNightMode ? (colLarge ? '#4a7e55' : '#585d4e') : (colLarge ? '#6dc23c' : '#7e7830');
+  const foliageDarkSmall  = isNightMode ? (colSmall ? '#3a6e48' : '#5e6256') : (colSmall ? '#5ba832' : '#8e8848');
+  const foliageLightSmall = isNightMode ? (colSmall ? '#4a7e55' : '#6c7162') : (colSmall ? '#6dc23c' : '#9c964e');
+  const foliageDarkLarge  = isNightMode ? (colLarge ? '#3a6e48' : '#5e6256') : (colLarge ? '#5ba832' : '#8e8848');
+  const foliageLightLarge = isNightMode ? (colLarge ? '#4a7e55' : '#6c7162') : (colLarge ? '#6dc23c' : '#9c964e');
 
   const hiveColors =
     tree.owner === 'enemy'
