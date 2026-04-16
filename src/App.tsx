@@ -890,32 +890,38 @@ export default function App() {
       
       // Vérifier les abeilles disponibles avec l'état actuel (prev)
       const idleBeesAtTree = prev.bees.filter(
-        b => b.treeId === treeId && b.owner === 'player' && b.state === 'idle'
+        b => b.owner === 'player' && b.state === 'idle' && b.treeId === treeId
       );
-      
-      if (idleBeesAtTree.length === 0) {
+
+      const movingBeesToTree = prev.bees.filter(
+        b => b.owner === 'player' && b.state === 'moving' && b.targetTreeId === treeId
+      );
+
+      const eligibleBees = [...idleBeesAtTree, ...movingBeesToTree];
+
+      if (eligibleBees.length === 0) {
         toast.error("Aucune abeille disponible ne gravite autour de cet arbre");
         return prev;
       }
-      
+
       // Vérifier si l'arbre est ennemi
       if (tree.owner === 'enemy') {
         toast.warning('Détruisez d\'abord les ruches ennemies et éliminez toutes les abeilles !');
         return prev;
       }
-      
+
       // Vérifier s'il y a des abeilles ennemies autour de cet arbre (même si neutre)
-      const hasEnemyBees = prev.bees.some(bee => 
+      const hasEnemyBees = prev.bees.some(bee =>
         bee.treeId === treeId && bee.owner !== 'player'
       );
-      
+
       if (hasEnemyBees) {
         toast.warning('Éliminez d\'abord toutes les abeilles ennemies !');
         return prev;
       }
-      
-      // Utiliser les abeilles déjà filtrées
-      const currentBeesAtTree = idleBeesAtTree;
+
+      // Utiliser les abeilles éligibles (idle + moving vers cet arbre)
+      const currentBeesAtTree = eligibleBees;
       const numBees = currentBeesAtTree.length;
       
       // Vérifier si l'arbre appartient au joueur et a des ruches endommagées

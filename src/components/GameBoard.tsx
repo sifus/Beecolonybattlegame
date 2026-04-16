@@ -471,7 +471,7 @@ export function GameBoard({
         {/* Trees - BASE LAYER (trunks and foliage) */}
         {gameState.trees.map((tree) => {
           const playerBeesAtTree = gameState.bees.filter(
-            b => b.treeId === tree.id && b.owner === 'player' && b.state === 'idle'
+            b => b.owner === 'player' && b.state === 'idle' && b.treeId === tree.id
           ).length;
 
           return (
@@ -736,7 +736,7 @@ export function GameBoard({
         {/* Trees - TOP LAYER (hives, indicators, compteurs) — au-dessus des abeilles */}
         {gameState.trees.map((tree) => {
           const playerBeesAtTree = gameState.bees.filter(
-            b => b.treeId === tree.id && b.owner === 'player' && b.state === 'idle'
+            b => b.owner === 'player' && b.state === 'idle' && b.treeId === tree.id
           ).length;
 
           return (

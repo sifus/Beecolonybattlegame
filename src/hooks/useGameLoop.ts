@@ -277,7 +277,9 @@ export function useGameLoop({
             const targetTree = newState.trees.find(t => t.id === bee.buildingTreeId);
             if (!targetTree) {
               bee.state = 'idle';
+              bee.treeId = bee.sourcetreeId ?? null;
               bee.buildingTreeId = null;
+              bee.sourcetreeId = null;
             } else {
               const dx = targetTree.x - bee.x;
               const dy = targetTree.y - bee.y;
@@ -313,8 +315,6 @@ export function useGameLoop({
                       toast.success(`${w.hiveCapital} réparé${w.hive === 'cocon' ? '' : 'e'} !`);
                     }
                   }
-                  const sourceTreeRepair = newState.trees.find(t => t.id === bee.sourcetreeId);
-                  if (sourceTreeRepair) sourceTreeRepair.beeCount = Math.max(0, sourceTreeRepair.beeCount - 1);
                   beesToRemove.add(bee.id);
                 } else if (targetTree.hiveCount === 1 && targetTree.hiveLevel[0] === 1 && !targetTree.isStartingTree && targetTree.owner === 'player' && targetTree.maxHives === 2) {
                   // UPGRADE NIVEAU 1 -> NIVEAU 2
@@ -364,8 +364,6 @@ export function useGameLoop({
                         toast.success(`${w.hiveCapital} amélioré${w.hive === 'cocon' ? '' : 'e'} au niveau 2 !`);
                       }
 
-                      const sourceTreeUpgrade = newState.trees.find(t => t.id === bee.sourcetreeId);
-                      if (sourceTreeUpgrade) sourceTreeUpgrade.beeCount = Math.max(0, sourceTreeUpgrade.beeCount - 1);
                       beesToRemove.add(bee.id);
                     }
                   }
@@ -405,15 +403,15 @@ export function useGameLoop({
                       toast.success(`${w.hiveCapital} niveau 1 créé${w.hive === 'cocon' ? '' : 'e'} !`);
                     }
 
-                    const sourceTreeBuild = newState.trees.find(t => t.id === bee.sourcetreeId);
-                    if (sourceTreeBuild) sourceTreeBuild.beeCount = Math.max(0, sourceTreeBuild.beeCount - 1);
                     beesToRemove.add(bee.id);
                   }
                 } else {
-                  // Rien à construire/réparer : rejoindre l'orbite de l'arbre
+                  // Rien à construire/réparer : rejoindre l'orbite de l'arbre source
+                  const returnTreeId = bee.sourcetreeId ?? targetTree.id;
                   bee.state = 'idle';
                   bee.buildingTreeId = null;
-                  bee.treeId = targetTree.id;
+                  bee.sourcetreeId = null;
+                  bee.treeId = returnTreeId;
                   if (!bee.angle) bee.angle = Math.random() * Math.PI * 2;
                 }
               } else {
