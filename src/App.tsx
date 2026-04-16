@@ -619,10 +619,9 @@ export default function App() {
           ...prev,
           selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
         }));
-        setLastClickedTreeId(null);
       }
     }
-    
+
     // Réinitialiser la sélection
     setSelectionStart(null);
     setSelectionCurrent(null);
@@ -686,10 +685,9 @@ export default function App() {
           ...prev,
           selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
         }));
-        setLastClickedTreeId(null);
       }
     }
-    
+
     // Réinitialiser la sélection
     setSelectionStart(null);
     setSelectionCurrent(null);
@@ -728,7 +726,6 @@ export default function App() {
         ...prev,
         selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
       }));
-      setLastClickedTreeId(null);
     } else if (gameState.selectedBeeIds.size > 0) {
       // C'est un simple clic avec des abeilles sélectionnées
       // Détecter si on a cliqué sur un arbre ou sur un endroit vide
@@ -756,7 +753,9 @@ export default function App() {
         });
         
         // Si toutes les abeilles sélectionnées gravitent déjà autour de cet arbre, créer une ruche
-        if (allBeesOnClickedTree && selectedBeesArray.length > 0) {
+        const timeSinceLastClick = Date.now() - lastClickTime;
+        const isPotentialDoubleClick = lastClickedTreeId === clickedTree.id && timeSinceLastClick < 400;
+        if (allBeesOnClickedTree && selectedBeesArray.length > 0 && !isPotentialDoubleClick) {
           createOrRepairHive(clickedTree.id);
           justBuiltHiveRef.current = true;
           setTimeout(() => { justBuiltHiveRef.current = false; }, 200);
@@ -962,12 +961,13 @@ export default function App() {
         
         // Mettre les abeilles en mode building
         const beesForBuilding = currentBeesAtTree.slice(0, beesToUse);
-        
+        const buildingIds = new Set(beesForBuilding.map(b => b.id));
+
         return {
           ...prev,
           bees: prev.bees.map(bee => {
-            if (beesForBuilding.some(b => b.id === bee.id)) {
-              return { ...bee, state: 'building' as const, buildingTreeId: treeId, treeId: null };
+            if (buildingIds.has(bee.id)) {
+              return { ...bee, state: 'building' as const, buildingTreeId: treeId, sourcetreeId: bee.treeId, treeId: null };
             }
             return bee;
           }),
@@ -1002,13 +1002,16 @@ export default function App() {
 
         // Mettre les abeilles en mode building + déverrouiller l'upgrade
         const beesForBuilding = currentBeesAtTree.slice(0, beesToUse);
+        const buildingIds = new Set(beesForBuilding.map(b => b.id));
 
         return {
           ...prev,
-          trees: prev.trees.map(t => t.id === treeId ? { ...t, upgradeLocked: false } : t),
+          trees: prev.trees.map(t =>
+            t.id === treeId ? { ...t, upgradeLocked: false } : t
+          ),
           bees: prev.bees.map(bee => {
-            if (beesForBuilding.some(b => b.id === bee.id)) {
-              return { ...bee, state: 'building' as const, buildingTreeId: treeId, treeId: null };
+            if (buildingIds.has(bee.id)) {
+              return { ...bee, state: 'building' as const, buildingTreeId: treeId, sourcetreeId: bee.treeId, treeId: null };
             }
             return bee;
           }),
@@ -1037,18 +1040,19 @@ export default function App() {
         
         // Mettre les abeilles en mode building
         const beesForBuilding = currentBeesAtTree.slice(0, beesToUse);
-        
+        const buildingIds = new Set(beesForBuilding.map(b => b.id));
+
         return {
           ...prev,
           bees: prev.bees.map(bee => {
-            if (beesForBuilding.some(b => b.id === bee.id)) {
-              return { ...bee, state: 'building' as const, buildingTreeId: treeId, treeId: null };
+            if (buildingIds.has(bee.id)) {
+              return { ...bee, state: 'building' as const, buildingTreeId: treeId, sourcetreeId: bee.treeId, treeId: null };
             }
             return bee;
           }),
           trees: prev.trees.map(t => {
             if (t.id === treeId && t.owner === 'neutral') {
-              return { ...t, owner: 'player' }; // Prendre possession immédiatement
+              return { ...t, owner: 'player' };
             }
             return t;
           }),
@@ -1092,9 +1096,7 @@ export default function App() {
       if (isDoubleClick && !tree.isCut) {
         setLastClickedTreeId(null);
         setLastClickTime(0);
-        if (!justBuiltHiveRef.current) {
-          createOrRepairHive(treeId);
-        }
+        createOrRepairHive(treeId);
         return;
       }
 

@@ -43,6 +43,7 @@ export interface Bee {
   hoverCenterX?: number; // Centre fixe pour le hover (wiggle sans arbre)
   hoverCenterY?: number; // Centre fixe pour le hover (wiggle sans arbre)
   buildingTreeId?: string | null; // Arbre ciblé pour construction/réparation/amélioration
+  sourcetreeId?: string | null; // Arbre d'origine avant de partir en building
   targetLumberjackId?: string | null; // Bûcheron ciblé (future fonctionnalité)
   state: 'idle' | 'moving' | 'building';
   angle: number; // Angle de rotation autour de l'arbre

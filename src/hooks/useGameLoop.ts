@@ -313,27 +313,32 @@ export function useGameLoop({
                       toast.success(`${w.hiveCapital} réparé${w.hive === 'cocon' ? '' : 'e'} !`);
                     }
                   }
+                  const sourceTreeRepair = newState.trees.find(t => t.id === bee.sourcetreeId);
+                  if (sourceTreeRepair) sourceTreeRepair.beeCount = Math.max(0, sourceTreeRepair.beeCount - 1);
                   beesToRemove.add(bee.id);
                 } else if (targetTree.hiveCount === 1 && targetTree.hiveLevel[0] === 1 && !targetTree.isStartingTree && targetTree.owner === 'player' && targetTree.maxHives === 2) {
                   // UPGRADE NIVEAU 1 -> NIVEAU 2
                   if (targetTree.upgradeLocked) {
-                    beesToRemove.add(bee.id);
+                    bee.state = 'idle';
+                    bee.treeId = bee.sourcetreeId ?? bee.buildingTreeId ?? null;
+                    bee.buildingTreeId = null;
+                    bee.sourcetreeId = null;
                   } else {
                   const currentHealth = targetTree.hiveHealth[0] || 0;
                   if (currentHealth < HIVE_L1_HP) {
-                    beesToRemove.add(bee.id);
+                    bee.state = 'idle';
+                    bee.treeId = bee.sourcetreeId ?? bee.buildingTreeId ?? null;
+                    bee.buildingTreeId = null;
+                    bee.sourcetreeId = null;
                   } else {
                     const currentProgress = targetTree.upgradingProgress || 0;
 
                     if (currentProgress >= UPGRADE_HIVE_COST || targetTree.hiveLevel[0] === 2) {
-                      beesToRemove.add(bee.id);
+                      bee.state = 'idle';
+                      bee.treeId = bee.sourcetreeId ?? bee.buildingTreeId ?? null;
+                      bee.buildingTreeId = null;
+                      bee.sourcetreeId = null;
                     } else {
-                      // Throttle : une contribution toutes les 150ms maximum
-                      const now = Date.now();
-                      if (now - (targetTree.lastBuildTick ?? 0) < 80) {
-                        // Trop tôt — l'abeille attend
-                      } else {
-                      targetTree.lastBuildTick = now;
                       const newProgress = currentProgress + 1;
                       targetTree.upgradingProgress = newProgress;
 
@@ -359,8 +364,9 @@ export function useGameLoop({
                         toast.success(`${w.hiveCapital} amélioré${w.hive === 'cocon' ? '' : 'e'} au niveau 2 !`);
                       }
 
+                      const sourceTreeUpgrade = newState.trees.find(t => t.id === bee.sourcetreeId);
+                      if (sourceTreeUpgrade) sourceTreeUpgrade.beeCount = Math.max(0, sourceTreeUpgrade.beeCount - 1);
                       beesToRemove.add(bee.id);
-                      } // fin else throttle
                     }
                   }
                   } // fin else upgradeLocked
@@ -370,14 +376,11 @@ export function useGameLoop({
                   const currentProgress = buildingProgress[0] || 0;
 
                   if (currentProgress >= BUILD_HIVE_COST) {
-                    beesToRemove.add(bee.id);
+                    bee.state = 'idle';
+                    bee.treeId = bee.sourcetreeId ?? bee.buildingTreeId ?? null;
+                    bee.buildingTreeId = null;
+                    bee.sourcetreeId = null;
                   } else {
-                    // Throttle : une contribution toutes les 200ms maximum
-                    const now = Date.now();
-                    if (now - (targetTree.lastBuildTick ?? 0) < 200) {
-                      // Trop tôt — l'abeille attend
-                    } else {
-                    targetTree.lastBuildTick = now;
                     const newProgress = currentProgress + 1;
 
                     const newBuildingProgress = [...buildingProgress];
@@ -402,8 +405,9 @@ export function useGameLoop({
                       toast.success(`${w.hiveCapital} niveau 1 créé${w.hive === 'cocon' ? '' : 'e'} !`);
                     }
 
+                    const sourceTreeBuild = newState.trees.find(t => t.id === bee.sourcetreeId);
+                    if (sourceTreeBuild) sourceTreeBuild.beeCount = Math.max(0, sourceTreeBuild.beeCount - 1);
                     beesToRemove.add(bee.id);
-                    } // fin else throttle
                   }
                 } else {
                   // Rien à construire/réparer : rejoindre l'orbite de l'arbre
