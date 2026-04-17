@@ -846,3 +846,17 @@ git push origin main
 ### Non traité (reporté)
 - Transition fade partie rapide
 - Sélection abeille à la sortie de ruche
+
+---
+
+## ⚠️ RÈGLE ABSOLUE — NE JAMAIS PASSER UNE ABEILLE EN `idle` SANS `treeId`
+
+Une abeille en state='idle' sans treeId est complètement figée — elle n'est prise en charge ni par le bloc idle orbital (qui vérifie bee.treeId) ni par aucun autre bloc. Elle devient invisible au clic sur l'arbre, ne bouge plus, et ne peut être récupérée que par drag.
+
+CAUSE IDENTIFIÉE (17 avril 2026) : le bloc moving vers targetX/Y passait l'abeille en state='idle' quand dist < 5, sans lui redonner de treeId.
+
+FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer un nouveau targetX/Y avec dérive aléatoire (8-16px) autour du point cible via bee.swarmX/bee.swarmY (centre fixe). L'abeille reste en 'moving' indéfiniment jusqu'à ce qu'elle reçoive un vrai treeId.
+
+⚠️ ATTENTION : la dérive doit toujours être ancrée sur le centre fixe (swarmX/swarmY), jamais sur la position courante de l'abeille — sinon les abeilles dérivent à l'infini sur toute la carte.
+
+RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abeille sans treeId doit rester en 'moving' ou 'building'.
