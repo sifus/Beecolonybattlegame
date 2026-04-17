@@ -168,7 +168,7 @@ export default function App() {
   const [isDragging, setIsDragging] = useState(false); // Pour désactiver les boutons UI pendant un drag
   const isDraggingRef = useRef(false); // Source de vérité synchrone pour les handlers
   const dragStartPosRef = useRef<{ x: number; y: number } | null>(null); // Position du mousedown/touchstart (coords écran)
-  const DRAG_DEAD_ZONE = 14; // Pixels — en dessous de ce seuil, le geste est un clic
+  const DRAG_DEAD_ZONE = 28; // Pixels — en dessous de ce seuil, le geste est un clic
   const svgRef = useRef<SVGSVGElement>(null);
   const victoryHandledRef = useRef(false); // Pour éviter les boucles infinies de victoire
   const beeConsumedByPondRef = useRef(false); // Pour détecter quand une abeille tombe dans l'étang (niveau dangers)
