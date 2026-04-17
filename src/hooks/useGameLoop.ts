@@ -102,7 +102,6 @@ export function useGameLoop({
               const orbitCenterY = tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215);
               bee.y = orbitCenterY + Math.sin(bee.angle) * radius;
               bee.displayAngle = bee.angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0);
-
               // Abeilles idle au-dessus d'un marais — meurent moins vite
               const idlePondIdx = mapData.ponds.findIndex(pond => {
                 const pw = pond.width * gridParams.cellSize;
@@ -290,10 +289,10 @@ export function useGameLoop({
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 5) {
-              bee.state = 'idle';
-              bee.targetX = undefined;
-              bee.targetY = undefined;
-              bee.angle = Math.random() * Math.PI * 2;
+              const driftAngle = Math.random() * Math.PI * 2;
+              const driftDist = 15 + Math.random() * 15;
+              bee.targetX = effTargetX + Math.cos(driftAngle) * driftDist;
+              bee.targetY = effTargetY + Math.sin(driftAngle) * driftDist;
             } else {
               const speed = 0.8 * cellSizeScale;
               const targetAngle = Math.atan2(dy, dx);
