@@ -96,7 +96,10 @@ export function useGameLoop({
               const orbitSpeed = 0.007 + (idHash % 9) * 0.0008;
               bee.angle += orbitSpeed * orbitDir;
 
-              const baseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+              const baseRadius = Math.max(
+                (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+                (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+              );
               const radius = bee.orbitRadius ?? baseRadius;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
               const s = gridParams.cellSize / 80;
@@ -171,7 +174,10 @@ export function useGameLoop({
               bee.bezierSide = undefined;
               bee.bezierArrivalAngle = undefined;
               if (bzTarget && !bzTarget.isCut) {
-                const baseRadius = (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+                const baseRadius = Math.max(
+                  (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+                  (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                );
                 const radius = bee.orbitRadius ?? baseRadius;
                 const s = gridParams.cellSize / 80;
                 const treeOffsetY = gridParams.cellSize * 0.19;
@@ -788,12 +794,6 @@ export function useGameLoop({
 
                   const beeId = `bee-${tree.id}-${now}-${Math.random()}`;
 
-                  const baseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-                  const radiusVariation = ((parseInt(beeId.slice(-5), 36) % 16) - 8);
-                  const radius = baseRadius + radiusVariation;
-                  const targetX = tree.x + Math.cos(orbitAngle) * radius;
-                  const targetY = (tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.26 : 0.215)) + Math.sin(orbitAngle) * radius;
-
                   const s = gridParams.cellSize / 80;
                   const trunkBottomY = tree.y + gridParams.cellSize * 0.5;
                   const trunkTopY = trunkBottomY - 20 * s;
@@ -812,11 +812,18 @@ export function useGameLoop({
                   // Courbe de Bézier quadratique : spawn → orbite
                   const idHash = parseInt(beeId.slice(-5), 36);
                   const beeOrbitDir = idHash % 2 === 0 ? 1 : -1;
-                  const orbitalCenterY = tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215);
-                  const beeBaseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-                  const beeRadiusVariation = ((idHash % 16) - 8);
+                  const spawnS = gridParams.cellSize / 80;
+                  const spawnTrunkBottomY = tree.y + gridParams.cellSize * 0.5 + gridParams.cellSize * 0.19;
+                  const spawnTrunkTopY = spawnTrunkBottomY - 20 * spawnS;
+                  const orbitalCenterY = spawnTrunkTopY - gridParams.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
+                  const beeBaseRadius = Math.max(
+                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                  );
+                  const beeRadiusVariation = ((idHash % 8) - 4);
                   const beeOrbitRadius = beeBaseRadius + beeRadiusVariation;
-                  const orbitRadius = beeOrbitRadius;
+                  const targetX = tree.x + Math.cos(orbitAngle) * beeOrbitRadius;
+                  const targetY = orbitalCenterY + Math.sin(orbitAngle) * beeOrbitRadius;
 
                   // Point d'arrivée : point sur l'orbite dans la direction du spawn
                   let arrivalAngle = Math.atan2(spawnY - orbitalCenterY, spawnX - tree.x);
@@ -829,11 +836,11 @@ export function useGameLoop({
                     arrivalAngle += side * Math.PI * 0.5;
                   }
 
-                  const bezierTargetX = tree.x + Math.cos(arrivalAngle) * orbitRadius;
-                  const bezierTargetY = orbitalCenterY + Math.sin(arrivalAngle) * orbitRadius;
+                  const bezierTargetX = tree.x + Math.cos(arrivalAngle) * beeOrbitRadius;
+                  const bezierTargetY = orbitalCenterY + Math.sin(arrivalAngle) * beeOrbitRadius;
                   const perpX = -Math.sin(arrivalAngle) * side;
                   const perpY = Math.cos(arrivalAngle) * side;
-                  const controlDist = orbitRadius * 1.2;
+                  const controlDist = beeOrbitRadius * 1.2;
                   const p1x = (spawnX + bezierTargetX) / 2 + perpX * controlDist;
                   const p1y = (spawnY + bezierTargetY) / 2 + perpY * controlDist;
 

@@ -80,24 +80,49 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   };
 }
 
+/** Crée une abeille positionnée correctement sur l'orbite d'un arbre. */
+function createBee(
+  id: string,
+  tree: TreeType,
+  cellSize: number,
+  owner: 'player' | 'enemy' | 'neutral' = 'player'
+): import('./types/game').Bee {
+  const idHash = parseInt(id.slice(-5), 36);
+  const orbitDir = idHash % 2 === 0 ? 1 : -1;
+  const baseRadius = Math.max(
+    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (cellSize / 80)
+  );
+  const radiusVariation = ((idHash % 8) - 4);
+  const orbitRadius = baseRadius + radiusVariation;
+  const spawnS = cellSize / 80;
+  const spawnTrunkBottomY = tree.y + cellSize * 0.5 + cellSize * 0.19;
+  const spawnTrunkTopY = spawnTrunkBottomY - 20 * spawnS;
+  const orbitalCenterY = spawnTrunkTopY - cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
+  const angle = Math.random() * Math.PI * 2;
+  return {
+    id,
+    x: tree.x + Math.cos(angle) * orbitRadius,
+    y: orbitalCenterY + Math.sin(angle) * orbitRadius,
+    owner,
+    treeId: tree.id,
+    targetTreeId: null,
+    state: 'idle' as const,
+    angle,
+    orbitDir,
+    orbitRadius,
+    createdAt: undefined,
+    displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
+  };
+}
+
 /** Crée les abeilles initiales depuis les arbres configurés (beeCount > 0). */
-function buildInitialBees(trees: Array<{ id: string; x: number; y: number; owner: string; beeCount: number; hiveHealth: number[] }>): import('./types/game').Bee[] {
+function buildInitialBees(trees: TreeType[], cellSize: number): import('./types/game').Bee[] {
   const bees: import('./types/game').Bee[] = [];
   trees.forEach((tree) => {
     if (tree.beeCount > 0 && tree.hiveHealth.length > 0) {
       for (let i = 0; i < tree.beeCount; i++) {
-        const angle = (i / tree.beeCount) * Math.PI * 2;
-        bees.push({
-          id: `bee-${tree.id}-${i}-${Date.now()}`,
-          x: tree.x + Math.cos(angle) * BEE_ORBIT_RADIUS_SOLO,
-          y: tree.y + Math.sin(angle) * BEE_ORBIT_RADIUS_SOLO,
-          owner: tree.owner as import('./types/game').Owner,
-          treeId: tree.id,
-          targetTreeId: null,
-          state: 'idle',
-          angle,
-          createdAt: undefined,
-        });
+        bees.push(createBee(`bee-${tree.id}-${i}-${Date.now()}`, tree, cellSize, tree.owner as 'player' | 'enemy' | 'neutral'));
       }
     }
   });
@@ -190,21 +215,8 @@ export default function App() {
     const initialBees: BeeType[] = [];
     gameState.trees.forEach((tree) => {
       if (tree.beeCount > 0 && tree.hiveHealth.length > 0) {
-        // Position bees from the first hive
         for (let i = 0; i < tree.beeCount; i++) {
-          const angle = (i / tree.beeCount) * Math.PI * 2;
-          const radius = tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO;
-          initialBees.push({
-            id: `bee-${tree.id}-${i}-${Date.now()}`,
-            x: tree.x + Math.cos(angle) * radius,
-            y: tree.y + Math.sin(angle) * radius,
-            owner: tree.owner,
-            treeId: tree.id,
-            targetTreeId: null,
-            state: 'idle',
-            angle,
-            createdAt: undefined,
-          });
+          initialBees.push(createBee(`bee-${tree.id}-${i}-${Date.now()}`, tree, gridParams.cellSize, tree.owner as 'player' | 'enemy' | 'neutral'));
         }
       }
     });
@@ -530,30 +542,9 @@ export default function App() {
       if (e.key === 't' || e.key === 'T') {
         const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
         if (!playerTree) return;
-        const testBees = Array.from({ length: 10 }, (_, i) => {
-          const id = `bee-test-${i}-${Date.now()}`;
-          const idHash = parseInt(id.slice(-5), 36);
-          const baseRadius = (playerTree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-          const radiusVariation = ((idHash % 16) - 8);
-          const orbitRadius = baseRadius + radiusVariation;
-          const orbitalCenterY = playerTree.y + gridParams.cellSize * (playerTree.maxHives === 2 ? 0.13 : 0.215);
-          const angle = Math.random() * Math.PI * 2;
-          const orbitDir = idHash % 2 === 0 ? 1 : -1;
-          return {
-            id,
-            x: playerTree.x + Math.cos(angle) * orbitRadius,
-            y: orbitalCenterY + Math.sin(angle) * orbitRadius,
-            owner: 'player' as const,
-            treeId: playerTree.id,
-            targetTreeId: null,
-            state: 'idle' as const,
-            angle,
-            orbitDir,
-            orbitRadius,
-            createdAt: undefined,
-            displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
-          };
-        });
+        const testBees = Array.from({ length: 10 }, (_, i) =>
+          createBee(`bee-test-${i}-${Date.now()}`, playerTree, gridParams.cellSize)
+        );
         setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
       }
     };
@@ -567,30 +558,9 @@ export default function App() {
       if (e.touches.length === 4) {
         const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
         if (!playerTree) return;
-        const testBees = Array.from({ length: 10 }, (_, i) => {
-          const id = `bee-test-${i}-${Date.now()}`;
-          const idHash = parseInt(id.slice(-5), 36);
-          const baseRadius = (playerTree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-          const radiusVariation = ((idHash % 16) - 8);
-          const orbitRadius = baseRadius + radiusVariation;
-          const orbitalCenterY = playerTree.y + gridParams.cellSize * (playerTree.maxHives === 2 ? 0.13 : 0.215);
-          const angle = Math.random() * Math.PI * 2;
-          const orbitDir = idHash % 2 === 0 ? 1 : -1;
-          return {
-            id,
-            x: playerTree.x + Math.cos(angle) * orbitRadius,
-            y: orbitalCenterY + Math.sin(angle) * orbitRadius,
-            owner: 'player' as const,
-            treeId: playerTree.id,
-            targetTreeId: null,
-            state: 'idle' as const,
-            angle,
-            orbitDir,
-            orbitRadius,
-            createdAt: undefined,
-            displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
-          };
-        });
+        const testBees = Array.from({ length: 10 }, (_, i) =>
+          createBee(`bee-test-${i}-${Date.now()}`, playerTree, gridParams.cellSize)
+        );
         setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
       }
     };
@@ -729,30 +699,9 @@ export default function App() {
       if (tripleTapRef.current.count >= 3) {
         const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
         if (playerTree) {
-          const testBees = Array.from({ length: 10 }, (_, i) => {
-            const id = `bee-test-${i}-${Date.now()}`;
-            const idHash = parseInt(id.slice(-5), 36);
-            const baseRadius = (playerTree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-            const radiusVariation = ((idHash % 16) - 8);
-            const orbitRadius = baseRadius + radiusVariation;
-            const orbitalCenterY = playerTree.y + gridParams.cellSize * (playerTree.maxHives === 2 ? 0.13 : 0.215);
-            const angle = Math.random() * Math.PI * 2;
-            const orbitDir = idHash % 2 === 0 ? 1 : -1;
-            return {
-              id,
-              x: playerTree.x + Math.cos(angle) * orbitRadius,
-              y: orbitalCenterY + Math.sin(angle) * orbitRadius,
-              owner: 'player' as const,
-              treeId: playerTree.id,
-              targetTreeId: null,
-              state: 'idle' as const,
-              angle,
-              orbitDir,
-              orbitRadius,
-              createdAt: undefined,
-              displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
-            };
-          });
+          const testBees = Array.from({ length: 10 }, (_, i) =>
+            createBee(`bee-test-${i}-${Date.now()}`, playerTree, gridParams.cellSize)
+          );
           setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
         }
       }
@@ -1194,6 +1143,33 @@ export default function App() {
     });
   }, [currentScreen, levelProgress, gameState.trees]);
 
+  // Wake Lock — empêche la mise en veille pendant la partie
+  useEffect(() => {
+    if (currentScreen !== 'game') return;
+
+    let wakeLock: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+      } catch (err) {
+        // Wake Lock non supporté ou refusé — ignorer silencieusement
+      }
+    };
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      wakeLock?.release();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [currentScreen]);
+
   const handleTreeDragStart = useCallback((e: React.PointerEvent) => {
     // Laisser passer le début du drag pour permettre le cercle de sélection
     if (!svgRef.current) return;
@@ -1530,7 +1506,7 @@ export default function App() {
         id: `tree-${index}`,
       }));
 
-      const initialBees = buildInitialBees(initialTrees);
+      const initialBees = buildInitialBees(initialTrees, gridParams.cellSize);
 
       setMapData({
         trees: initialTrees,
@@ -1639,7 +1615,7 @@ export default function App() {
       setGameOver(null); setShowGameOverPopup(false);
       setGameState({
         trees: restartTrees,
-        bees: buildInitialBees(restartTrees),
+        bees: buildInitialBees(restartTrees, gridParams.cellSize),
         selectedBeeIds: new Set(),
         gameTime: 0,
         isPlaying: true,
@@ -1735,7 +1711,7 @@ export default function App() {
       setGameOver(null); setShowGameOverPopup(false);
       setGameState({
         trees: nextTrees,
-        bees: buildInitialBees(nextTrees),
+        bees: buildInitialBees(nextTrees, gridParams.cellSize),
         selectedBeeIds: new Set(),
         gameTime: 0,
         isPlaying: true,
