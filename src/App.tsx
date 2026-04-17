@@ -805,17 +805,17 @@ export default function App() {
             
             if (clickedTree) {
               // Clic sur un arbre - envoyer vers cet arbre
-              return { 
-                ...bee, 
-                state: 'moving' as const, 
-                targetTreeId: clickedTree.id, 
+              return {
+                ...bee,
+                state: 'moving' as const,
+                targetTreeId: clickedTree.id,
                 targetX: undefined,
                 targetY: undefined,
                 offsetX,
                 offsetY,
                 hoverCenterX: undefined,
                 hoverCenterY: undefined,
-                treeId: null 
+                treeId: null,
               };
             } else {
               // Clic sur un endroit vide - envoyer vers ce point avec offset
