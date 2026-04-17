@@ -821,3 +821,28 @@ git push origin main
 
 ### Dette technique ajoutée
 - Compteur baisse brièvement si construction impossible — amélioration possible : vérifier la faisabilité AVANT d'envoyer les abeilles dans `createOrRepairHive`, si impossible ne pas les envoyer (juste toast d'erreur)
+
+---
+
+## Ce qui a été fait — 17 avril 2026 (session 7)
+
+### Zone morte drag (commit `0ade122`)
+- Constante `DRAG_DEAD_ZONE = 28px` ajoutée dans `App.tsx`
+- En dessous de 28px de mouvement depuis le mousedown/touchstart, le geste est traité comme un clic et non un drag
+
+### Double-clic ruche
+- Plusieurs tentatives de fix du mouvement désordonné au double-clic
+- Reset sur le commit de la zone morte drag (`0ade122`) — état propre conservé
+- Désordre visuel au double-clic accepté pour l'instant — à améliorer plus tard
+- Orbite abeilles : diamètre conservé tel quel (`BEE_ORBIT_RADIUS_SOLO = 50`)
+
+### Parité lucioles
+- Vérification dans `Bee.tsx` — déjà paritaire, rien à corriger
+
+### Ease in/out abeilles
+- Plusieurs tentatives infructueuses — reporté à une prochaine session
+- La logique souhaitée : uniquement ease in sur changement de direction (~40px depuis le départ)
+
+### Non traité (reporté)
+- Transition fade partie rapide
+- Sélection abeille à la sortie de ruche
