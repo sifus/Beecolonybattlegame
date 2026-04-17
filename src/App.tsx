@@ -150,6 +150,7 @@ export default function App() {
 
   const [gameOver, setGameOver] = useState<'won' | 'lost' | null>(null);
   const [showGameOverPopup, setShowGameOverPopup] = useState(false);
+  const [isFading, setIsFading] = useState(false);
   const [isAppVisible, setIsAppVisible] = useState(true);
   const [sleepModeEnabled, setSleepModeEnabled] = useState(() => loadSleepModePreference());
   const wasPlayingRef = useRef(false);
@@ -1182,43 +1183,46 @@ export default function App() {
 
   const handleStartGame = () => {
     setCurrentScreen('game');
-    victoryHandledRef.current = false; // Réinitialiser le flag de victoire
-    
-    // Generate random map avec les bons paramètres de grille
-    const randomMap = generateRandomMap(gridParams.cellSize, gridParams.rows, gridParams.cols, {
-      gameStartRow: gridParams.gameStartRow,
-      gameEndRow: gridParams.gameEndRow,
-      gameStartCol: gridParams.gameStartCol,
-      gameEndCol: gridParams.gameEndCol
-    });
-    setMapData(randomMap);
-    
-    setGameOver(null); setShowGameOverPopup(false);
-    setGameState({
-      trees: randomMap.trees.map(tree => ({
-        ...tree,
-        hiveHealth: tree.hiveHealth || [],
-        hiveLevel: tree.hiveLevel || [],
-        buildingProgress: [],
-        upgradingProgress: 0,
-        isStartingTree: tree.isStartingTree || false,
-        isCut: false,
-        cutProgress: 0
-      })),
-      bees: [],
-      selectedBeeIds: new Set(),
-      gameTime: 0,
-      isPlaying: true,
-      stars: 3,
-      haloEffects: [],
-      fireflies: [],
-    });
-    
-    setLastClickedTreeId(null);
-    setLastClickTime(0);
+    setIsFading(true);
+    setTimeout(() => {
+      victoryHandledRef.current = false; // Réinitialiser le flag de victoire
 
-    const w = getWording(globalTimeOfDay);
-    toast.success('🎮 Nouvelle partie - Carte aléatoire générée !');
+      // Generate random map avec les bons paramètres de grille
+      const randomMap = generateRandomMap(gridParams.cellSize, gridParams.rows, gridParams.cols, {
+        gameStartRow: gridParams.gameStartRow,
+        gameEndRow: gridParams.gameEndRow,
+        gameStartCol: gridParams.gameStartCol,
+        gameEndCol: gridParams.gameEndCol
+      });
+      setMapData(randomMap);
+
+      setGameOver(null); setShowGameOverPopup(false);
+      setGameState({
+        trees: randomMap.trees.map(tree => ({
+          ...tree,
+          hiveHealth: tree.hiveHealth || [],
+          hiveLevel: tree.hiveLevel || [],
+          buildingProgress: [],
+          upgradingProgress: 0,
+          isStartingTree: tree.isStartingTree || false,
+          isCut: false,
+          cutProgress: 0
+        })),
+        bees: [],
+        selectedBeeIds: new Set(),
+        gameTime: 0,
+        isPlaying: true,
+        stars: 3,
+        haloEffects: [],
+        fireflies: [],
+      });
+
+      setLastClickedTreeId(null);
+      setLastClickTime(0);
+
+      toast.success('🎮 Nouvelle partie - Carte aléatoire générée !');
+      setIsFading(false);
+    }, 220);
   };
 
   const handleRestart = () => {
@@ -1737,6 +1741,8 @@ export default function App() {
         minHeight: '100vh',
         maxHeight: '100vh',
         backgroundColor: '#D9D255', // fallback si SVG non encore peint
+        opacity: isFading ? 0 : 1,
+        transition: 'opacity 200ms ease-in-out',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         MozUserSelect: 'none',

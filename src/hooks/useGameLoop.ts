@@ -191,10 +191,16 @@ export function useGameLoop({
                 }
               } else {
                 const speed = 0.8 * cellSizeScale;
-                bee.angle = Math.atan2(dy, dx);
+                const targetAngle = Math.atan2(dy, dx);
+                const angleDiff = ((targetAngle - bee.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+                if (Math.abs(angleDiff) > Math.PI * 0.75) {
+                  bee.angle = targetAngle;
+                } else {
+                  bee.angle = bee.angle + angleDiff * 0.12;
+                }
                 bee.displayAngle = bee.angle;
-                bee.x += (dx / dist) * speed;
-                bee.y += (dy / dist) * speed;
+                bee.x += Math.cos(bee.angle) * speed;
+                bee.y += Math.sin(bee.angle) * speed;
 
                 const pondIdx1 = mapData.ponds.findIndex(pond => {
                   const pw = pond.width * gridParams.cellSize;
@@ -241,10 +247,16 @@ export function useGameLoop({
               bee.angle = Math.random() * Math.PI * 2;
             } else {
               const speed = 0.8 * cellSizeScale;
-              bee.angle = Math.atan2(dy, dx);
+              const targetAngle = Math.atan2(dy, dx);
+              const angleDiff = ((targetAngle - bee.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+              if (Math.abs(angleDiff) > Math.PI * 0.75) {
+                bee.angle = targetAngle;
+              } else {
+                bee.angle = bee.angle + angleDiff * 0.12;
+              }
               bee.displayAngle = bee.angle;
-              bee.x += (dx / dist) * speed;
-              bee.y += (dy / dist) * speed;
+              bee.x += Math.cos(bee.angle) * speed;
+              bee.y += Math.sin(bee.angle) * speed;
 
               const pondIdx2 = mapData.ponds.findIndex(pond => {
                 const pw = pond.width * gridParams.cellSize;
@@ -716,26 +728,41 @@ export function useGameLoop({
                 const shouldProduce = level === 2 || (level === 1 && now % 3000 < 1000);
 
                 if (shouldProduce) {
-                  const hiveY = tree.y - 10;
-                  const angle = Math.random() * Math.PI * 2;
+                  const orbitAngle = Math.random() * Math.PI * 2;
 
                   const beeId = `bee-${tree.id}-${now}-${Math.random()}`;
 
                   const baseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
                   const radiusVariation = ((parseInt(beeId.slice(-5), 36) % 16) - 8);
                   const radius = baseRadius + radiusVariation;
-                  const targetX = tree.x + Math.cos(angle) * radius;
-                  const targetY = (tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.26 : 0.215)) + Math.sin(angle) * radius;
+                  const targetX = tree.x + Math.cos(orbitAngle) * radius;
+                  const targetY = (tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.26 : 0.215)) + Math.sin(orbitAngle) * radius;
+
+                  const s = gridParams.cellSize / 80;
+                  const trunkBottomY = tree.y + gridParams.cellSize * 0.5;
+                  const trunkTopY = trunkBottomY - 20 * s;
+
+                  // Position du trou de la ruche selon le type
+                  const hiveX = tree.maxHives === 2
+                    ? (tree.hiveCount >= 1 ? tree.x - 22 * s : tree.x + 14 * s)
+                    : tree.x;
+                  const hiveY = tree.maxHives === 2
+                    ? trunkTopY - (tree.hiveCount >= 1 ? 10 * s : 4 * s) + 8 * s
+                    : trunkTopY - 14 * s + 8 * s;
+
+                  const spawnX = hiveX + (Math.random() - 0.5) * 4;
+                  const spawnY = hiveY + (Math.random() - 0.5) * 4;
+                  const spawnAngle = Math.atan2(tree.y - spawnY, tree.x - spawnX);
 
                   newBees.push({
                     id: beeId,
-                    x: tree.x + (Math.random() - 0.5) * 20,
-                    y: tree.y + (Math.random() - 0.5) * 20,
+                    x: spawnX,
+                    y: spawnY,
                     owner: tree.owner,
                     treeId: null,
                     targetTreeId: tree.id,
                     state: 'moving',
-                    angle,
+                    angle: spawnAngle,
                     offsetX: targetX - tree.x,
                     offsetY: targetY - tree.y,
                     createdAt: now,
