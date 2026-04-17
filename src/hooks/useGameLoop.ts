@@ -99,7 +99,11 @@ export function useGameLoop({
               const baseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
               const radius = bee.orbitRadius ?? baseRadius;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
-              const orbitCenterY = tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215);
+              const s = gridParams.cellSize / 80;
+              const treeOffsetY = gridParams.cellSize * 0.19;
+              const trunkBottomY = tree.y + gridParams.cellSize * 0.5 + treeOffsetY;
+              const trunkTopY = trunkBottomY - 20 * s;
+              const orbitCenterY = trunkTopY - gridParams.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
               bee.y = orbitCenterY + Math.sin(bee.angle) * radius;
               bee.displayAngle = bee.angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0);
               // Abeilles idle au-dessus d'un marais — meurent moins vite
@@ -169,7 +173,11 @@ export function useGameLoop({
               if (bzTarget && !bzTarget.isCut) {
                 const baseRadius = (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
                 const radius = bee.orbitRadius ?? baseRadius;
-                const orbitalCenterY = bzTarget.y + gridParams.cellSize * (bzTarget.maxHives === 2 ? 0.13 : 0.215);
+                const s = gridParams.cellSize / 80;
+                const treeOffsetY = gridParams.cellSize * 0.19;
+                const trunkBottomY = bzTarget.y + gridParams.cellSize * 0.5 + treeOffsetY;
+                const trunkTopY = trunkBottomY - 20 * s;
+                const orbitalCenterY = trunkTopY - gridParams.cellSize * (bzTarget.maxHives === 2 ? 0.28 : 0.26);
                 const arrivalAngle = Math.atan2(bee.y - orbitalCenterY, bee.x - bzTarget.x);
                 bee.x = bzTarget.x + Math.cos(arrivalAngle) * radius;
                 bee.y = orbitalCenterY + Math.sin(arrivalAngle) * radius;

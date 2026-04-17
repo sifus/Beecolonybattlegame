@@ -63,6 +63,8 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   const marginLeft = (availW - gridW) / 2;
   const marginTop  = (availH - gridH) / 2;
 
+  console.log('GRID', { cellSize, gameWidth: gridW, gameHeight: gridH, windowW: availW, windowH: availH });
+
   return {
     cols: totalCols,
     rows: totalRows,
@@ -178,6 +180,7 @@ export default function App() {
   const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
   const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
   const lastTouchEndRef = useRef(0); // Timestamp du dernier touchend — pour ignorer les mousedown synthétiques
+  const tripleTapRef = useRef<{ count: number, timer: ReturnType<typeof setTimeout> | null }>({ count: 0, timer: null });
 
   // Generate initial bees around trees (only on first mount)
   useEffect(() => {
@@ -558,6 +561,43 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [gameState.trees]);
 
+  // Geste 4 doigts — spawn 10 abeilles de test sur l'arbre joueur (équivalent touche T, mobile)
+  useEffect(() => {
+    const handleFourFingerTouch = (e: TouchEvent) => {
+      if (e.touches.length === 4) {
+        const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
+        if (!playerTree) return;
+        const testBees = Array.from({ length: 10 }, (_, i) => {
+          const id = `bee-test-${i}-${Date.now()}`;
+          const idHash = parseInt(id.slice(-5), 36);
+          const baseRadius = (playerTree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+          const radiusVariation = ((idHash % 16) - 8);
+          const orbitRadius = baseRadius + radiusVariation;
+          const orbitalCenterY = playerTree.y + gridParams.cellSize * (playerTree.maxHives === 2 ? 0.13 : 0.215);
+          const angle = Math.random() * Math.PI * 2;
+          const orbitDir = idHash % 2 === 0 ? 1 : -1;
+          return {
+            id,
+            x: playerTree.x + Math.cos(angle) * orbitRadius,
+            y: orbitalCenterY + Math.sin(angle) * orbitRadius,
+            owner: 'player' as const,
+            treeId: playerTree.id,
+            targetTreeId: null,
+            state: 'idle' as const,
+            angle,
+            orbitDir,
+            orbitRadius,
+            createdAt: undefined,
+            displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
+          };
+        });
+        setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
+      }
+    };
+    window.addEventListener('touchstart', handleFourFingerTouch);
+    return () => window.removeEventListener('touchstart', handleFourFingerTouch);
+  }, [gameState, gridParams]);
+
   // Fonction utilitaire pour convertir les coordonnées écran en coordonnées jeu
   // NOUVELLE VERSION : Plus simple car preserveAspectRatio="none" et dimensions fixes
   const getGameCoordinates = (clientX: number, clientY: number) => {
@@ -682,6 +722,42 @@ export default function App() {
   const handleTouchEnd = () => {
     lastTouchEndRef.current = Date.now();
     handleMouseUp();
+
+    tripleTapRef.current.count++;
+    if (tripleTapRef.current.timer) clearTimeout(tripleTapRef.current.timer);
+    tripleTapRef.current.timer = setTimeout(() => {
+      if (tripleTapRef.current.count >= 3) {
+        const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
+        if (playerTree) {
+          const testBees = Array.from({ length: 10 }, (_, i) => {
+            const id = `bee-test-${i}-${Date.now()}`;
+            const idHash = parseInt(id.slice(-5), 36);
+            const baseRadius = (playerTree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+            const radiusVariation = ((idHash % 16) - 8);
+            const orbitRadius = baseRadius + radiusVariation;
+            const orbitalCenterY = playerTree.y + gridParams.cellSize * (playerTree.maxHives === 2 ? 0.13 : 0.215);
+            const angle = Math.random() * Math.PI * 2;
+            const orbitDir = idHash % 2 === 0 ? 1 : -1;
+            return {
+              id,
+              x: playerTree.x + Math.cos(angle) * orbitRadius,
+              y: orbitalCenterY + Math.sin(angle) * orbitRadius,
+              owner: 'player' as const,
+              treeId: playerTree.id,
+              targetTreeId: null,
+              state: 'idle' as const,
+              angle,
+              orbitDir,
+              orbitRadius,
+              createdAt: undefined,
+              displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
+            };
+          });
+          setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
+        }
+      }
+      tripleTapRef.current.count = 0;
+    }, 400);
   };
 
   const handleTouchCancel = () => {
@@ -828,20 +904,34 @@ export default function App() {
                 hoverCenterX: undefined,
                 hoverCenterY: undefined,
                 treeId: null,
+                bezierT: undefined,
+                bezierStartX: undefined,
+                bezierStartY: undefined,
+                bezierP1x: undefined,
+                bezierP1y: undefined,
+                bezierTargetX: undefined,
+                bezierTargetY: undefined,
               };
             } else {
               // Clic sur un endroit vide - envoyer vers ce point avec offset
-              return { 
-                ...bee, 
-                state: 'moving' as const, 
-                targetTreeId: null, 
-                targetX: clickX + offsetX, 
+              return {
+                ...bee,
+                state: 'moving' as const,
+                targetTreeId: null,
+                targetX: clickX + offsetX,
                 targetY: clickY + offsetY,
                 offsetX,
                 offsetY,
                 hoverCenterX: undefined,
                 hoverCenterY: undefined,
-                treeId: null 
+                treeId: null,
+                bezierT: undefined,
+                bezierStartX: undefined,
+                bezierStartY: undefined,
+                bezierP1x: undefined,
+                bezierP1y: undefined,
+                bezierTargetX: undefined,
+                bezierTargetY: undefined,
               };
             }
           }
@@ -1146,7 +1236,7 @@ export default function App() {
         setGameState(prev => {
           const updatedBees = prev.bees.map(bee => {
             if (!prev.selectedBeeIds.has(bee.id)) return bee;
-            return { ...bee, state: 'moving' as const, targetTreeId: treeId, targetX: undefined, targetY: undefined, treeId: null };
+            return { ...bee, state: 'moving' as const, targetTreeId: treeId, targetX: undefined, targetY: undefined, treeId: null, bezierT: undefined, bezierStartX: undefined, bezierStartY: undefined, bezierP1x: undefined, bezierP1y: undefined, bezierTargetX: undefined, bezierTargetY: undefined };
           });
           const updatedTrees = prev.trees.map(t => {
             const leaving = prev.bees.filter(b => prev.selectedBeeIds.has(b.id) && b.treeId === t.id).length;
