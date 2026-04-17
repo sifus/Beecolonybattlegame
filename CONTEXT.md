@@ -797,3 +797,27 @@ git push origin main
 - **Parité graphique lucioles** : vérifier que les lucioles ennemies et joueur ont la même priorité graphique (taille du centre vif notamment) — seule la couleur doit différer.
 
 - **Zone morte drag** : le clic est trop souvent interprété comme un drag. Ajouter une zone morte au début du drag (1/5 de la largeur d'un arbre) en dessous de laquelle le geste est considéré comme un clic et non un drag.
+
+---
+
+## Ce qui a été fait — 17 avril 2026 (session 6)
+
+### Orbite abeilles — recentrage complet
+- Investigation `Tree.tsx` pour extraire les `cy` exacts des feuillages
+- `BEE_ORBIT_RADIUS_SOLO = 50`, `BEE_ORBIT_RADIUS_GROUP = 56`
+- Centre orbite solo : `tree.y + cellSize * 0.215`, groupe : `tree.y + cellSize * 0.13`
+- Constante `BEE_ORBIT_RADIUS` supprimée, remplacée par `SOLO`/`GROUP` dans `gameRules.ts`
+
+### Double-clic construction — corrigé
+- Bug root cause : `setLastClickedTreeId(null)` dans `handleMouseUp` cassait la détection
+- Bug secondaire : `justBuiltHiveRef` bloquait `createOrRepairHive`
+- Bug principal : `allBeesOnClickedTree` dans `handleMouseUp` interceptait le premier clic, passait les abeilles en `moving` avant le double-clic
+- Fix : `isPotentialDoubleClick` bloque le chemin `allBeesOnClickedTree` si même arbre cliqué récemment
+- `createOrRepairHive` accepte maintenant les abeilles `idle` ET `moving` vers l'arbre
+
+### Compteur abeilles — simplifié
+- Revenu à un compteur simple : abeilles `idle` avec `treeId === tree.id`
+- `tree.beeCount` n'est plus utilisé pour l'affichage
+
+### Dette technique ajoutée
+- Compteur baisse brièvement si construction impossible — amélioration possible : vérifier la faisabilité AVANT d'envoyer les abeilles dans `createOrRepairHive`, si impossible ne pas les envoyer (juste toast d'erreur)
