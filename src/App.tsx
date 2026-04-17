@@ -165,8 +165,10 @@ export default function App() {
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [lastClickedTreeId, setLastClickedTreeId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false); // Pour détecter si on drag ou clic simple
-  const dragThreshold = 5; // Distance en pixels pour considérer un drag
+  const [isDragging, setIsDragging] = useState(false); // Pour désactiver les boutons UI pendant un drag
+  const isDraggingRef = useRef(false); // Source de vérité synchrone pour les handlers
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null); // Position du mousedown/touchstart (coords écran)
+  const DRAG_DEAD_ZONE = 14; // Pixels — en dessous de ce seuil, le geste est un clic
   const svgRef = useRef<SVGSVGElement>(null);
   const victoryHandledRef = useRef(false); // Pour éviter les boucles infinies de victoire
   const beeConsumedByPondRef = useRef(false); // Pour détecter quand une abeille tombe dans l'étang (niveau dangers)
@@ -574,23 +576,28 @@ export default function App() {
     const { x, y } = getGameCoordinates(e.clientX, e.clientY);
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
+    isDraggingRef.current = false;
     setIsDragging(false);
+    dragStartPosRef.current = { x: e.clientX, y: e.clientY };
     tapPosRef.current = { x, y };
   };
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!selectionStart || !svgRef.current) return;
     const { x, y } = getGameCoordinates(e.clientX, e.clientY);
-    
-    // Détecter si on a bougé assez pour considérer un drag
-    const distance = Math.sqrt(
-      Math.pow(x - selectionStart.x, 2) + Math.pow(y - selectionStart.y, 2)
-    );
-    
-    if (distance > dragThreshold) {
+
+    if (!isDraggingRef.current) {
+      // Zone morte : mesurer en pixels écran pour rester cohérent avec DRAG_DEAD_ZONE
+      if (dragStartPosRef.current) {
+        const dx = e.clientX - dragStartPosRef.current.x;
+        const dy = e.clientY - dragStartPosRef.current.y;
+        const screenDist = Math.sqrt(dx * dx + dy * dy);
+        if (screenDist < DRAG_DEAD_ZONE) return; // Pas encore sorti de la zone morte
+      }
+      isDraggingRef.current = true;
       setIsDragging(true);
     }
-    
+
     setSelectionCurrent({ x, y });
   };
 
@@ -634,7 +641,9 @@ export default function App() {
     const { x, y } = getGameCoordinates(touch.clientX, touch.clientY);
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
+    isDraggingRef.current = false;
     setIsDragging(false);
+    dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     tapPosRef.current = { x, y };
   };
 
@@ -642,16 +651,18 @@ export default function App() {
     if (!selectionStart || !svgRef.current || e.touches.length === 0) return;
     const touch = e.touches[0];
     const { x, y } = getGameCoordinates(touch.clientX, touch.clientY);
-    
-    // Détecter si on a bougé assez pour considérer un drag
-    const distance = Math.sqrt(
-      Math.pow(x - selectionStart.x, 2) + Math.pow(y - selectionStart.y, 2)
-    );
-    
-    if (distance > dragThreshold) {
+
+    if (!isDraggingRef.current) {
+      if (dragStartPosRef.current) {
+        const dx = touch.clientX - dragStartPosRef.current.x;
+        const dy = touch.clientY - dragStartPosRef.current.y;
+        const screenDist = Math.sqrt(dx * dx + dy * dy);
+        if (screenDist < DRAG_DEAD_ZONE) return; // Pas encore sorti de la zone morte
+      }
+      isDraggingRef.current = true;
       setIsDragging(true);
     }
-    
+
     setSelectionCurrent({ x, y });
   };
 
@@ -697,7 +708,9 @@ export default function App() {
     if (!selectionStart || !selectionCurrent) {
       setSelectionStart(null);
       setSelectionCurrent(null);
+      isDraggingRef.current = false;
       setIsDragging(false);
+      dragStartPosRef.current = null;
       tapPosRef.current = null;
       return;
     }
@@ -711,8 +724,8 @@ export default function App() {
     const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
     const radius = leftHanded ? dist : dist / 2;
 
-    // Si on a dragger, toujours faire la sélection par cercle
-    if (isDragging && radius > 5) {
+    // Si on a draggeré (zone morte franchie), faire la sélection par cercle
+    if (isDraggingRef.current && radius > 5) {
       // C'est une sélection par cercle
       const selectedBees = gameState.bees.filter((bee) => {
         if (bee.owner !== 'player') return false;
@@ -843,14 +856,16 @@ export default function App() {
         justSentBeesRef.current = false;
       }, 100);
     }
-    // Ripple seulement si tap simple (pas de drag)
-    if (!isDragging && tapPosRef.current) {
+    // Ripple seulement si tap simple (zone morte non franchie)
+    if (!isDraggingRef.current && tapPosRef.current) {
       const { x, y } = tapPosRef.current;
       const id = Date.now();
       setRipples(prev => [...prev, { id, x, y }]);
       setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
     }
     tapPosRef.current = null;
+    dragStartPosRef.current = null;
+    isDraggingRef.current = false;
     setSelectionStart(null);
     setSelectionCurrent(null);
     setIsDragging(false);
@@ -1082,12 +1097,14 @@ export default function App() {
     const { x, y } = getGameCoordinates(e.clientX, e.clientY);
     setSelectionStart({ x, y });
     setSelectionCurrent({ x, y });
+    isDraggingRef.current = false;
     setIsDragging(false);
+    dragStartPosRef.current = { x: e.clientX, y: e.clientY };
   }, []);
 
   const handleTreeClick = useCallback(
     (treeId: string, e: React.MouseEvent | React.PointerEvent) => {
-      if (isDragging) return;
+      if (isDraggingRef.current) return;
 
       e.stopPropagation();
       e.preventDefault();
@@ -1140,7 +1157,7 @@ export default function App() {
           : prev;
       });
     },
-    [gameState, lastClickedTreeId, lastClickTime, isDragging, selectionStart]
+    [gameState, lastClickedTreeId, lastClickTime, selectionStart]
   );
 
   const handlePause = () => {
