@@ -859,4 +859,64 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 
 ⚠️ ATTENTION : la dérive doit toujours être ancrée sur le centre fixe (swarmX/swarmY), jamais sur la position courante de l'abeille — sinon les abeilles dérivent à l'infini sur toute la carte.
 
+---
+
+## Ce qui a été fait — 17 avril 2026 (session 8)
+
+### Corrections orbite abeilles
+- Centre orbital migré vers formule trunkTopY dans tous les blocs (idle, bezierT>=1, spawn production loop, abeilles T, triple tap)
+- Rayon minimum absolu via Math.max pour cohérence Chrome/Safari/iPhone
+- BEE_ORBIT_RADIUS_SOLO = 38, BEE_ORBIT_RADIUS_GROUP = 43
+- Fonction utilitaire createBee() créée dans App.tsx — source unique pour tous les spawns
+- orbitalCenterY unifié : trunkTopY - cellSize * (0.28 solo / 0.26 groupe)
+- Alias inutile orbitRadius = beeOrbitRadius supprimé
+
+### Trajectoire Bézier naissance abeilles
+- Abeilles naissent sur le trou de la ruche (position exacte avec treeOffsetY)
+- Halo de naissance visible par-dessus la ruche (rendu après layer top)
+- Trajectoire courbe aléatoire (déviation ±45°) depuis la ruche vers l'orbite
+- Durée Bézier : bezierT += 0.008 (~2 secondes)
+- Entrée en orbite fluide : orbitDir ajusté selon tangente d'arrivée
+- Reset des champs Bézier si abeille redirigée en vol
+- Sélection par clic sur arbre source possible pendant la Bézier
+
+### Bug abeille figée — règle absolue
+- Voir section ⚠️ RÈGLE ABSOLUE plus bas
+
+### Cohérence orbite multi-device
+- Chrome Mac cellSize=61, Safari Mac cellSize=67, iPhone 17 cellSize=57
+- Math.max(RADIUS, RADIUS * cellSize/80) = plancher absolu pour petits écrans
+- Vérification complète de tous les sites de spawn — tous alignés
+
+### Autres fixes session 8
+- Zone morte drag 28px
+- Transition fade partie rapide 100ms
+- Virage abeilles smooth (interpolation angulaire 0.12, snap >135°)
+- Wake lock écran pendant la partie
+- Triple tap = 10 abeilles (debug iPhone)
+- Sélection abeilles Bézier par clic sur arbre source
+
+### Audit qualité effectué — à traiter session 9
+**Urgents :**
+- console.log('GRID') ligne 66 App.tsx en production — à supprimer
+- Ancienne formule orbite (0.13/0.215) subsiste lignes 237/245 useGameLoop.ts bloc moving→arbre
+- Bee.tsx : 50 filtres SVG identiques par abeille (firefly-glow, clipPath) — perf
+
+**Importants :**
+- borderCells/nightColorMap recalculés à chaque render GameBoard.tsx — useMemo
+- Bloc attaque ruche joueur/ennemi : ~150 lignes dupliquées useGameLoop.ts
+- createOrRepairHive : 220 lignes à découper en 3 fonctions
+
+**Mineurs :**
+- handleMouseLeave/handleTouchCancel/handleMouseUp : logique cercle dupliquée 3 fois
+- startLevel dupliqué 3 fois dans App.tsx
+- greedyColor à déplacer hors du composant GameBoard
+
+### Backlog session 9
+- Abeilles en déplacement : moins s'éparpiller, rester plus en groupe
+- Rochers : ne jamais être trop au bord d'un carré de damier
+- iPhone landscape : barre blanche en haut si déjà en paysage au lancement — fix orientation
+- Double clic n'importe où fait laguer quelques frames — à investiguer
+- Trop d'abeilles = rame — surveiller le frame rate et agir si baisse (throttle abeilles ?)
+
 RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abeille sans treeId doit rester en 'moving' ou 'building'.
