@@ -92,13 +92,12 @@ export function useGameLoop({
             if (tree && !tree.isCut) {
               // Direction et vitesse orbitale individuelles — space feel
               const idHash = parseInt(bee.id.slice(-5), 36);
-              const orbitDir = idHash % 2 === 0 ? 1 : -1;
+              const orbitDir = bee.orbitDir ?? (idHash % 2 === 0 ? 1 : -1);
               const orbitSpeed = 0.007 + (idHash % 9) * 0.0008;
               bee.angle += orbitSpeed * orbitDir;
 
               const baseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-              const radiusVariation = ((idHash % 16) - 8);
-              const radius = baseRadius + radiusVariation;
+              const radius = bee.orbitRadius ?? baseRadius;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
               const orbitCenterY = tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215);
               bee.y = orbitCenterY + Math.sin(bee.angle) * radius;
@@ -141,6 +140,56 @@ export function useGameLoop({
                   bee.state = 'moving';
                   bee.targetTreeId = closestTree.id;
                 }
+              }
+            }
+          } else if (bee.state === 'moving' && bee.bezierT !== undefined && bee.bezierT < 1 && bee.bezierStartX !== undefined) {
+            // Déplacement le long de la courbe de Bézier quadratique
+            bee.bezierT = Math.min(1, bee.bezierT + 0.008);
+            const t = bee.bezierT;
+            const mt = 1 - t;
+            const prevX = bee.x;
+            const prevY = bee.y;
+            const newX = mt * mt * bee.bezierStartX + 2 * mt * t * bee.bezierP1x! + t * t * bee.bezierTargetX!;
+            const newY = mt * mt * bee.bezierStartY! + 2 * mt * t * bee.bezierP1y! + t * t * bee.bezierTargetY!;
+            bee.angle = Math.atan2(newY - prevY, newX - prevX);
+            bee.displayAngle = bee.angle;
+            bee.x = newX;
+            bee.y = newY;
+
+            if (bee.bezierT >= 1) {
+              const bzTarget = newState.trees.find(t => t.id === bee.targetTreeId);
+              bee.bezierT = undefined;
+              bee.bezierStartX = undefined;
+              bee.bezierStartY = undefined;
+              bee.bezierP1x = undefined;
+              bee.bezierP1y = undefined;
+              bee.bezierTargetX = undefined;
+              bee.bezierTargetY = undefined;
+              bee.bezierSide = undefined;
+              bee.bezierArrivalAngle = undefined;
+              if (bzTarget && !bzTarget.isCut) {
+                const baseRadius = (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+                const radius = bee.orbitRadius ?? baseRadius;
+                const orbitalCenterY = bzTarget.y + gridParams.cellSize * (bzTarget.maxHives === 2 ? 0.13 : 0.215);
+                const arrivalAngle = Math.atan2(bee.y - orbitalCenterY, bee.x - bzTarget.x);
+                bee.x = bzTarget.x + Math.cos(arrivalAngle) * radius;
+                bee.y = orbitalCenterY + Math.sin(arrivalAngle) * radius;
+                bee.angle = arrivalAngle;
+
+                // Vérifier que orbitDir correspond à la direction d'arrivée naturelle
+                const bezierTangentAngle = Math.atan2(newY - prevY, newX - prevX);
+                const tangentDot = Math.cos(bezierTangentAngle) * (-Math.sin(arrivalAngle) * (bee.orbitDir ?? 1))
+                                 + Math.sin(bezierTangentAngle) * (Math.cos(arrivalAngle) * (bee.orbitDir ?? 1));
+                if (tangentDot < 0) bee.orbitDir = -(bee.orbitDir ?? 1);
+
+                bee.displayAngle = arrivalAngle - Math.PI / 2;
+                bee.treeId = bzTarget.id;
+                bee.targetTreeId = null;
+                bee.state = 'idle';
+                bzTarget.beeCount++;
+              } else {
+                bee.state = 'idle';
+                bee.targetTreeId = null;
               }
             }
           } else if (bee.state === 'moving' && bee.targetTreeId) {
@@ -752,7 +801,36 @@ export function useGameLoop({
 
                   const spawnX = hiveX + (Math.random() - 0.5) * 4;
                   const spawnY = hiveY + (Math.random() - 0.5) * 4;
-                  const spawnAngle = Math.atan2(tree.y - spawnY, tree.x - spawnX);
+
+                  // Courbe de Bézier quadratique : spawn → orbite
+                  const idHash = parseInt(beeId.slice(-5), 36);
+                  const beeOrbitDir = idHash % 2 === 0 ? 1 : -1;
+                  const orbitalCenterY = tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215);
+                  const beeBaseRadius = (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+                  const beeRadiusVariation = ((idHash % 16) - 8);
+                  const beeOrbitRadius = beeBaseRadius + beeRadiusVariation;
+                  const orbitRadius = beeOrbitRadius;
+
+                  // Point d'arrivée : point sur l'orbite dans la direction du spawn
+                  let arrivalAngle = Math.atan2(spawnY - orbitalCenterY, spawnX - tree.x);
+
+                  // Déviation perpendiculaire aléatoire gauche ou droite
+                  const side = Math.random() > 0.5 ? 1 : -1;
+
+                  // Si l'angle pointe vers le haut, décaler pour éviter les trajectoires verticales
+                  if (arrivalAngle > -Math.PI * 0.75 && arrivalAngle < -Math.PI * 0.25) {
+                    arrivalAngle += side * Math.PI * 0.5;
+                  }
+
+                  const bezierTargetX = tree.x + Math.cos(arrivalAngle) * orbitRadius;
+                  const bezierTargetY = orbitalCenterY + Math.sin(arrivalAngle) * orbitRadius;
+                  const perpX = -Math.sin(arrivalAngle) * side;
+                  const perpY = Math.cos(arrivalAngle) * side;
+                  const controlDist = orbitRadius * 1.2;
+                  const p1x = (spawnX + bezierTargetX) / 2 + perpX * controlDist;
+                  const p1y = (spawnY + bezierTargetY) / 2 + perpY * controlDist;
+
+                  const spawnAngle = Math.atan2(bezierTargetY - spawnY, bezierTargetX - spawnX);
 
                   newBees.push({
                     id: beeId,
@@ -766,6 +844,17 @@ export function useGameLoop({
                     offsetX: targetX - tree.x,
                     offsetY: targetY - tree.y,
                     createdAt: now,
+                    bezierStartX: spawnX,
+                    bezierStartY: spawnY,
+                    bezierP1x: p1x,
+                    bezierP1y: p1y,
+                    bezierTargetX,
+                    bezierTargetY,
+                    bezierT: 0,
+                    bezierSide: side,
+                    bezierArrivalAngle: arrivalAngle,
+                    orbitDir: beeOrbitDir,
+                    orbitRadius: beeOrbitRadius,
                   });
                   tree.beeCount++;
                 }

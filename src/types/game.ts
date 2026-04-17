@@ -49,6 +49,17 @@ export interface Bee {
   angle: number; // Angle de rotation autour de l'arbre
   displayAngle?: number; // Direction tangentielle pour l'orientation visuelle
   createdAt?: number; // Timestamp de création
+  orbitRadius?: number;  // Rayon orbital fixe pour cette abeille
+  orbitDir?: number;     // Direction orbitale fixe (1 ou -1)
+  bezierStartX?: number; // Point de départ Bézier x
+  bezierStartY?: number; // Point de départ Bézier y
+  bezierP1x?: number;    // Point de contrôle Bézier x
+  bezierP1y?: number;    // Point de contrôle Bézier y
+  bezierTargetX?: number; // Point d'arrivée Bézier x
+  bezierTargetY?: number; // Point d'arrivée Bézier y
+  bezierT?: number;       // Progression 0→1 le long de la courbe
+  bezierSide?: number;    // Côté de déviation (+1 ou -1)
+  bezierArrivalAngle?: number; // Angle d'arrivée pour tangente orbite
 }
 
 /**
