@@ -101,7 +101,7 @@ export function useGameLoop({
               bee.x = tree.x + Math.cos(bee.angle) * radius;
               const orbitCenterY = tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215);
               bee.y = orbitCenterY + Math.sin(bee.angle) * radius;
-              bee.displayAngle = bee.angle + Math.PI / 2;
+              bee.displayAngle = bee.angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0);
 
               // Abeilles idle au-dessus d'un marais — meurent moins vite
               const idlePondIdx = mapData.ponds.findIndex(pond => {
@@ -182,7 +182,7 @@ export function useGameLoop({
                                  + Math.sin(bezierTangentAngle) * (Math.cos(arrivalAngle) * (bee.orbitDir ?? 1));
                 if (tangentDot < 0) bee.orbitDir = -(bee.orbitDir ?? 1);
 
-                bee.displayAngle = arrivalAngle - Math.PI / 2;
+                bee.displayAngle = arrivalAngle + Math.PI / 2 + (bee.orbitDir === -1 ? Math.PI : 0);
                 bee.treeId = bzTarget.id;
                 bee.targetTreeId = null;
                 bee.state = 'idle';
