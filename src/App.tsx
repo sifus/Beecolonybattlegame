@@ -1253,7 +1253,7 @@ export default function App() {
       // CLIC SIMPLE SANS SÉLECTION : sélectionne les abeilles de cet arbre
       setGameState(prev => {
         const beesAtThisTree = prev.bees
-          .filter(bee => bee.treeId === treeId && bee.owner === 'player')
+          .filter(bee => ((bee.treeId === treeId) || (bee.targetTreeId === treeId && bee.bezierT !== undefined)) && bee.owner === 'player')
           .map(bee => bee.id);
         return beesAtThisTree.length > 0
           ? { ...prev, selectedBeeIds: new Set(beesAtThisTree) }
