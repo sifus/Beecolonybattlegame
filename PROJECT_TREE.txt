@@ -1,410 +1,73 @@
+Bee Colony Battle Game — Arborescence du projet (mise à jour 17 avril 2026)
+Exclus : node_modules, build, .git, .claude/worktrees, .DS_Store
+
 .
-./.DS_Store
-./.claude
-./.claude/launch.json
-./.claude/settings.local.json
-./.claude/worktrees
-./.claude/worktrees/awesome-torvalds
-./.claude/worktrees/awesome-torvalds/.claude
-./.claude/worktrees/awesome-torvalds/.claude/settings.local.json
-./.claude/worktrees/awesome-torvalds/.git
-./.claude/worktrees/awesome-torvalds/.gitignore
-./.claude/worktrees/awesome-torvalds/CONTEXT.md
-./.claude/worktrees/awesome-torvalds/README.md
-./.claude/worktrees/awesome-torvalds/docs
-./.claude/worktrees/awesome-torvalds/docs/AJOUT_BOUTON_ACCUEIL.md
-./.claude/worktrees/awesome-torvalds/docs/AMBIENT_SOUND_SETUP.md
-./.claude/worktrees/awesome-torvalds/docs/Attributions.md
-./.claude/worktrees/awesome-torvalds/docs/BACKUP_INFO.md
-./.claude/worktrees/awesome-torvalds/docs/BUG_BOUTONS_MODAL_DECALAGE.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_AIDE_DROITE_V5.1.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_AIDE_ET_TOASTS_V5.2.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_AMBIENT_SOUND_V5.3.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_GROUPE_ARBRES.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_LUCIOLES_V2.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_MENU_SIMPLIFIE_V5.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_MODE_HISTOIRE_V6.0.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_MODE_JOUR_NUIT_V5.6.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_RESPONSIVE_V5.9.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_SESSION.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_SON_AMBIANCE_PRAIRIE_V5.5.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_TEXTURE_RUCHE_MENU_V5.4.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_UI_PAUSE_V4.md
-./.claude/worktrees/awesome-torvalds/docs/CHANGELOG_V3_COMPLET.md
-./.claude/worktrees/awesome-torvalds/docs/FEATURES_PERSISTENCE_FUTURES.md
-./.claude/worktrees/awesome-torvalds/docs/FIX_FULLSCREEN_PERMISSIONS.md
-./.claude/worktrees/awesome-torvalds/docs/FIX_IOS_ORIENTATION.md
-./.claude/worktrees/awesome-torvalds/docs/FIX_RESIZE_ET_SELECTION.md
-./.claude/worktrees/awesome-torvalds/docs/FIX_RESPONSIVE_SCALING.md
-./.claude/worktrees/awesome-torvalds/docs/FIX_TOUCH_ALIGNMENT.md
-./.claude/worktrees/awesome-torvalds/docs/FIX_TOUCH_COORDINATES.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_GITHUB.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_MOBILE_TABLETTE.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_MP3_FIGMA_MAC.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_RAPIDE.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_TEST.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_TEST_GRILLE.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_TEST_MODE_HISTOIRE.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_TEST_PERSISTENCE.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_TEST_V3.md
-./.claude/worktrees/awesome-torvalds/docs/GUIDE_VISUEL_DEBUG.md
-./.claude/worktrees/awesome-torvalds/docs/INDEX_DOCUMENTATION.md
-./.claude/worktrees/awesome-torvalds/docs/INTERFACE_BOUTONS.md
-./.claude/worktrees/awesome-torvalds/docs/MOBILE_FIRST_OPTIMIZATION.md
-./.claude/worktrees/awesome-torvalds/docs/MODIFICATIONS_UI.md
-./.claude/worktrees/awesome-torvalds/docs/NOUVELLES_FONCTIONNALITES.md
-./.claude/worktrees/awesome-torvalds/docs/OPTIMISATION_COMPLETE_V2.2.md
-./.claude/worktrees/awesome-torvalds/docs/OPTIMISATION_V2.2.md
-./.claude/worktrees/awesome-torvalds/docs/PERSISTENCE_PROGRESSION.md
-./.claude/worktrees/awesome-torvalds/docs/README.md
-./.claude/worktrees/awesome-torvalds/docs/README_V3.md
-./.claude/worktrees/awesome-torvalds/docs/REFONTE_VISUELLE_V3.md
-./.claude/worktrees/awesome-torvalds/docs/REGLES_DU_JEU.md
-./.claude/worktrees/awesome-torvalds/docs/REGLE_RUCHE_INTACTE_POUR_UPGRADE.md
-./.claude/worktrees/awesome-torvalds/docs/RESUME_FICHIERS_CREES.md
-./.claude/worktrees/awesome-torvalds/docs/RESUME_PERSISTENCE.md
-./.claude/worktrees/awesome-torvalds/docs/RESUME_RESPONSIVE.md
-./.claude/worktrees/awesome-torvalds/docs/RETOUR_GENERATION_ALEATOIRE.md
-./.claude/worktrees/awesome-torvalds/docs/SESSION_13_JANVIER_2026.md
-./.claude/worktrees/awesome-torvalds/docs/SESSION_COMPLETE_25_OCT.md
-./.claude/worktrees/awesome-torvalds/docs/SYNTHESE_FINALE.md
-./.claude/worktrees/awesome-torvalds/docs/TEST_GRILLE_BORDURE.md
-./.claude/worktrees/awesome-torvalds/docs/TEST_MENU_NIVEAUX.md
-./.claude/worktrees/awesome-torvalds/index.html
-./.claude/worktrees/awesome-torvalds/package-lock.json
-./.claude/worktrees/awesome-torvalds/package.json
-./.claude/worktrees/awesome-torvalds/src
-./.claude/worktrees/awesome-torvalds/src/App.tsx
-./.claude/worktrees/awesome-torvalds/src/LICENSE
-./.claude/worktrees/awesome-torvalds/src/LICENSE/Code-component-53-72.tsx
-./.claude/worktrees/awesome-torvalds/src/LICENSE/Code-component-53-81.tsx
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/BACKUP_V2_INFO.md
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/Bee.tsx
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/CHANGELOG.md
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/FEATURES.md
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/FILES_LIST.md
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/GameUI.tsx
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/INDEX.md
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/README.md
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/game.ts
-./.claude/worktrees/awesome-torvalds/src/backup-v1-stable/restore.md
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/App_Visual_Effects_Extract.tsx
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/BACKUP_V2_2_INFO.md
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/BACKUP_V2_INFO.md
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/Bee.tsx
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/CHANGELOG_V2.md
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/RESTORATION_GUIDE.md
-./.claude/worktrees/awesome-torvalds/src/backup-v2-lucioles/Tree_Badge_Extract.tsx
-./.claude/worktrees/awesome-torvalds/src/components
-./.claude/worktrees/awesome-torvalds/src/components/AmbientSound.tsx
-./.claude/worktrees/awesome-torvalds/src/components/Bee.tsx
-./.claude/worktrees/awesome-torvalds/src/components/GameBoard.tsx
-./.claude/worktrees/awesome-torvalds/src/components/GameUI.tsx
-./.claude/worktrees/awesome-torvalds/src/components/LevelCompleteModal.tsx
-./.claude/worktrees/awesome-torvalds/src/components/LevelMap.tsx
-./.claude/worktrees/awesome-torvalds/src/components/Lumberjack.tsx
-./.claude/worktrees/awesome-torvalds/src/components/MainMenu.tsx
-./.claude/worktrees/awesome-torvalds/src/components/OptionsMenu.tsx
-./.claude/worktrees/awesome-torvalds/src/components/Tree.tsx
-./.claude/worktrees/awesome-torvalds/src/components/TutorialBanner.tsx
-./.claude/worktrees/awesome-torvalds/src/components/figma
-./.claude/worktrees/awesome-torvalds/src/components/figma/ImageWithFallback.tsx
-./.claude/worktrees/awesome-torvalds/src/constants
-./.claude/worktrees/awesome-torvalds/src/constants/gameRules.ts
-./.claude/worktrees/awesome-torvalds/src/constants/quickPlayRules.ts
-./.claude/worktrees/awesome-torvalds/src/guidelines
-./.claude/worktrees/awesome-torvalds/src/guidelines/Guidelines.md
-./.claude/worktrees/awesome-torvalds/src/hooks
-./.claude/worktrees/awesome-torvalds/src/hooks/useGameLoop.ts
-./.claude/worktrees/awesome-torvalds/src/hooks/useSolarSystem.ts
-./.claude/worktrees/awesome-torvalds/src/hooks/useStorage.ts
-./.claude/worktrees/awesome-torvalds/src/index.css
-./.claude/worktrees/awesome-torvalds/src/index.html
-./.claude/worktrees/awesome-torvalds/src/main.tsx
-./.claude/worktrees/awesome-torvalds/src/public
-./.claude/worktrees/awesome-torvalds/src/public/FAVICON_INFO.md
-./.claude/worktrees/awesome-torvalds/src/public/favicon-preview.html
-./.claude/worktrees/awesome-torvalds/src/public/favicon.svg
-./.claude/worktrees/awesome-torvalds/src/styles
-./.claude/worktrees/awesome-torvalds/src/styles/globals.css
-./.claude/worktrees/awesome-torvalds/src/types
-./.claude/worktrees/awesome-torvalds/src/types/game.ts
-./.claude/worktrees/awesome-torvalds/src/types/levels.ts
-./.claude/worktrees/awesome-torvalds/src/utils
-./.claude/worktrees/awesome-torvalds/src/utils/enemyAI.ts
-./.claude/worktrees/awesome-torvalds/src/utils/grassGenerator.ts
-./.claude/worktrees/awesome-torvalds/src/utils/levelGenerator.ts
-./.claude/worktrees/awesome-torvalds/src/utils/mapGenerator.ts
-./.claude/worktrees/awesome-torvalds/src/utils/storage.ts
-./.claude/worktrees/awesome-torvalds/src/utils/storyLevelGenerator.ts
-./.claude/worktrees/awesome-torvalds/src/utils/useFullscreen.ts
-./.claude/worktrees/awesome-torvalds/vite.config.ts
-./.claude/worktrees/brave-nightingale
-./.claude/worktrees/brave-nightingale/.claude
-./.claude/worktrees/brave-nightingale/.claude/launch.json
-./.claude/worktrees/brave-nightingale/.claude/settings.local.json
-./.claude/worktrees/brave-nightingale/.git
-./.claude/worktrees/brave-nightingale/.gitignore
-./.claude/worktrees/brave-nightingale/CONTEXT.md
-./.claude/worktrees/brave-nightingale/README.md
-./.claude/worktrees/brave-nightingale/assets
-./.claude/worktrees/brave-nightingale/assets/icon-rush-1024.svg
-./.claude/worktrees/brave-nightingale/docs
-./.claude/worktrees/brave-nightingale/docs/AMBIENT_SOUND_SETUP.md
-./.claude/worktrees/brave-nightingale/docs/Attributions.md
-./.claude/worktrees/brave-nightingale/docs/CHANGELOG_MENU_SIMPLIFIE_V5.md
-./.claude/worktrees/brave-nightingale/docs/FEATURES_PERSISTENCE_FUTURES.md
-./.claude/worktrees/brave-nightingale/docs/GUIDE_GITHUB.md
-./.claude/worktrees/brave-nightingale/docs/GUIDE_MP3_FIGMA_MAC.md
-./.claude/worktrees/brave-nightingale/docs/GUIDE_RAPIDE.md
-./.claude/worktrees/brave-nightingale/docs/INDEX_DOCUMENTATION.md
-./.claude/worktrees/brave-nightingale/docs/NOUVELLES_FONCTIONNALITES.md
-./.claude/worktrees/brave-nightingale/docs/REGLES_DU_JEU.md
-./.claude/worktrees/brave-nightingale/index.html
-./.claude/worktrees/brave-nightingale/node_modules
-./.claude/worktrees/brave-nightingale/node_modules/.vite
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/_metadata.json
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/chunk-L6LZHRS5.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/chunk-L6LZHRS5.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/chunk-TJVDB64S.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/chunk-TJVDB64S.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/lucide-react.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/lucide-react.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/motion_react.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/motion_react.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/package.json
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react-dom_client.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react-dom_client.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react_jsx-dev-runtime.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react_jsx-dev-runtime.js.map
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react_jsx-runtime.js
-./.claude/worktrees/brave-nightingale/node_modules/.vite/deps/react_jsx-runtime.js.map
-./.claude/worktrees/brave-nightingale/package-lock.json
-./.claude/worktrees/brave-nightingale/package.json
-./.claude/worktrees/brave-nightingale/public
-./.claude/worktrees/brave-nightingale/public/favicon.svg
-./.claude/worktrees/brave-nightingale/src
-./.claude/worktrees/brave-nightingale/src/App.tsx
-./.claude/worktrees/brave-nightingale/src/components
-./.claude/worktrees/brave-nightingale/src/components/AmbientSound.tsx
-./.claude/worktrees/brave-nightingale/src/components/Bee.tsx
-./.claude/worktrees/brave-nightingale/src/components/GameBoard.tsx
-./.claude/worktrees/brave-nightingale/src/components/GameUI.tsx
-./.claude/worktrees/brave-nightingale/src/components/LevelCompleteModal.tsx
-./.claude/worktrees/brave-nightingale/src/components/LevelMap.tsx
-./.claude/worktrees/brave-nightingale/src/components/Lumberjack.tsx
-./.claude/worktrees/brave-nightingale/src/components/MainMenu.tsx
-./.claude/worktrees/brave-nightingale/src/components/OptionsMenu.tsx
-./.claude/worktrees/brave-nightingale/src/components/Tree.tsx
-./.claude/worktrees/brave-nightingale/src/components/TutorialAnimationOverlay.tsx
-./.claude/worktrees/brave-nightingale/src/components/TutorialBanner.tsx
-./.claude/worktrees/brave-nightingale/src/constants
-./.claude/worktrees/brave-nightingale/src/constants/gameRules.ts
-./.claude/worktrees/brave-nightingale/src/constants/quickPlayRules.ts
-./.claude/worktrees/brave-nightingale/src/hooks
-./.claude/worktrees/brave-nightingale/src/hooks/useGameLoop.ts
-./.claude/worktrees/brave-nightingale/src/hooks/useSolarSystem.ts
-./.claude/worktrees/brave-nightingale/src/hooks/useStorage.ts
-./.claude/worktrees/brave-nightingale/src/index.css
-./.claude/worktrees/brave-nightingale/src/main.tsx
-./.claude/worktrees/brave-nightingale/src/types
-./.claude/worktrees/brave-nightingale/src/types/game.ts
-./.claude/worktrees/brave-nightingale/src/types/levels.ts
-./.claude/worktrees/brave-nightingale/src/utils
-./.claude/worktrees/brave-nightingale/src/utils/enemyAI.ts
-./.claude/worktrees/brave-nightingale/src/utils/grassGenerator.ts
-./.claude/worktrees/brave-nightingale/src/utils/gridUtils.ts
-./.claude/worktrees/brave-nightingale/src/utils/levelGenerator.ts
-./.claude/worktrees/brave-nightingale/src/utils/mapGenerator.ts
-./.claude/worktrees/brave-nightingale/src/utils/storage.ts
-./.claude/worktrees/brave-nightingale/src/utils/storyLevelGenerator.ts
-./.claude/worktrees/brave-nightingale/src/utils/toast.ts
-./.claude/worktrees/brave-nightingale/src/utils/wording.ts
-./.claude/worktrees/brave-nightingale/vite.config.ts
-./.claude/worktrees/stupefied-kowalevski
-./.claude/worktrees/stupefied-kowalevski/.claude
-./.claude/worktrees/stupefied-kowalevski/.claude/settings.local.json
-./.claude/worktrees/stupefied-kowalevski/.git
-./.claude/worktrees/stupefied-kowalevski/.gitignore
-./.claude/worktrees/stupefied-kowalevski/CONTEXT.md
-./.claude/worktrees/stupefied-kowalevski/README.md
-./.claude/worktrees/stupefied-kowalevski/docs
-./.claude/worktrees/stupefied-kowalevski/docs/AJOUT_BOUTON_ACCUEIL.md
-./.claude/worktrees/stupefied-kowalevski/docs/AMBIENT_SOUND_SETUP.md
-./.claude/worktrees/stupefied-kowalevski/docs/Attributions.md
-./.claude/worktrees/stupefied-kowalevski/docs/BACKUP_INFO.md
-./.claude/worktrees/stupefied-kowalevski/docs/BUG_BOUTONS_MODAL_DECALAGE.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_AIDE_DROITE_V5.1.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_AIDE_ET_TOASTS_V5.2.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_AMBIENT_SOUND_V5.3.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_GROUPE_ARBRES.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_LUCIOLES_V2.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_MENU_SIMPLIFIE_V5.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_MODE_HISTOIRE_V6.0.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_MODE_JOUR_NUIT_V5.6.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_RESPONSIVE_V5.9.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_SESSION.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_SON_AMBIANCE_PRAIRIE_V5.5.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_TEXTURE_RUCHE_MENU_V5.4.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_UI_PAUSE_V4.md
-./.claude/worktrees/stupefied-kowalevski/docs/CHANGELOG_V3_COMPLET.md
-./.claude/worktrees/stupefied-kowalevski/docs/FEATURES_PERSISTENCE_FUTURES.md
-./.claude/worktrees/stupefied-kowalevski/docs/FIX_FULLSCREEN_PERMISSIONS.md
-./.claude/worktrees/stupefied-kowalevski/docs/FIX_IOS_ORIENTATION.md
-./.claude/worktrees/stupefied-kowalevski/docs/FIX_RESIZE_ET_SELECTION.md
-./.claude/worktrees/stupefied-kowalevski/docs/FIX_RESPONSIVE_SCALING.md
-./.claude/worktrees/stupefied-kowalevski/docs/FIX_TOUCH_ALIGNMENT.md
-./.claude/worktrees/stupefied-kowalevski/docs/FIX_TOUCH_COORDINATES.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_GITHUB.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_MOBILE_TABLETTE.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_MP3_FIGMA_MAC.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_RAPIDE.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_TEST.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_TEST_GRILLE.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_TEST_MODE_HISTOIRE.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_TEST_PERSISTENCE.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_TEST_V3.md
-./.claude/worktrees/stupefied-kowalevski/docs/GUIDE_VISUEL_DEBUG.md
-./.claude/worktrees/stupefied-kowalevski/docs/INDEX_DOCUMENTATION.md
-./.claude/worktrees/stupefied-kowalevski/docs/INTERFACE_BOUTONS.md
-./.claude/worktrees/stupefied-kowalevski/docs/MOBILE_FIRST_OPTIMIZATION.md
-./.claude/worktrees/stupefied-kowalevski/docs/MODIFICATIONS_UI.md
-./.claude/worktrees/stupefied-kowalevski/docs/NOUVELLES_FONCTIONNALITES.md
-./.claude/worktrees/stupefied-kowalevski/docs/OPTIMISATION_COMPLETE_V2.2.md
-./.claude/worktrees/stupefied-kowalevski/docs/OPTIMISATION_V2.2.md
-./.claude/worktrees/stupefied-kowalevski/docs/PERSISTENCE_PROGRESSION.md
-./.claude/worktrees/stupefied-kowalevski/docs/README.md
-./.claude/worktrees/stupefied-kowalevski/docs/README_V3.md
-./.claude/worktrees/stupefied-kowalevski/docs/REFONTE_VISUELLE_V3.md
-./.claude/worktrees/stupefied-kowalevski/docs/REGLES_DU_JEU.md
-./.claude/worktrees/stupefied-kowalevski/docs/REGLE_RUCHE_INTACTE_POUR_UPGRADE.md
-./.claude/worktrees/stupefied-kowalevski/docs/RESUME_FICHIERS_CREES.md
-./.claude/worktrees/stupefied-kowalevski/docs/RESUME_PERSISTENCE.md
-./.claude/worktrees/stupefied-kowalevski/docs/RESUME_RESPONSIVE.md
-./.claude/worktrees/stupefied-kowalevski/docs/RETOUR_GENERATION_ALEATOIRE.md
-./.claude/worktrees/stupefied-kowalevski/docs/SESSION_13_JANVIER_2026.md
-./.claude/worktrees/stupefied-kowalevski/docs/SESSION_COMPLETE_25_OCT.md
-./.claude/worktrees/stupefied-kowalevski/docs/SYNTHESE_FINALE.md
-./.claude/worktrees/stupefied-kowalevski/docs/TEST_GRILLE_BORDURE.md
-./.claude/worktrees/stupefied-kowalevski/docs/TEST_MENU_NIVEAUX.md
-./.claude/worktrees/stupefied-kowalevski/index.html
-./.claude/worktrees/stupefied-kowalevski/package-lock.json
-./.claude/worktrees/stupefied-kowalevski/package.json
-./.claude/worktrees/stupefied-kowalevski/src
-./.claude/worktrees/stupefied-kowalevski/src/App.tsx
-./.claude/worktrees/stupefied-kowalevski/src/LICENSE
-./.claude/worktrees/stupefied-kowalevski/src/LICENSE/Code-component-53-72.tsx
-./.claude/worktrees/stupefied-kowalevski/src/LICENSE/Code-component-53-81.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components
-./.claude/worktrees/stupefied-kowalevski/src/components/AmbientSound.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/Bee.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/GameBoard.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/GameUI.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/LevelCompleteModal.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/LevelMap.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/Lumberjack.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/MainMenu.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/OptionsMenu.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/Tree.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/TutorialBanner.tsx
-./.claude/worktrees/stupefied-kowalevski/src/components/figma
-./.claude/worktrees/stupefied-kowalevski/src/components/figma/ImageWithFallback.tsx
-./.claude/worktrees/stupefied-kowalevski/src/constants
-./.claude/worktrees/stupefied-kowalevski/src/constants/gameRules.ts
-./.claude/worktrees/stupefied-kowalevski/src/constants/quickPlayRules.ts
-./.claude/worktrees/stupefied-kowalevski/src/guidelines
-./.claude/worktrees/stupefied-kowalevski/src/guidelines/Guidelines.md
-./.claude/worktrees/stupefied-kowalevski/src/hooks
-./.claude/worktrees/stupefied-kowalevski/src/hooks/useGameLoop.ts
-./.claude/worktrees/stupefied-kowalevski/src/hooks/useSolarSystem.ts
-./.claude/worktrees/stupefied-kowalevski/src/hooks/useStorage.ts
-./.claude/worktrees/stupefied-kowalevski/src/index.css
-./.claude/worktrees/stupefied-kowalevski/src/index.html
-./.claude/worktrees/stupefied-kowalevski/src/main.tsx
-./.claude/worktrees/stupefied-kowalevski/src/public
-./.claude/worktrees/stupefied-kowalevski/src/public/FAVICON_INFO.md
-./.claude/worktrees/stupefied-kowalevski/src/public/favicon-preview.html
-./.claude/worktrees/stupefied-kowalevski/src/public/favicon.svg
-./.claude/worktrees/stupefied-kowalevski/src/styles
-./.claude/worktrees/stupefied-kowalevski/src/styles/globals.css
-./.claude/worktrees/stupefied-kowalevski/src/types
-./.claude/worktrees/stupefied-kowalevski/src/types/game.ts
-./.claude/worktrees/stupefied-kowalevski/src/types/levels.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils
-./.claude/worktrees/stupefied-kowalevski/src/utils/enemyAI.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/grassGenerator.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/gridUtils.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/levelGenerator.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/mapGenerator.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/storage.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/storyLevelGenerator.ts
-./.claude/worktrees/stupefied-kowalevski/src/utils/useFullscreen.ts
-./.claude/worktrees/stupefied-kowalevski/vite.config.ts
-./.git
-./.gitignore
-./CONTEXT.md
-./PROJECT_TREE.txt
-./README.md
-./assets
-./assets/icon-rush-1024.svg
-./build
-./docs
-./docs/AMBIENT_SOUND_SETUP.md
-./docs/Attributions.md
-./docs/CHANGELOG_MENU_SIMPLIFIE_V5.md
-./docs/FEATURES_PERSISTENCE_FUTURES.md
-./docs/GUIDE_GITHUB.md
-./docs/GUIDE_MP3_FIGMA_MAC.md
-./docs/GUIDE_RAPIDE.md
-./docs/INDEX_DOCUMENTATION.md
-./docs/NOUVELLES_FONCTIONNALITES.md
-./docs/REGLES_DU_JEU.md
-./index.html
-./node_modules
-./package-lock.json
-./package.json
-./public
-./public/favicon.svg
-./src
-./src/.DS_Store
-./src/App.tsx
-./src/components
-./src/components/AmbientSound.tsx
-./src/components/Bee.tsx
-./src/components/GameBoard.tsx
-./src/components/GameUI.tsx
-./src/components/LevelCompleteModal.tsx
-./src/components/LevelMap.tsx
-./src/components/Lumberjack.tsx
-./src/components/MainMenu.tsx
-./src/components/OptionsMenu.tsx
-./src/components/Tree.tsx
-./src/components/TutorialBanner.tsx
-./src/constants
-./src/constants/gameRules.ts
-./src/constants/quickPlayRules.ts
-./src/hooks
-./src/hooks/useGameLoop.ts
-./src/hooks/useSolarSystem.ts
-./src/hooks/useStorage.ts
-./src/index.css
-./src/main.tsx
-./src/types
-./src/types/game.ts
-./src/types/levels.ts
-./src/utils
-./src/utils/enemyAI.ts
-./src/utils/grassGenerator.ts
-./src/utils/gridUtils.ts
-./src/utils/levelGenerator.ts
-./src/utils/mapGenerator.ts
-./src/utils/storage.ts
-./src/utils/storyLevelGenerator.ts
-./src/utils/toast.ts
-./src/utils/wording.ts
-./vite.config.ts
+├── CONTEXT.md                          # Journal de session + règles absolues
+├── PROJECT_TREE.txt                    # Ce fichier
+├── README.md
+├── index.html
+├── package.json
+├── package-lock.json
+├── vite.config.ts
+├── capacitor.config.ts
+│
+├── assets/
+│   └── icon-rush-1024.svg
+│
+├── public/
+│   ├── favicon.svg
+│   └── manifest.webmanifest
+│
+├── docs/
+│   ├── AMBIENT_SOUND_SETUP.md
+│   ├── Attributions.md
+│   ├── CHANGELOG_MENU_SIMPLIFIE_V5.md
+│   ├── FEATURES_PERSISTENCE_FUTURES.md
+│   ├── GUIDE_GITHUB.md
+│   ├── GUIDE_MP3_FIGMA_MAC.md
+│   ├── GUIDE_RAPIDE.md
+│   ├── INDEX_DOCUMENTATION.md
+│   ├── NOUVELLES_FONCTIONNALITES.md
+│   └── REGLES_DU_JEU.md
+│
+└── src/
+    ├── App.tsx                         # Point d'entrée principal — state, handlers, layout SVG
+    ├── main.tsx
+    ├── index.css
+    │
+    ├── components/
+    │   ├── AmbientSound.tsx            # Sons ambiants (prairie, forêt…)
+    │   ├── Bee.tsx                     # Rendu SVG d'une abeille (forme + filtres)
+    │   ├── GameBoard.tsx               # Grille de jeu (cellules, rochers, damier)
+    │   ├── GameUI.tsx                  # HUD en jeu (compteurs, boutons pause)
+    │   ├── LevelCompleteModal.tsx      # Modal fin de niveau
+    │   ├── LevelMap.tsx                # Carte de sélection des niveaux
+    │   ├── Lumberjack.tsx              # Rendu SVG du bûcheron (ennemi)
+    │   ├── MainMenu.tsx                # Écran d'accueil
+    │   ├── OptionsMenu.tsx             # Menu options
+    │   ├── Tree.tsx                    # Rendu SVG d'un arbre (tronc, feuillage, ruches)
+    │   └── TutorialBanner.tsx          # Bannière tutoriel contextuelle
+    │
+    ├── constants/
+    │   ├── gameRules.ts                # Constantes gameplay (coûts, HP, rayons orbite, grille)
+    │   └── quickPlayRules.ts           # Surcharges mode partie rapide
+    │
+    ├── hooks/
+    │   ├── useGameLoop.ts              # Boucle de jeu (60 FPS) — mouvement abeilles, IA, combats
+    │   ├── useSolarSystem.ts           # Animation solaire (position, intensité, étoiles)
+    │   └── useStorage.ts              # Persistance localStorage (progression, options)
+    │
+    ├── types/
+    │   ├── game.ts                     # Types métier (Bee, Tree, Hive, GameState…)
+    │   └── levels.ts                   # Types structure de niveaux
+    │
+    └── utils/
+        ├── enemyAI.ts                  # Décisions IA ennemie
+        ├── grassGenerator.ts           # Génération du décor herbe/rochers
+        ├── gridUtils.ts                # Utilitaires grille (coordonnées, voisins)
+        ├── levelGenerator.ts           # Génération procédurale des niveaux
+        ├── mapGenerator.ts             # Placement des arbres et entités
+        ├── storage.ts                  # Lecture/écriture localStorage (bas niveau)
+        ├── storyLevelGenerator.ts      # Niveaux histoire prédéfinis
+        ├── toast.ts                    # Notifications temporaires en jeu
+        └── wording.ts                  # Textes UI localisés
