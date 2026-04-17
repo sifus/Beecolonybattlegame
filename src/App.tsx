@@ -527,18 +527,30 @@ export default function App() {
       if (e.key === 't' || e.key === 'T') {
         const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
         if (!playerTree) return;
-        const testBees = Array.from({ length: 10 }, (_, i) => ({
-          id: `bee-test-${i}-${Date.now()}`,
-          x: playerTree.x + Math.cos(Math.random() * Math.PI * 2) * (30 + Math.random() * 16),
-          y: playerTree.y + Math.sin(Math.random() * Math.PI * 2) * (30 + Math.random() * 16),
-          owner: 'player' as const,
-          treeId: playerTree.id,
-          targetTreeId: null,
-          state: 'idle' as const,
-          angle: Math.random() * Math.PI * 2,
-          createdAt: undefined,
-          displayAngle: undefined,
-        }));
+        const testBees = Array.from({ length: 10 }, (_, i) => {
+          const id = `bee-test-${i}-${Date.now()}`;
+          const idHash = parseInt(id.slice(-5), 36);
+          const baseRadius = (playerTree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+          const radiusVariation = ((idHash % 16) - 8);
+          const orbitRadius = baseRadius + radiusVariation;
+          const orbitalCenterY = playerTree.y + gridParams.cellSize * (playerTree.maxHives === 2 ? 0.13 : 0.215);
+          const angle = Math.random() * Math.PI * 2;
+          const orbitDir = idHash % 2 === 0 ? 1 : -1;
+          return {
+            id,
+            x: playerTree.x + Math.cos(angle) * orbitRadius,
+            y: orbitalCenterY + Math.sin(angle) * orbitRadius,
+            owner: 'player' as const,
+            treeId: playerTree.id,
+            targetTreeId: null,
+            state: 'idle' as const,
+            angle,
+            orbitDir,
+            orbitRadius,
+            createdAt: undefined,
+            displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
+          };
+        });
         setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
       }
     };
