@@ -888,28 +888,6 @@ export function useGameLoop({
     return () => clearInterval(interval);
   }, [gameState.isPlaying]);
 
-  // Fireflies animation loop — 30 FPS (mode nuit uniquement)
-  useEffect(() => {
-    if (globalTimeOfDay !== 'night') return;
-
-    const interval = setInterval(() => {
-      setGameState(prev => {
-        if (!prev.fireflies) return prev;
-
-        return {
-          ...prev,
-          fireflies: prev.fireflies.map(firefly => ({
-            ...firefly,
-            phase: firefly.phase + 0.05,
-            brightness: (Math.sin(firefly.phase) + 1) / 2,
-          }))
-        };
-      });
-    }, 1000 / 30);
-
-    return () => clearInterval(interval);
-  }, [globalTimeOfDay]);
-
   // Timer — incrémente gameTime toutes les secondes
   useEffect(() => {
     if (!gameState.isPlaying) return;

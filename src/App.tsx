@@ -145,7 +145,7 @@ export default function App() {
   });
   const [scale, setScale] = useState(1);
 
-  const { sunIntensity, sparkleIntensity, lateralOffset, sparkles } = useSolarSystem(gridParams);
+  const { sunIntensity, sparkleIntensity, lateralOffset, sparkles } = useSolarSystem(gridParams, globalTimeOfDay === 'night');
 
   // État du mode histoire - Charger depuis localStorage
   const [levelProgress, setLevelProgress] = useState<LevelProgress>(() => loadLevelProgress());

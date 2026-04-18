@@ -46,7 +46,7 @@ function makeSparkleAlongBeam(id: number, gp: GridParams, lateralOffset: number)
   };
 }
 
-export function useSolarSystem(gridParams: GridParams) {
+export function useSolarSystem(gridParams: GridParams, isNight: boolean = false) {
   const [sunIntensity, setSunIntensity] = useState(0);
   const [sparkleIntensity, setSparkleIntensity] = useState(0);
   const [lateralOffset, setLateralOffset] = useState(0);
@@ -64,6 +64,7 @@ export function useSolarSystem(gridParams: GridParams) {
   // Cycle : visible (7 s) → fadeout (1,5 s) → hidden (10 s)
   useEffect(() => {
     const interval = setInterval(() => {
+      if (isNight) return;
       const now = Date.now();
       const elapsed = now - beamPhaseStartRef.current;
       const phase = beamPhaseRef.current;
@@ -119,11 +120,12 @@ export function useSolarSystem(gridParams: GridParams) {
 
     }, 100);
     return () => clearInterval(interval);
-  }, [gridParams]);
+  }, [gridParams, isNight]);
 
   // Animation des étincelles (tick 120 ms — fluide)
   useEffect(() => {
     const interval = setInterval(() => {
+      if (isNight) return;
       const si = sparkleIntensityRef.current;
       const lo = lateralOffsetRef.current;
 
@@ -167,7 +169,7 @@ export function useSolarSystem(gridParams: GridParams) {
       }));
     }, 120);
     return () => clearInterval(interval);
-  }, [gridParams]);
+  }, [gridParams, isNight]);
 
   return { sunIntensity, sparkleIntensity, lateralOffset, sparkles };
 }
