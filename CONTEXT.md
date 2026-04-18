@@ -912,11 +912,55 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - startLevel dupliqué 3 fois dans App.tsx
 - greedyColor à déplacer hors du composant GameBoard
 
-### Backlog session 9
-- Abeilles en déplacement : moins s'éparpiller, rester plus en groupe
-- Rochers : ne jamais être trop au bord d'un carré de damier
-- iPhone landscape : barre blanche en haut si déjà en paysage au lancement — fix orientation
-- Double clic n'importe où fait laguer quelques frames — à investiguer
-- Trop d'abeilles = rame — surveiller le frame rate et agir si baisse (throttle abeilles ?)
+## Ce qui a été fait — 18 avril 2026 (session 9)
+
+### Commits de session
+| Hash | Description |
+|---|---|
+| `a5641b8` | refactor: extraction createBee() — déduplication spawn abeilles (App.tsx -90 lignes) |
+| `953c1ca` | perf: filtres SVG Bee centralisés dans BeeFilters.tsx — suppression N duplications DOM |
+| `8f76292` | perf: useMemo sur borderCells et nightColorMap dans GameBoard.tsx |
+| `3602b09` | fix: formule orbite unifiée dans useGameLoop — suppression anciennes constantes 0.13/0.215 |
+| `[toast]` | fix: types TS — toast.success signature + hiveLevel cast |
+| `[startLevel]` | refactor: factorisation startLevel — suppression duplication x3 dans App.tsx + fix cellSize stale au restart |
+| `de6e802` | fix: abeilles perdues post-combat — décrément beeCount moving + redirect après victoire |
+| `[perf-nuit]` | perf: useSolarSystem pausé la nuit + suppression fireflies loop inerte |
+| `[logs]` | chore: suppression tous les console.log de debug |
+
+### Gains perf session 9
+- BeeFilters centralisé : 40 nœuds DOM → 3 (GPU)
+- useMemo borderCells/nightColorMap : 0 recalcul O(n²) par frame
+- useSolarSystem pausé la nuit : 2 intervals économisés
+- Fireflies loop supprimée : 30 appels setGameState/s économisés
+
+### Dette technique résolue
+- 4 warnings TS éliminés (toast.success signature + hiveLevel cast)
+- startLevel factorisé (×3 → 1 fonction) + fix cellSize stale au restart
+- Conditions de victoire App.tsx : analysées, migration useGameLoop NON faite (états UI, bonne place)
+
+### Décision architecture
+- Mode nuit = skin uniquement — tout comportement gameplay s'applique identiquement jour/nuit
+
+---
+
+## Backlog session 10
+
+### Bugs iPhone (priorité haute)
+- **Clic continu / double clic → lag frames** : investiguer, probablement un setState en cascade ou un recalcul lourd déclenché par les events touch
+- **Retour d'onglet → abeilles stoppées** : le wake lock ou la visibilitychange ne reprend pas la game loop correctement
+- **Compteur abeilles en retard mode nuit** : le compteur n'inclut pas les abeilles en état 'moving' vers leur orbite (Bézier)
+- **Abeille Bézier non comptabilisée** : doit être comptée dès la naissance dans le compteur de l'arbre source
+
+### Dette technique restante
+- state 'fighting' déclaré dans Bee (game.ts) mais jamais assigné → supprimer
+- stars: number dans GameState commenté "non utilisé" → supprimer si confirmé
+- Compteur abeilles baisse brièvement si construction impossible → vérifier faisabilité avant envoi
+
+### Roadmap modes de jeu
+- Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore)
+- Mode Partie Rapide — tableau des scores localStorage par difficulté
+- Mode Histoire — niveaux manuels, difficulté croissante
+- Orage : nuages orageux déciment abeilles et cassent ruches
+- Bûcheron : trébuche sur cailloux
 
 RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abeille sans treeId doit rester en 'moving' ou 'building'.
