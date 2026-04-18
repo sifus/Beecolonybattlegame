@@ -756,180 +756,191 @@ export default function App() {
       tapPosRef.current = null;
       return;
     }
-    
-    // Calculate circle selection (mode gaucher : centre = point de départ, rayon = distance)
-    const dist = Math.sqrt(
-      Math.pow(selectionCurrent.x - selectionStart.x, 2) +
-        Math.pow(selectionCurrent.y - selectionStart.y, 2)
-    );
-    const centerX = leftHanded ? selectionStart.x : (selectionStart.x + selectionCurrent.x) / 2;
-    const centerY = leftHanded ? selectionStart.y : (selectionStart.y + selectionCurrent.y) / 2;
-    const radius = leftHanded ? dist : dist / 2;
 
-    // Si on a draggeré (zone morte franchie), faire la sélection par cercle
-    if (isDraggingRef.current && radius > 5) {
-      // C'est une sélection par cercle
-      const selectedBees = gameState.bees.filter((bee) => {
-        if (bee.owner !== 'player') return false;
-        const distToBee = Math.sqrt(
-          Math.pow(bee.x - centerX, 2) + Math.pow(bee.y - centerY, 2)
-        );
-        return distToBee <= radius;
-      });
+    // Capture immédiate avant reset — les refs/states seront nuls dans le setTimeout(0)
+    const snapStart = selectionStart;
+    const snapCurrent = selectionCurrent;
+    const snapIsDragging = isDraggingRef.current;
+    const snapTapPos = tapPosRef.current;
+    const snapSelectedBeeIdsSize = gameState.selectedBeeIds.size;
 
-      setGameState((prev) => ({
-        ...prev,
-        selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
-      }));
-    } else if (gameState.selectedBeeIds.size > 0) {
-      // C'est un simple clic avec des abeilles sélectionnées
-      // Détecter si on a cliqué sur un arbre ou sur un endroit vide
-      const clickX = selectionCurrent.x;
-      const clickY = selectionCurrent.y;
-      
-      // Trouver l'arbre le plus proche du clic (rayon proportionnel à la cellSize)
-      const clickRadius = gridParams.cellSize * 0.6;
-      let clickedTree = null;
-      let closestDist = Infinity;
-      for (const tree of gameState.trees) {
-        const d = Math.sqrt(Math.pow(tree.x - clickX, 2) + Math.pow(tree.y - clickY, 2));
-        if (d <= clickRadius && d < closestDist) {
-          closestDist = d;
-          clickedTree = tree;
-        }
-      }
-      
-      // Vérifier si toutes les abeilles sélectionnées gravitent autour du même arbre cliqué
-      if (clickedTree) {
-        const selectedBeesArray = Array.from(gameState.selectedBeeIds);
-        const allBeesOnClickedTree = selectedBeesArray.every(beeId => {
-          const bee = gameState.bees.find(b => b.id === beeId);
-          return bee && bee.treeId === clickedTree.id && bee.state === 'idle' && bee.owner === 'player';
-        });
-        
-        // Si toutes les abeilles sélectionnées gravitent déjà autour de cet arbre, créer une ruche
-        const timeSinceLastClick = Date.now() - lastClickTime;
-        const isPotentialDoubleClick = lastClickedTreeId === clickedTree.id && timeSinceLastClick < 400;
-        if (allBeesOnClickedTree && selectedBeesArray.length > 0 && !isPotentialDoubleClick) {
-          createOrRepairHive(clickedTree.id);
-          justBuiltHiveRef.current = true;
-          setTimeout(() => { justBuiltHiveRef.current = false; }, 200);
-          setSelectionStart(null);
-          setSelectionCurrent(null);
-          return;
-        }
-      }
-      
-      setGameState(prev => {
-        // Générer des offsets pour créer un effet de nuage
-        const selectedBees = Array.from(prev.selectedBeeIds);
-        const numBees = selectedBees.length;
-
-        // Pré-calcul des variations d'orbite (parseInt coûteux) pour toutes les abeilles sélectionnées
-        const idOffsetMap = new Map<string, number>();
-        for (const id of selectedBees) {
-          idOffsetMap.set(id, (parseInt(id.slice(-5), 36) % 16) - 8);
-        }
-
-        const updatedBees = prev.bees.map(bee => {
-          if (prev.selectedBeeIds.has(bee.id)) {
-            // Rayon d'orbite autour d'un arbre (même formule que le game loop)
-            const baseOrbit = (clickedTree?.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
-            const angle = Math.random() * Math.PI * 2;
-            let offsetX: number, offsetY: number;
-            if (clickedTree) {
-              // Cible exactement sur le cercle d'orbite individuel de cette abeille
-              const variation = idOffsetMap.get(bee.id) ?? 0;
-              const individualRadius = baseOrbit + variation;
-              offsetX = Math.cos(angle) * individualRadius;
-              offsetY = Math.sin(angle) * individualRadius;
-            } else {
-              const cloudRadius = Math.sqrt(numBees) * 8;
-              offsetX = Math.cos(angle) * Math.random() * cloudRadius;
-              offsetY = Math.sin(angle) * Math.random() * cloudRadius;
-            }
-            
-            if (clickedTree) {
-              // Clic sur un arbre - envoyer vers cet arbre
-              return {
-                ...bee,
-                state: 'moving' as const,
-                targetTreeId: clickedTree.id,
-                targetX: undefined,
-                targetY: undefined,
-                offsetX,
-                offsetY,
-                hoverCenterX: undefined,
-                hoverCenterY: undefined,
-                treeId: null,
-                bezierT: undefined,
-                bezierStartX: undefined,
-                bezierStartY: undefined,
-                bezierP1x: undefined,
-                bezierP1y: undefined,
-                bezierTargetX: undefined,
-                bezierTargetY: undefined,
-              };
-            } else {
-              // Clic sur un endroit vide - envoyer vers ce point avec offset
-              return {
-                ...bee,
-                state: 'moving' as const,
-                targetTreeId: null,
-                targetX: clickX + offsetX,
-                targetY: clickY + offsetY,
-                offsetX,
-                offsetY,
-                hoverCenterX: undefined,
-                hoverCenterY: undefined,
-                treeId: null,
-                bezierT: undefined,
-                bezierStartX: undefined,
-                bezierStartY: undefined,
-                bezierP1x: undefined,
-                bezierP1y: undefined,
-                bezierTargetX: undefined,
-                bezierTargetY: undefined,
-              };
-            }
-          }
-          return bee;
-        });
-        
-        const updatedTrees = prev.trees.map(tree => {
-          const beesLeavingThisTree = prev.bees.filter(
-            b => prev.selectedBeeIds.has(b.id) && b.treeId === tree.id
-          ).length;
-          
-          if (beesLeavingThisTree > 0) {
-            return { ...tree, beeCount: Math.max(0, tree.beeCount - beesLeavingThisTree) };
-          }
-          return tree;
-        });
-        
-        return { ...prev, bees: updatedBees, trees: updatedTrees, selectedBeeIds: new Set() };
-      });
-      
-      // Marquer qu'on vient d'envoyer des abeilles pour éviter de sélectionner dans handleTreeClick
-      justSentBeesRef.current = true;
-      // Réinitialiser après un court délai (plus long que le délai entre mouseUp et onClick)
-      setTimeout(() => {
-        justSentBeesRef.current = false;
-      }, 100);
-    }
-    // Ripple seulement si tap simple (zone morte non franchie)
-    if (!isDraggingRef.current && tapPosRef.current) {
-      const { x, y } = tapPosRef.current;
-      const id = Date.now();
-      setRipples(prev => [...prev, { id, x, y }]);
-      setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
-    }
+    // Reset immédiat — libère le thread tactile iOS
     tapPosRef.current = null;
     dragStartPosRef.current = null;
     isDraggingRef.current = false;
     setSelectionStart(null);
     setSelectionCurrent(null);
     setIsDragging(false);
+
+    // Ripple immédiat (visuel pur, pas de calcul lourd)
+    if (!snapIsDragging && snapTapPos) {
+      const { x, y } = snapTapPos;
+      const id = Date.now();
+      setRipples(prev => [...prev, { id, x, y }]);
+      setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+    }
+
+    // Travail lourd différé au tick suivant
+    setTimeout(() => {
+      // Calculate circle selection (mode gaucher : centre = point de départ, rayon = distance)
+      const dist = Math.sqrt(
+        Math.pow(snapCurrent.x - snapStart.x, 2) +
+          Math.pow(snapCurrent.y - snapStart.y, 2)
+      );
+      const centerX = leftHanded ? snapStart.x : (snapStart.x + snapCurrent.x) / 2;
+      const centerY = leftHanded ? snapStart.y : (snapStart.y + snapCurrent.y) / 2;
+      const radius = leftHanded ? dist : dist / 2;
+
+      // Si on a draggeré (zone morte franchie), faire la sélection par cercle
+      if (snapIsDragging && radius > 5) {
+        const selectedBees = gameState.bees.filter((bee) => {
+          if (bee.owner !== 'player') return false;
+          const distToBee = Math.sqrt(
+            Math.pow(bee.x - centerX, 2) + Math.pow(bee.y - centerY, 2)
+          );
+          return distToBee <= radius;
+        });
+
+        setGameState((prev) => ({
+          ...prev,
+          selectedBeeIds: new Set(selectedBees.map((b) => b.id)),
+        }));
+      } else if (snapSelectedBeeIdsSize > 0) {
+        // C'est un simple clic avec des abeilles sélectionnées
+        const clickX = snapCurrent.x;
+        const clickY = snapCurrent.y;
+
+        // Trouver l'arbre le plus proche du clic (rayon proportionnel à la cellSize)
+        const clickRadius = gridParams.cellSize * 0.6;
+        let clickedTree = null;
+        let closestDist = Infinity;
+        for (const tree of gameState.trees) {
+          const d = Math.sqrt(Math.pow(tree.x - clickX, 2) + Math.pow(tree.y - clickY, 2));
+          if (d <= clickRadius && d < closestDist) {
+            closestDist = d;
+            clickedTree = tree;
+          }
+        }
+
+        // Vérifier si toutes les abeilles sélectionnées gravitent autour du même arbre cliqué
+        let builtHive = false;
+        if (clickedTree) {
+          const selectedBeesArray = Array.from(gameState.selectedBeeIds);
+          const allBeesOnClickedTree = selectedBeesArray.every(beeId => {
+            const bee = gameState.bees.find(b => b.id === beeId);
+            return bee && bee.treeId === clickedTree!.id && bee.state === 'idle' && bee.owner === 'player';
+          });
+
+          // Si toutes les abeilles sélectionnées gravitent déjà autour de cet arbre, créer une ruche
+          const timeSinceLastClick = Date.now() - lastClickTime;
+          const isPotentialDoubleClick = lastClickedTreeId === clickedTree.id && timeSinceLastClick < 400;
+          if (allBeesOnClickedTree && selectedBeesArray.length > 0 && !isPotentialDoubleClick) {
+            createOrRepairHive(clickedTree.id);
+            justBuiltHiveRef.current = true;
+            setTimeout(() => { justBuiltHiveRef.current = false; }, 200);
+            builtHive = true;
+          }
+        }
+
+        if (!builtHive) {
+          setGameState(prev => {
+            // Générer des offsets pour créer un effet de nuage
+            const selectedBees = Array.from(prev.selectedBeeIds);
+            const numBees = selectedBees.length;
+
+            // Pré-calcul des variations d'orbite (parseInt coûteux) pour toutes les abeilles sélectionnées
+            const idOffsetMap = new Map<string, number>();
+            for (const id of selectedBees) {
+              idOffsetMap.set(id, (parseInt(id.slice(-5), 36) % 16) - 8);
+            }
+
+            const updatedBees = prev.bees.map(bee => {
+              if (prev.selectedBeeIds.has(bee.id)) {
+                // Rayon d'orbite autour d'un arbre (même formule que le game loop)
+                const baseOrbit = (clickedTree?.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80);
+                const angle = Math.random() * Math.PI * 2;
+                let offsetX: number, offsetY: number;
+                if (clickedTree) {
+                  // Cible exactement sur le cercle d'orbite individuel de cette abeille
+                  const variation = idOffsetMap.get(bee.id) ?? 0;
+                  const individualRadius = baseOrbit + variation;
+                  offsetX = Math.cos(angle) * individualRadius;
+                  offsetY = Math.sin(angle) * individualRadius;
+                } else {
+                  const cloudRadius = Math.sqrt(numBees) * 8;
+                  offsetX = Math.cos(angle) * Math.random() * cloudRadius;
+                  offsetY = Math.sin(angle) * Math.random() * cloudRadius;
+                }
+
+                if (clickedTree) {
+                  // Clic sur un arbre - envoyer vers cet arbre
+                  return {
+                    ...bee,
+                    state: 'moving' as const,
+                    targetTreeId: clickedTree.id,
+                    targetX: undefined,
+                    targetY: undefined,
+                    offsetX,
+                    offsetY,
+                    hoverCenterX: undefined,
+                    hoverCenterY: undefined,
+                    treeId: null,
+                    bezierT: undefined,
+                    bezierStartX: undefined,
+                    bezierStartY: undefined,
+                    bezierP1x: undefined,
+                    bezierP1y: undefined,
+                    bezierTargetX: undefined,
+                    bezierTargetY: undefined,
+                  };
+                } else {
+                  // Clic sur un endroit vide - envoyer vers ce point avec offset
+                  return {
+                    ...bee,
+                    state: 'moving' as const,
+                    targetTreeId: null,
+                    targetX: clickX + offsetX,
+                    targetY: clickY + offsetY,
+                    offsetX,
+                    offsetY,
+                    hoverCenterX: undefined,
+                    hoverCenterY: undefined,
+                    treeId: null,
+                    bezierT: undefined,
+                    bezierStartX: undefined,
+                    bezierStartY: undefined,
+                    bezierP1x: undefined,
+                    bezierP1y: undefined,
+                    bezierTargetX: undefined,
+                    bezierTargetY: undefined,
+                  };
+                }
+              }
+              return bee;
+            });
+
+            const updatedTrees = prev.trees.map(tree => {
+              const beesLeavingThisTree = prev.bees.filter(
+                b => prev.selectedBeeIds.has(b.id) && b.treeId === tree.id
+              ).length;
+
+              if (beesLeavingThisTree > 0) {
+                return { ...tree, beeCount: Math.max(0, tree.beeCount - beesLeavingThisTree) };
+              }
+              return tree;
+            });
+
+            return { ...prev, bees: updatedBees, trees: updatedTrees, selectedBeeIds: new Set() };
+          });
+
+          // Marquer qu'on vient d'envoyer des abeilles pour éviter de sélectionner dans handleTreeClick
+          justSentBeesRef.current = true;
+          setTimeout(() => {
+            justSentBeesRef.current = false;
+          }, 100);
+        }
+      }
+    }, 0);
   };
 
   const createOrRepairHive = useCallback((treeId: string) => {
