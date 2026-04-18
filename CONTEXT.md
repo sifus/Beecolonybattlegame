@@ -956,6 +956,13 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 
 ## Backlog session 10
 
+### Tentative BeesCanvas — session 9 (annulée)
+- Approche : canvas 2D superposé au SVG pour sortir les abeilles du cycle React
+- Techniquement viable : rendu goutte d'eau OK, dimensions `window.innerWidth × window.innerHeight`, coordonnées `bee.x/y` directement utilisables
+- Annulé : trop de régressions visuelles en cours de route, risque élevé
+- **Découverte importante** : le lag au clic existe sur Chrome mais PAS sur Safari iOS — la cible principale (iPhone) n'est probablement pas affectée
+- **Conclusion** : ne pas prioriser le refactor rAF, tester d'abord sur iPhone réel avant tout refactor architectural
+
 ### PRIORITÉ ABSOLUE — Refactor architectural rAF
 **Sortir le rendu SVG du cycle React — game loop `requestAnimationFrame` + manipulation DOM directe via `gameStateRef`.**
 - Objectif : supprimer les lags au clic/touch sur iPhone
@@ -963,6 +970,7 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - `gameStateRef` muté directement chaque frame, sans `setGameState` → zéro re-render React pendant le jeu
 - React re-render uniquement sur événements UI (clic arbre, victoire, pause)
 - Supprime le besoin de `React.memo`, `useMemo`, `setTimeout(0)`, throttle touch — la cause racine est résolue
+- ⚠️ À ne faire QUE si les tests iPhone confirment un lag réel
 
 ### Bugs iPhone — état réel
 | Bug | État | Détail |
@@ -972,6 +980,10 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 | Compteur abeilles Bézier non comptabilisé | **FAIT** | Commit `4fa4b12` — bezierT défini et < 1 |
 | Arrivée en orbite fluide abeilles manuelles | **REVERT** | Commit `c5d8228` annulé — à reprendre après refactor rAF |
 | Mode nuit rame iPhone 13 (audit iso jour/nuit) | **PAS FAIT** | Vérifier qu'aucun calcul ni boucle n'est actif uniquement la nuit |
+
+### Gameplay — améliorations
+- **Délai premier spawn** : passer de 2s à 1s (actuellement `if (newState.gameTime < 2) return`)
+- **Mouvement d'attente des abeilles** : moins aléatoire, essaim plus éparpillé (swarmX/swarmY implémenté, dérive 15–30px autour du point cible)
 
 ### Dette technique restante
 - state 'fighting' déclaré dans Bee (game.ts) mais jamais assigné → supprimer
