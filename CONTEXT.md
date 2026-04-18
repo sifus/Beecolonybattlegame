@@ -956,18 +956,22 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 
 ## Backlog session 10
 
-### PRIORITÉ ABSOLUE — Refactor architectural
-**Sortir le rendu SVG du cycle React — game loop rAF + manipulation DOM directe via gameStateRef.**
+### PRIORITÉ ABSOLUE — Refactor architectural rAF
+**Sortir le rendu SVG du cycle React — game loop `requestAnimationFrame` + manipulation DOM directe via `gameStateRef`.**
 - Objectif : supprimer les lags au clic/touch sur iPhone
-- Pattern : React gère UI (menus, HUD, modals), une boucle `requestAnimationFrame` gère le SVG jeu en dehors de React
+- Pattern : React gère UI (menus, HUD, modals), une boucle rAF gère le SVG jeu en dehors de React
 - `gameStateRef` muté directement chaque frame, sans `setGameState` → zéro re-render React pendant le jeu
 - React re-render uniquement sur événements UI (clic arbre, victoire, pause)
 - Supprime le besoin de `React.memo`, `useMemo`, `setTimeout(0)`, throttle touch — la cause racine est résolue
 
-### Bugs iPhone restants
-- **Arrivée en orbite fluide pour abeilles envoyées manuellement** : le fix (commit `c5d8228`) a été revert — à reprendre après le refactor rAF
-- **Retour d'onglet → abeilles stoppées** : fix 100ms appliqué (commit `f571353`) — à tester sur iPhone réel
-- **Clic continu / lag frames** : sera résolu structurellement par le refactor rAF
+### Bugs iPhone — état réel
+| Bug | État | Détail |
+|---|---|---|
+| Clic continu / lag frames | **PAS FAIT** | Sera résolu structurellement par le refactor rAF |
+| Retour d'onglet → abeilles stoppées | **FAIT** | Commit `f571353` — délai 100ms avant relance game loop. À tester sur iPhone réel |
+| Compteur abeilles Bézier non comptabilisé | **FAIT** | Commit `4fa4b12` — bezierT défini et < 1 |
+| Arrivée en orbite fluide abeilles manuelles | **REVERT** | Commit `c5d8228` annulé — à reprendre après refactor rAF |
+| Mode nuit rame iPhone 13 (audit iso jour/nuit) | **PAS FAIT** | Vérifier qu'aucun calcul ni boucle n'est actif uniquement la nuit |
 
 ### Dette technique restante
 - state 'fighting' déclaré dans Bee (game.ts) mais jamais assigné → supprimer
