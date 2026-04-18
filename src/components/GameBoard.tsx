@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Tree } from './Tree';
 import { Bee } from './Bee';
@@ -54,6 +54,18 @@ interface GameBoardProps {
   onTouchCancel: () => void;
   onTreeClick: (treeId: string, e: React.MouseEvent | React.PointerEvent) => void;
   onTreeDragStart: (e: React.PointerEvent) => void;
+}
+
+function greedyColor(row: number, col: number, colorMap: Map<string, string>, palette: string[]): string {
+  const used = new Set<string>();
+  for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1]] as const) {
+    const c = colorMap.get(`${row+dr},${col+dc}`);
+    if (c) used.add(c);
+  }
+  const available = palette.filter(c => !used.has(c));
+  const pool = available.length > 0 ? available : palette;
+  const seed = Math.abs((row * 31337 + col * 7919)) % pool.length;
+  return pool[seed];
 }
 
 function organicPondPath(x: number, y: number, w: number, h: number, seed: number, rxOverride?: number, ryOverride?: number): string {
@@ -131,42 +143,31 @@ export function GameBoard({
   const BORDER_COLORS = globalTimeOfDay === 'night' ? BORDER_COLORS_NIGHT : BORDER_COLORS_DAY;
   const GRASS_NIGHT   = ['#263444','#283648','#2a3a4e','#2e4054','#304256','#324458'];
 
-  // Coloration greedy row-major : aucune couleur identique côte à côte ou coin à coin,
-  // sans pattern visible (seed déterministe par position)
-  const greedyColor = (row: number, col: number, colorMap: Map<string, string>, palette: string[]): string => {
-    const used = new Set<string>();
-    for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1]] as const) {
-      const c = colorMap.get(`${row+dr},${col+dc}`);
-      if (c) used.add(c);
+  const borderCells = useMemo(() => {
+    const colorMap = new Map<string, string>();
+    const cells: { x: number; y: number; color: string }[] = [];
+    for (let row = -extraTop; row < gridParams.rows + extraBottom; row++) {
+      for (let col = -extraLeft; col < gridParams.cols + extraRight; col++) {
+        if (row >= 0 && row < gridParams.rows && col >= 0 && col < gridParams.cols) continue;
+        const color = greedyColor(row, col, colorMap, BORDER_COLORS);
+        colorMap.set(`${row},${col}`, color);
+        cells.push({ x: col * cellSize, y: row * cellSize, color });
+      }
     }
-    const available = palette.filter(c => !used.has(c));
-    const pool = available.length > 0 ? available : palette;
-    const seed = Math.abs((row * 31337 + col * 7919)) % pool.length;
-    return pool[seed];
-  };
+    return cells;
+  }, [gridParams.rows, gridParams.cols, gridParams.cellSize, gridParams.marginLeft, gridParams.marginTop, gridParams.gridWidth, gridParams.gridHeight, globalTimeOfDay]);
 
-  // Bordures
-  const borderColorMap = new Map<string, string>();
-  const borderCells: { x: number; y: number; color: string }[] = [];
-  for (let row = -extraTop; row < gridParams.rows + extraBottom; row++) {
-    for (let col = -extraLeft; col < gridParams.cols + extraRight; col++) {
-      if (row >= 0 && row < gridParams.rows && col >= 0 && col < gridParams.cols) continue;
-      const color = greedyColor(row, col, borderColorMap, BORDER_COLORS);
-      borderColorMap.set(`${row},${col}`, color);
-      borderCells.push({ x: col * cellSize, y: row * cellSize, color });
-    }
-  }
-
-  // Herbe nuit — même algorithme greedy sur la grille principale (grassGrid est en ordre row-major)
-  const nightColorMap = new Map<string, string>();
-  if (globalTimeOfDay === 'night') {
+  const nightColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (globalTimeOfDay !== 'night') return map;
     for (const grass of mapData.grassGrid) {
       const c = Math.round(grass.x / cellSize);
       const r = Math.round(grass.y / cellSize);
-      const color = greedyColor(r, c, nightColorMap, GRASS_NIGHT);
-      nightColorMap.set(`${r},${c}`, color);
+      const color = greedyColor(r, c, map, GRASS_NIGHT);
+      map.set(`${r},${c}`, color);
     }
-  }
+    return map;
+  }, [mapData.grassGrid, cellSize, globalTimeOfDay]);
 
   // Calcul des abeilles en cours d'encerclement pendant le drag
   const beingSelectedIds = new Set<string>();
