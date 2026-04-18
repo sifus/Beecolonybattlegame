@@ -476,7 +476,7 @@ export function GameBoard({
           const playerBeesAtTree = gameState.bees.filter(
             b => b.owner === 'player' && (
               (b.state === 'idle' && b.treeId === tree.id) ||
-              (b.state === 'moving' && b.targetTreeId === tree.id)
+              (b.state === 'moving' && b.targetTreeId === tree.id && b.bezierT !== undefined && b.bezierT < 1)
             )
           ).length;
 
@@ -741,7 +741,7 @@ export function GameBoard({
           const playerBeesAtTree = gameState.bees.filter(
             b => b.owner === 'player' && (
               (b.state === 'idle' && b.treeId === tree.id) ||
-              (b.state === 'moving' && b.targetTreeId === tree.id)
+              (b.state === 'moving' && b.targetTreeId === tree.id && b.bezierT !== undefined && b.bezierT < 1)
             )
           ).length;
 
