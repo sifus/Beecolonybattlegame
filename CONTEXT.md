@@ -1000,3 +1000,26 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - Bûcheron : trébuche sur cailloux
 
 RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abeille sans treeId doit rester en 'moving' ou 'building'.
+
+---
+
+## Ce qui a été fait — 18 avril 2026 (session 10)
+
+### Essaim abeilles — rayon élargi (commit à faire)
+- Rayon de dérive swarm : 15–30px → 40–80px (essaim ~3× plus large)
+- Seuil déclenchement nouvelle cible : dist < 5 → dist < 3
+- Vitesse dérive : revenue à 0.8 * cellSizeScale (valeur d'origine) après plusieurs tentatives échouées
+
+### Vitesse dérive swarm — tentatives échouées, à reprendre
+**Objectif :** ralentir uniquement les abeilles en dérive aléatoire sur un point de la carte, sans toucher à la vitesse de transit A→B ni à l'orbite.
+
+**Tentatives échouées :**
+- `!bee.targetTreeId && bee.swarmX !== null` → affectait quand même le transit
+- `bee.swarmX !== null ? 0.25 : 0.8` → swarmX jamais remis à undefined quand l'abeille repart vers un arbre, donc transit ralenti aussi
+- Remettre swarmX à undefined sur chaque assignation targetTreeId → trop de sites à patcher, risque de régression
+
+**Bonne approche à implémenter (session suivante) :**
+- Ajouter `isDrifting?: boolean` dans le type `Bee` (game.ts)
+- Le mettre à `true` dans le bloc `dist < 3` (dérive swarm)
+- Le mettre à `false` dans handleMouseUp quand l'utilisateur donne une destination
+- Vitesse cible dérive : `0.25 * cellSizeScale`
