@@ -233,8 +233,11 @@ export function useGameLoop({
                     bee.offsetX = undefined;
                     bee.offsetY = undefined;
                   } else if (tree.owner === 'neutral' || tree.owner === bee.owner) {
-                    // Angle depuis le centre orbital de l'arbre → entrée en orbite sans saut
-                    bee.angle = Math.atan2(bee.y - (tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215)), bee.x - tree.x);
+                    const _cs = gridParams.cellSize;
+                    const _tbY = tree.y + _cs * 0.5 + _cs * 0.19;
+                    const _ttY = _tbY - 20 * (_cs / 80);
+                    const _ocY = _ttY - _cs * (tree.maxHives === 2 ? 0.28 : 0.26);
+                    bee.angle = Math.atan2(bee.y - _ocY, bee.x - tree.x);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
@@ -242,7 +245,11 @@ export function useGameLoop({
                     bee.offsetY = undefined;
                     tree.beeCount++;
                   } else {
-                    bee.angle = Math.atan2(bee.y - (tree.y + gridParams.cellSize * (tree.maxHives === 2 ? 0.13 : 0.215)), bee.x - tree.x);
+                    const _cs = gridParams.cellSize;
+                    const _tbY = tree.y + _cs * 0.5 + _cs * 0.19;
+                    const _ttY = _tbY - 20 * (_cs / 80);
+                    const _ocY = _ttY - _cs * (tree.maxHives === 2 ? 0.28 : 0.26);
+                    bee.angle = Math.atan2(bee.y - _ocY, bee.x - tree.x);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
