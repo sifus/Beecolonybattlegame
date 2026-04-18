@@ -983,7 +983,9 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 
 ### Gameplay — améliorations
 - **Délai premier spawn** : passer de 2s à 1s (actuellement `if (newState.gameTime < 2) return`)
-- **Mouvement d'attente des abeilles** : moins aléatoire, essaim plus éparpillé (swarmX/swarmY implémenté, dérive 15–30px autour du point cible)
+- **Essaim abeilles en attente** : mouvement aléatoire moins rapide + essaim plus éparpillé (rayon de dérive plus grand, actuellement 15–30px autour de swarmX/swarmY)
+- **Lag au clic** : présent sur Chrome, absent sur Safari iOS — non prioritaire pour cible iPhone. Ne pas prioriser le refactor BeesCanvas.
+- **Tentative BeesCanvas annulée** : approche canvas 2D viable techniquement mais trop de régressions. À reprendre en session dédiée si le lag devient un problème sur iPhone réel.
 
 ### Dette technique restante
 - state 'fighting' déclaré dans Bee (game.ts) mais jamais assigné → supprimer
