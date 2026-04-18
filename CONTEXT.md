@@ -921,22 +921,33 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 | `953c1ca` | perf: filtres SVG Bee centralisés dans BeeFilters.tsx — suppression N duplications DOM |
 | `8f76292` | perf: useMemo sur borderCells et nightColorMap dans GameBoard.tsx |
 | `3602b09` | fix: formule orbite unifiée dans useGameLoop — suppression anciennes constantes 0.13/0.215 |
-| `[toast]` | fix: types TS — toast.success signature + hiveLevel cast |
-| `[startLevel]` | refactor: factorisation startLevel — suppression duplication x3 dans App.tsx + fix cellSize stale au restart |
+| `c0285ab` | fix: types TS — toast.success signature + hiveLevel cast |
+| `9e49fa9` | refactor: factorisation startLevel — suppression duplication x3 dans App.tsx + fix cellSize stale au restart |
 | `de6e802` | fix: abeilles perdues post-combat — décrément beeCount moving + redirect après victoire |
-| `[perf-nuit]` | perf: useSolarSystem pausé la nuit + suppression fireflies loop inerte |
-| `[logs]` | chore: suppression tous les console.log de debug |
+| `52af135` | fix: compteur abeilles — inclut abeilles Bézier (moving vers arbre) dès la naissance |
+| `4fa4b12` | fix: compteur abeilles — inclut uniquement abeilles Bézier naissance (bezierT défini) |
+| `5d75b43` | fix: délai 2s avant premier spawn abeille — suppression spawn instantané au lancement |
+| `c5d8228` | fix: arrivée en orbite fluide — snap + orbitDir cohérent pour abeilles envoyées manuellement |
+| `f571353` | fix: retour onglet Safari iOS — délai 100ms avant relance game loop |
+| `1af01a0` | perf: throttle touchMove 30ms + pré-calcul offsets abeilles dans handleMouseUp |
+| `e80b35f` | perf: handleMouseUp — travail lourd différé via setTimeout(0) pour libérer thread tactile iOS |
+| `fafaf6a` | perf: GameBoard wrappé dans React.memo — suppression re-renders inutiles au clic |
+| `4d0b7dd` | fix: erreurs TS — dyingBees angle manquant + svgRef nullable + arguments fonction |
 
 ### Gains perf session 9
-- BeeFilters centralisé : 40 nœuds DOM → 3 (GPU)
+- BeeFilters centralisé : N nœuds DOM → 3 (GPU)
 - useMemo borderCells/nightColorMap : 0 recalcul O(n²) par frame
 - useSolarSystem pausé la nuit : 2 intervals économisés
 - Fireflies loop supprimée : 30 appels setGameState/s économisés
+- handleTouchMove throttlé à 30ms : ~33 appels/s au lieu de 60
+- handleMouseUp setTimeout(0) : thread tactile iOS libéré immédiatement
+- React.memo GameBoard : re-renders supprimés lors des clics sans changement de props
 
 ### Dette technique résolue
-- 4 warnings TS éliminés (toast.success signature + hiveLevel cast)
+- 4 warnings TS éliminés (toast.success, hiveLevel cast, dyingBees angle, svgRef nullable)
 - startLevel factorisé (×3 → 1 fonction) + fix cellSize stale au restart
 - Conditions de victoire App.tsx : analysées, migration useGameLoop NON faite (états UI, bonne place)
+- console.log de debug supprimés
 
 ### Décision architecture
 - Mode nuit = skin uniquement — tout comportement gameplay s'applique identiquement jour/nuit
@@ -945,12 +956,18 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 
 ## Backlog session 10
 
-### Bugs iPhone (priorité haute)
-- **Clic continu / double clic → lag frames** : investiguer, probablement un setState en cascade ou un recalcul lourd déclenché par les events touch
-- **Retour d'onglet → abeilles stoppées** : le wake lock ou la visibilitychange ne reprend pas la game loop correctement
-- **Compteur abeilles en retard mode nuit** : le compteur n'inclut pas les abeilles en état 'moving' vers leur orbite (Bézier)
-- **Abeille Bézier non comptabilisée** : doit être comptée dès la naissance dans le compteur de l'arbre source
-- **Audit mode nuit iPhone 13** : le mode nuit rame encore sur iPhone 13 — faire un audit complet pour vérifier que le mode nuit est strictement iso avec le mode jour côté logique/perf (aucun calcul supplémentaire la nuit, aucune boucle active uniquement la nuit). Le mode nuit doit être un skin pur.
+### PRIORITÉ ABSOLUE — Refactor architectural
+**Sortir le rendu SVG du cycle React — game loop rAF + manipulation DOM directe via gameStateRef.**
+- Objectif : supprimer les lags au clic/touch sur iPhone
+- Pattern : React gère UI (menus, HUD, modals), une boucle `requestAnimationFrame` gère le SVG jeu en dehors de React
+- `gameStateRef` muté directement chaque frame, sans `setGameState` → zéro re-render React pendant le jeu
+- React re-render uniquement sur événements UI (clic arbre, victoire, pause)
+- Supprime le besoin de `React.memo`, `useMemo`, `setTimeout(0)`, throttle touch — la cause racine est résolue
+
+### Bugs iPhone restants
+- **Arrivée en orbite fluide pour abeilles envoyées manuellement** : le fix (commit `c5d8228`) a été revert — à reprendre après le refactor rAF
+- **Retour d'onglet → abeilles stoppées** : fix 100ms appliqué (commit `f571353`) — à tester sur iPhone réel
+- **Clic continu / lag frames** : sera résolu structurellement par le refactor rAF
 
 ### Dette technique restante
 - state 'fighting' déclaré dans Bee (game.ts) mais jamais assigné → supprimer
