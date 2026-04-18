@@ -1,7 +1,7 @@
 // Toasts désactivés — stub silencieux
 export const toast = {
-  info: () => {},
-  success: () => {},
-  error: () => {},
-  warning: () => {},
+  info: (_msg?: string) => {},
+  success: (_msg?: string) => {},
+  error: (_msg?: string) => {},
+  warning: (_msg?: string) => {},
 };

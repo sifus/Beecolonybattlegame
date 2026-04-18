@@ -414,7 +414,7 @@ export function useGameLoop({
                   } else {
                     const currentProgress = targetTree.upgradingProgress || 0;
 
-                    if (currentProgress >= UPGRADE_HIVE_COST || targetTree.hiveLevel[0] === 2) {
+                    if (currentProgress >= UPGRADE_HIVE_COST || (targetTree.hiveLevel[0] as number) === 2) {
                       bee.state = 'idle';
                       bee.treeId = bee.sourcetreeId ?? bee.buildingTreeId ?? null;
                       bee.buildingTreeId = null;
