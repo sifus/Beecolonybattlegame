@@ -94,7 +94,7 @@ function organicPondPath(x: number, y: number, w: number, h: number, seed: numbe
   ].join(' ');
 }
 
-export function GameBoard({
+const GameBoardInner = function GameBoard({
   gameState,
   gridParams,
   mapData,
@@ -841,4 +841,6 @@ export function GameBoard({
       </svg>
     </div>
   );
-}
+};
+
+export const GameBoard = React.memo(GameBoardInner);
