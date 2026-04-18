@@ -899,6 +899,8 @@ export default function App() {
                     targetTreeId: null,
                     targetX: clickX + offsetX,
                     targetY: clickY + offsetY,
+                    swarmX: clickX,
+                    swarmY: clickY,
                     offsetX,
                     offsetY,
                     hoverCenterX: undefined,

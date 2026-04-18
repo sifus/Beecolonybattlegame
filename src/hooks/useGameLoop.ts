@@ -338,10 +338,12 @@ export function useGameLoop({
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 5) {
+              const centerX = bee.swarmX ?? effTargetX;
+              const centerY = bee.swarmY ?? effTargetY;
               const driftAngle = Math.random() * Math.PI * 2;
               const driftDist = 15 + Math.random() * 15;
-              bee.targetX = effTargetX + Math.cos(driftAngle) * driftDist;
-              bee.targetY = effTargetY + Math.sin(driftAngle) * driftDist;
+              bee.targetX = centerX + Math.cos(driftAngle) * driftDist;
+              bee.targetY = centerY + Math.sin(driftAngle) * driftDist;
             } else {
               const speed = 0.8 * cellSizeScale;
               const targetAngle = Math.atan2(dy, dx);

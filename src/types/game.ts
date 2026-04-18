@@ -60,6 +60,8 @@ export interface Bee {
   bezierT?: number;       // Progression 0→1 le long de la courbe
   bezierSide?: number;    // Côté de déviation (+1 ou -1)
   bezierArrivalAngle?: number; // Angle d'arrivée pour tangente orbite
+  swarmX?: number; // Centre fixe de nuée pour la dérive sur point vide
+  swarmY?: number;
 }
 
 /**
