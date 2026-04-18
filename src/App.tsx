@@ -203,6 +203,7 @@ export default function App() {
   const gridParamsRef = useRef(gridParams); // Toujours à jour pour le handler resize
   const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
   const lastTouchEndRef = useRef(0); // Timestamp du dernier touchend — pour ignorer les mousedown synthétiques
+  const lastTouchMoveRef = useRef(0);
   const tripleTapRef = useRef<{ count: number, timer: ReturnType<typeof setTimeout> | null }>({ count: 0, timer: null });
 
   // Generate initial bees around trees (only on first mount)
@@ -671,6 +672,9 @@ export default function App() {
   };
 
   const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    const now = Date.now();
+    if (now - lastTouchMoveRef.current < 30) return;
+    lastTouchMoveRef.current = now;
     if (!selectionStart || !svgRef.current || e.touches.length === 0) return;
     const touch = e.touches[0];
     const { x, y } = getGameCoordinates(touch.clientX, touch.clientY);
@@ -820,7 +824,13 @@ export default function App() {
         // Générer des offsets pour créer un effet de nuage
         const selectedBees = Array.from(prev.selectedBeeIds);
         const numBees = selectedBees.length;
-        
+
+        // Pré-calcul des variations d'orbite (parseInt coûteux) pour toutes les abeilles sélectionnées
+        const idOffsetMap = new Map<string, number>();
+        for (const id of selectedBees) {
+          idOffsetMap.set(id, (parseInt(id.slice(-5), 36) % 16) - 8);
+        }
+
         const updatedBees = prev.bees.map(bee => {
           if (prev.selectedBeeIds.has(bee.id)) {
             // Rayon d'orbite autour d'un arbre (même formule que le game loop)
@@ -829,8 +839,7 @@ export default function App() {
             let offsetX: number, offsetY: number;
             if (clickedTree) {
               // Cible exactement sur le cercle d'orbite individuel de cette abeille
-              // (même variation déterministe que le game loop : ±8px selon bee.id)
-              const variation = ((parseInt(bee.id.slice(-5), 36) % 16) - 8);
+              const variation = idOffsetMap.get(bee.id) ?? 0;
               const individualRadius = baseOrbit + variation;
               offsetX = Math.cos(angle) * individualRadius;
               offsetY = Math.sin(angle) * individualRadius;
