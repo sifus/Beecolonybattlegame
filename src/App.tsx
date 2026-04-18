@@ -63,8 +63,6 @@ function calculateGridParams(levelId?: number, subLevelIndex?: number) {
   const marginLeft = (availW - gridW) / 2;
   const marginTop  = (availH - gridH) / 2;
 
-  console.log('GRID', { cellSize, gameWidth: gridW, gameHeight: gridH, windowW: availW, windowH: availH });
-
   return {
     cols: totalCols,
     rows: totalRows,
@@ -1564,8 +1562,6 @@ export default function App() {
       return { ...prev, levels: newLevels };
     });
     
-    // Note: La sauvegarde se fait automatiquement via useEffect
-    console.log('💾 Progression sauvegardée automatiquement');
   };
 
   const handleRestartLevel = () => {

@@ -27,9 +27,7 @@ export function saveLevelProgress(progress: LevelProgress): void {
       progress,
     };
     localStorage.setItem(STORAGE_KEYS.LEVEL_PROGRESS, JSON.stringify(data));
-    console.log('[Storage] Progression sauvegardée :', progress);
-  } catch (error) {
-    console.error('[Storage] Erreur lors de la sauvegarde :', error);
+  } catch {
   }
 }
 
@@ -42,7 +40,6 @@ export function loadLevelProgress(): LevelProgress {
     const saved = localStorage.getItem(STORAGE_KEYS.LEVEL_PROGRESS);
     
     if (!saved) {
-      console.log('[Storage] Aucune sauvegarde trouvée, utilisation de la progression initiale');
       return {
         currentLevel: 1,
         currentSubLevel: 0,
@@ -54,7 +51,6 @@ export function loadLevelProgress(): LevelProgress {
     
     // Vérifier la version (pour gérer les migrations futures)
     if (data.version !== CURRENT_VERSION) {
-      console.warn('[Storage] Version différente détectée, migration nécessaire');
     }
     
     // Fusionner les données sauvegardées avec INITIAL_LEVELS pour s'assurer que tous les sous-niveaux sont présents
@@ -82,14 +78,12 @@ export function loadLevelProgress(): LevelProgress {
       };
     });
     
-    console.log('[Storage] Progression chargée et fusionnée depuis', new Date(data.timestamp).toLocaleString());
     return {
       currentLevel: data.progress.currentLevel || 1,
       currentSubLevel: data.progress.currentSubLevel || 0,
       levels: mergedLevels,
     };
-  } catch (error) {
-    console.error('[Storage] Erreur lors du chargement :', error);
+  } catch {
     return {
       currentLevel: 1,
       currentSubLevel: 0,
@@ -104,9 +98,7 @@ export function loadLevelProgress(): LevelProgress {
 export function resetLevelProgress(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.LEVEL_PROGRESS);
-    console.log('[Storage] Progression réinitialisée');
-  } catch (error) {
-    console.error('[Storage] Erreur lors de la réinitialisation :', error);
+  } catch {
   }
 }
 
@@ -116,8 +108,7 @@ export function resetLevelProgress(): void {
 export function saveSoundPreference(enabled: boolean): void {
   try {
     localStorage.setItem(STORAGE_KEYS.SOUND_ENABLED, JSON.stringify(enabled));
-  } catch (error) {
-    console.error('[Storage] Erreur lors de la sauvegarde du son :', error);
+  } catch {
   }
 }
 
@@ -129,8 +120,7 @@ export function loadSoundPreference(): boolean {
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.SOUND_ENABLED);
     return saved ? JSON.parse(saved) : true;
-  } catch (error) {
-    console.error('[Storage] Erreur lors du chargement du son :', error);
+  } catch {
     return true;
   }
 }
@@ -141,8 +131,7 @@ export function loadSoundPreference(): boolean {
 export function saveTimeOfDayPreference(timeOfDay: 'day' | 'night'): void {
   try {
     localStorage.setItem(STORAGE_KEYS.TIME_OF_DAY, timeOfDay);
-  } catch (error) {
-    console.error('[Storage] Erreur lors de la sauvegarde du mode jour/nuit :', error);
+  } catch {
   }
 }
 
@@ -154,8 +143,7 @@ export function loadTimeOfDayPreference(): 'day' | 'night' {
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.TIME_OF_DAY);
     return (saved === 'night' ? 'night' : 'day');
-  } catch (error) {
-    console.error('[Storage] Erreur lors du chargement du mode jour/nuit :', error);
+  } catch {
     return 'day';
   }
 }
@@ -203,8 +191,7 @@ export function exportGameData(): string {
       timeOfDay: loadTimeOfDayPreference(),
     };
     return JSON.stringify(allData, null, 2);
-  } catch (error) {
-    console.error('[Storage] Erreur lors de l\'export :', error);
+  } catch {
     return '';
   }
 }
@@ -226,10 +213,8 @@ export function importGameData(jsonData: string): boolean {
       saveTimeOfDayPreference(data.timeOfDay);
     }
     
-    console.log('[Storage] Données importées avec succès');
     return true;
-  } catch (error) {
-    console.error('[Storage] Erreur lors de l\'import :', error);
+  } catch {
     return false;
   }
 }

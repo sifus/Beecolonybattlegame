@@ -26,8 +26,6 @@ export function generateRandomMap(
   ponds: PondShape[];
   grassGrid: Array<{ x: number; y: number; color: string; borderOpacity: number; borderOffset: number }>;
 } {
-  console.log(`🗺️ Génération de carte: ${gridCols}x${gridRows}, cellSize: ${cellSize}px`, options);
-  
   // Par défaut, toute la grille est utilisable
   const gameStartRow = options?.gameStartRow ?? 0;
   const gameEndRow = options?.gameEndRow ?? gridRows - 1;
@@ -108,8 +106,6 @@ export function generateRandomMap(
     }
   }
   
-  console.log(`🌊 Étangs générés: ${ponds.length}, Cellules occupées par étangs+marges: ${occupiedCells.size}/${cols * rows}`);
-  
   // Generate trees on grid cells
   const trees: Tree[] = [];
   // Distance minimale entre arbres : 2 cellules en Chebyshev → pas d'adjacence orthogonale ni diagonale
@@ -136,8 +132,6 @@ export function generateRandomMap(
     // Grande grille : 2-5 arbres neutres
     numNeutralTrees = Math.floor(Math.random() * 4) + 2;
   }
-  
-  console.log(`🌳 Placement arbres: 1 joueur + 1 ennemi + ${numNeutralTrees} neutres (zone jeu ${gameCols}x${gameRows}=${totalCells} cellules, verySmall=${isVerySmallGrid})`);
   
   function isValidTreeCell(gridX: number, gridY: number): boolean {
     // ZONE DE JEU : l'arbre doit être dans la zone jouable (pas dans la bordure écran)
@@ -216,13 +210,11 @@ export function generateRandomMap(
         }
         if (tooClose) continue;
         treesOccupiedCells.add(cellKey);
-        console.warn(`⚠️ Fallback élargi: arbre placé en (${x},${y}) — contraintes UI/côté relâchées`);
         return { x: treeX(x, cellSize), y: treeY(y, cellSize) };
       }
     }
 
     // Ultime recours absolu : zone jouable, hors étang, même si adjacent à un autre arbre
-    console.error(`❌ ERREUR CRITIQUE: Aucune cellule respectant Chebyshev trouvée — placement forcé hors étang`);
     for (let y = gameStartRow; y <= gameEndRow; y++) {
       for (let x = gameStartCol; x <= gameEndCol; x++) {
         const ck = `${x},${y}`;
@@ -301,6 +293,5 @@ export function generateRandomMap(
     shuffledNeutral[i].maxHives = 2;
   }
 
-  console.log(`✅ Carte générée: ${trees.length} arbres (${targetGroups} groupes), ${ponds.length} étangs sur grille ${cols}x${rows}`);
   return { trees, ponds, grassGrid };
 }
