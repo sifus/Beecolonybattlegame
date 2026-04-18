@@ -564,12 +564,14 @@ export function useGameLoop({
                 beesToRemove.add(bee1.id);
                 beesToRemove.add(bee2.id);
 
-                if (bee1.treeId) {
-                  const tree1 = newState.trees.find(t => t.id === bee1.treeId);
+                const ref1 = bee1.treeId ?? bee1.targetTreeId;
+                if (ref1) {
+                  const tree1 = newState.trees.find(t => t.id === ref1);
                   if (tree1) tree1.beeCount--;
                 }
-                if (bee2.treeId) {
-                  const tree2 = newState.trees.find(t => t.id === bee2.treeId);
+                const ref2 = bee2.treeId ?? bee2.targetTreeId;
+                if (ref2) {
+                  const tree2 = newState.trees.find(t => t.id === ref2);
                   if (tree2) tree2.beeCount--;
                 }
               }
@@ -756,6 +758,33 @@ export function useGameLoop({
                 }
               }
             }
+          }
+        });
+
+        // Redirect post-victoire : abeilles idle sur un arbre dont elles ne sont plus owner
+        newState.bees.forEach((bee) => {
+          if (beesToRemove.has(bee.id)) return;
+          if (bee.state !== 'idle' || !bee.treeId) return;
+          const occupiedTree = newState.trees.find(t => t.id === bee.treeId);
+          if (!occupiedTree || occupiedTree.owner === bee.owner || occupiedTree.owner === 'neutral') return;
+
+          // L'arbre est maintenant possédé par l'ennemi — renvoyer l'abeille chez elle
+          const homeTreeId = bee.sourcetreeId ?? null;
+          const homeTree = homeTreeId ? newState.trees.find(t => t.id === homeTreeId && !t.isCut && t.owner === bee.owner) : null;
+          const fallbackTree = homeTree ?? newState.trees.find(t => t.owner === bee.owner && !t.isCut);
+
+          occupiedTree.beeCount--;
+          bee.treeId = null;
+          bee.state = 'moving';
+
+          if (fallbackTree) {
+            bee.targetTreeId = fallbackTree.id;
+            bee.targetX = undefined;
+            bee.targetY = undefined;
+          } else {
+            bee.targetTreeId = null;
+            bee.targetX = bee.x + (Math.random() - 0.5) * 60;
+            bee.targetY = bee.y + (Math.random() - 0.5) * 60;
           }
         });
 
