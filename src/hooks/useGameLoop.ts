@@ -41,7 +41,7 @@ interface UseGameLoopParams {
   beeConsumedByPondRef: React.MutableRefObject<boolean>;
   setWaterSplashes: React.Dispatch<React.SetStateAction<Array<{ x: number; y: number; id: string; timestamp: number; pondIdx: number }>>>;
   setFlashEffect: React.Dispatch<React.SetStateAction<{ x: number; y: number; type: 'small' | 'large' } | null>>;
-  setDyingBees: React.Dispatch<React.SetStateAction<Array<{ id: string; x: number; y: number; timestamp: number; owner: string }>>>;
+  setDyingBees: React.Dispatch<React.SetStateAction<Array<{ id: string; x: number; y: number; timestamp: number; owner: string; angle: number }>>>;
 }
 
 export function useGameLoop({

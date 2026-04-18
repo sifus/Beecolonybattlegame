@@ -226,9 +226,7 @@ export default function App() {
       // Show welcome toast (only when initializing bees for the first time)
       setTimeout(() => {
         const w = getWording(globalTimeOfDay);
-        toast.info(`Cliquez sur un arbre avec vos ${w.bees} pour construire ${w.hive === 'cocon' ? 'un' : 'une'} ${w.hive} progressivement !`, {
-          duration: 6000
-        });
+        toast.info(`Cliquez sur un arbre avec vos ${w.bees} pour construire ${w.hive === 'cocon' ? 'un' : 'une'} ${w.hive} progressivement !`);
       }, 1000);
     }
   }, []);

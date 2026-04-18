@@ -43,7 +43,7 @@ interface GameBoardProps {
   waterSplashes: Array<{ x: number; y: number; id: string; timestamp: number; pondIdx: number }>;
   dyingBees: Array<{ id: string; x: number; y: number; timestamp: number; owner: string; angle: number }>;
   ripples: { id: number; x: number; y: number }[];
-  svgRef: React.RefObject<SVGSVGElement>;
+  svgRef: React.RefObject<SVGSVGElement | null>;
   onMouseDown: (e: React.MouseEvent<SVGSVGElement>) => void;
   onMouseMove: (e: React.MouseEvent<SVGSVGElement>) => void;
   onMouseUp: () => void;
