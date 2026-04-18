@@ -950,6 +950,7 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - **Retour d'onglet → abeilles stoppées** : le wake lock ou la visibilitychange ne reprend pas la game loop correctement
 - **Compteur abeilles en retard mode nuit** : le compteur n'inclut pas les abeilles en état 'moving' vers leur orbite (Bézier)
 - **Abeille Bézier non comptabilisée** : doit être comptée dès la naissance dans le compteur de l'arbre source
+- **Audit mode nuit iPhone 13** : le mode nuit rame encore sur iPhone 13 — faire un audit complet pour vérifier que le mode nuit est strictement iso avec le mode jour côté logique/perf (aucun calcul supplémentaire la nuit, aucune boucle active uniquement la nuit). Le mode nuit doit être un skin pur.
 
 ### Dette technique restante
 - state 'fighting' déclaré dans Bee (game.ts) mais jamais assigné → supprimer
