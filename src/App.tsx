@@ -281,8 +281,10 @@ export default function App() {
     } else {
       // Retour au premier plan : reprendre si le jeu était en cours
       if (wasPlayingRef.current) {
-        setGameState(prev => ({ ...prev, isPlaying: true }));
         wasPlayingRef.current = false;
+        setTimeout(() => {
+          setGameState(prev => ({ ...prev, isPlaying: true }));
+        }, 100);
       }
     }
   }, [isAppVisible]);
