@@ -17,19 +17,8 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
     const fireflyColor = bee.owner === 'player' ? '#7FFF00' : '#00BFFF';
     const glowColor    = bee.owner === 'player' ? '#9FFF00' : '#87CEFA';
 
-    const filterId = `firefly-glow-${bee.id}`;
     return (
       <g style={{ pointerEvents: 'none' }}>
-        <defs>
-          <filter id={filterId} x="-150%" y="-150%" width="400%" height="400%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
         {isSelected && (
           <motion.circle
             cx={bee.x} cy={bee.y} r={10}
@@ -53,7 +42,7 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
         <circle cx={bee.x} cy={bee.y} r={5}
           fill={isBeingSelected && !isSelected ? '#ffffff' : glowColor}
           opacity={isBeingSelected && !isSelected ? 0.5 : 0.25}
-          filter={`url(#${filterId})`}
+          filter="url(#firefly-glow)"
         />
 
         {/* Corps de la luciole */}
@@ -78,7 +67,6 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
   }
 
   // ─── DAY MODE : goutte d'eau ──────────────────────────────────────────────
-  const clipId      = `bee-clip-${bee.id}`;
   const bodyColor   = bee.owner === 'player' ? '#7a3a08' : '#5a1a08';
   const stripeColor = bee.owner === 'player' ? '#f0c020' : '#cc2020';
 
@@ -112,16 +100,11 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
 
       {/* Corps goutte + bande colorée */}
       <g transform={`translate(${bee.x}, ${bee.y}) rotate(${((bee.displayAngle ?? bee.angle) * (180 / Math.PI) + 270) || 0}) scale(${sc})`}>
-        <defs>
-          <clipPath id={clipId}>
-            <path d={dropPath} />
-          </clipPath>
-        </defs>
         <path d={dropPath} fill={bodyColor}
           stroke={isBeingSelected && !isSelected ? '#FFFFFF' : 'none'}
           strokeWidth={isBeingSelected && !isSelected ? 10 : 0}
         />
-        <rect x={-22} y={-3} width={44} height={16} fill={stripeColor} clipPath={`url(#${clipId})`} />
+        <rect x={-22} y={-3} width={44} height={16} fill={stripeColor} clipPath="url(#bee-drop-clip)" />
         <ellipse cx={-6} cy={-14} rx={5} ry={4} fill="#fff" opacity={0.18} />
       </g>
     </g>

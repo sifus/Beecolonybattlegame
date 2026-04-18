@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Tree } from './Tree';
 import { Bee } from './Bee';
+import { BeeFilters } from './BeeFilters';
 import { GameState } from '../types/game';
 import { Sparkle } from '../hooks/useSolarSystem';
 import { PondShape } from '../utils/mapGenerator';
@@ -467,6 +468,7 @@ export function GameBoard({
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchCancel}
       >
+        <BeeFilters />
         <g transform={`translate(${marginLeft}, ${marginTop})`}>
         {/* Trees - BASE LAYER (trunks and foliage) */}
         {gameState.trees.map((tree) => {
@@ -702,16 +704,12 @@ export function GameBoard({
           const angleDeg = ((bee.angle * 180 / Math.PI) + 270) || 0;
           const bodyFill   = bee.owner === 'player' ? '#7a3a08' : '#5a1a08';
           const stripeFill = bee.owner === 'player' ? '#f0c020' : '#cc2020';
-          const clipDyingId = `dying-clip-${bee.id}`;
           return (
             <g key={bee.id} pointerEvents="none" opacity={opacity}>
               <g transform={`translate(${bee.x},${bee.y}) rotate(${angleDeg}) scale(${sc})`}>
-                <defs>
-                  <clipPath id={clipDyingId}><path d={dropPath} /></clipPath>
-                </defs>
                 <path d={dropPath} fill={bodyFill} />
                 <rect x={-22} y={-3} width={44} height={16}
-                  fill={stripeFill} clipPath={`url(#${clipDyingId})`} />
+                  fill={stripeFill} clipPath="url(#bee-dying-drop-clip)" />
                 <ellipse cx={-6} cy={-14} rx={5} ry={4} fill="#fff" opacity={0.18} />
               </g>
             </g>
