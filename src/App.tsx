@@ -1466,6 +1466,58 @@ export default function App() {
     toast.success('⚔️ Niveau "Premier combat" chargé !');
   };
 
+  const applyLevelConfig = (levelId: number, subLevelIndex: number) => {
+    const level = levelProgress.levels.find(l => l.id === levelId);
+    if (!level) return;
+    const subLevel = level.subLevels[subLevelIndex];
+    if (!subLevel) return;
+
+    const newGridParams = calculateGridParams(levelId, subLevelIndex);
+    setGridParams(newGridParams);
+
+    const levelConfig = generateStoryLevel(
+      levelId,
+      subLevelIndex,
+      subLevel.type,
+      newGridParams.cellSize,
+      newGridParams.rows,
+      newGridParams.cols,
+      {
+        gameStartRow: newGridParams.gameStartRow,
+        gameEndRow: newGridParams.gameEndRow,
+        gameStartCol: newGridParams.gameStartCol,
+        gameEndCol: newGridParams.gameEndCol,
+      }
+    );
+
+    const trees = levelConfig.trees.map((tree, index) => ({
+      ...tree,
+      id: `tree-${index}`,
+    }));
+
+    setMapData({
+      trees,
+      ponds: levelConfig.ponds,
+      grassGrid: levelConfig.grassGrid,
+    });
+
+    setGameOver(null);
+    setShowGameOverPopup(false);
+    setGameState({
+      trees,
+      bees: buildInitialBees(trees, newGridParams.cellSize),
+      selectedBeeIds: new Set(),
+      gameTime: 0,
+      isPlaying: true,
+      stars: 3,
+      haloEffects: [],
+      fireflies: [],
+    });
+
+    setLastClickedTreeId(null);
+    setLastClickTime(0);
+  };
+
   const startLevel = (levelId: number, subLevelIndex: number) => {
     const level = levelProgress.levels.find(l => l.id === levelId);
     if (!level || !level.unlocked) return;
@@ -1479,55 +1531,7 @@ export default function App() {
       currentSubLevel: subLevelIndex,
     }));
 
-    const newGridParams = calculateGridParams(levelId, subLevelIndex);
-    setGridParams(newGridParams);
-
-    const subLevel = level.subLevels[subLevelIndex];
-    if (subLevel) {
-      const levelConfig = generateStoryLevel(
-        levelId,
-        subLevelIndex,
-        subLevel.type,
-        newGridParams.cellSize,
-        newGridParams.rows,
-        newGridParams.cols,
-        {
-          gameStartRow: newGridParams.gameStartRow,
-          gameEndRow: newGridParams.gameEndRow,
-          gameStartCol: newGridParams.gameStartCol,
-          gameEndCol: newGridParams.gameEndCol
-        }
-      );
-      
-      const initialTrees = levelConfig.trees.map((tree, index) => ({
-        ...tree,
-        id: `tree-${index}`,
-      }));
-
-      const initialBees = buildInitialBees(initialTrees, gridParams.cellSize);
-
-      setMapData({
-        trees: initialTrees,
-        ponds: levelConfig.ponds,
-        grassGrid: levelConfig.grassGrid,
-      });
-
-      setGameOver(null); setShowGameOverPopup(false);
-      setGameState({
-        trees: initialTrees,
-        bees: initialBees,
-        selectedBeeIds: new Set(),
-        gameTime: 0,
-        isPlaying: true,
-        stars: 3,
-        haloEffects: [],
-        fireflies: [],
-      });
-
-      setLastClickedTreeId(null);
-      setLastClickTime(0);
-    }
-
+    applyLevelConfig(levelId, subLevelIndex);
     setCurrentScreen('story');
   };
 
@@ -1566,63 +1570,12 @@ export default function App() {
 
   const handleRestartLevel = () => {
     setShowLevelComplete(false);
-    setTutorialCompleted(false); // Réinitialiser le statut du tutoriel
-    victoryHandledRef.current = false; // Réinitialiser le flag de victoire
-    beeConsumedByPondRef.current = false; // Réinitialiser le flag de l'étang
-    
-    // Reload current sub-level
-    const { currentLevel, currentSubLevel } = levelProgress;
-    const level = levelProgress.levels.find(l => l.id === currentLevel);
-    
-    if (level && level.subLevels[currentSubLevel]) {
-      // Recalculer les gridParams pour ce niveau
-      const newGridParams = calculateGridParams(currentLevel, currentSubLevel);
-      setGridParams(newGridParams);
-      
-      const subLevel = level.subLevels[currentSubLevel];
-      const levelConfig = generateStoryLevel(
-        currentLevel,
-        currentSubLevel,
-        subLevel.type,
-        newGridParams.cellSize,
-        newGridParams.rows,
-        newGridParams.cols,
-        {
-          gameStartRow: newGridParams.gameStartRow,
-          gameEndRow: newGridParams.gameEndRow,
-          gameStartCol: newGridParams.gameStartCol,
-          gameEndCol: newGridParams.gameEndCol
-        }
-      );
-      
-      setMapData({
-        trees: levelConfig.trees.map((tree, index) => ({
-          ...tree,
-          id: `tree-${index}`,
-        })),
-        ponds: levelConfig.ponds,
-        grassGrid: levelConfig.grassGrid,
-      });
-      
-      const restartTrees = levelConfig.trees.map((tree, index) => ({
-        ...tree,
-        id: `tree-${index}`,
-      }));
-      setGameOver(null); setShowGameOverPopup(false);
-      setGameState({
-        trees: restartTrees,
-        bees: buildInitialBees(restartTrees, gridParams.cellSize),
-        selectedBeeIds: new Set(),
-        gameTime: 0,
-        isPlaying: true,
-        stars: 3,
-        haloEffects: [],
-        fireflies: [],
-      });
+    setTutorialCompleted(false);
+    victoryHandledRef.current = false;
+    beeConsumedByPondRef.current = false;
 
-      setLastClickedTreeId(null);
-      setLastClickTime(0);
-    }
+    const { currentLevel, currentSubLevel } = levelProgress;
+    applyLevelConfig(currentLevel, currentSubLevel);
   };
 
   const handleNextLevel = () => {
@@ -1663,61 +1616,14 @@ export default function App() {
     // Check if there's a next sub-level
     if (currentSubLevel + 1 < level.subLevels.length) {
       const nextSubLevelIndex = currentSubLevel + 1;
-      const nextSubLevel = level.subLevels[nextSubLevelIndex];
-      
+
       // Update progress
       setLevelProgress(prev => ({
         ...prev,
         currentSubLevel: nextSubLevelIndex,
       }));
-      
-      // Recalculer les gridParams pour le prochain sous-niveau
-      const newGridParams = calculateGridParams(currentLevel, nextSubLevelIndex);
-      setGridParams(newGridParams);
-      
-      // Load next sub-level configuration
-      const levelConfig = generateStoryLevel(
-        currentLevel,
-        nextSubLevelIndex,
-        nextSubLevel.type,
-        newGridParams.cellSize,
-        newGridParams.rows,
-        newGridParams.cols,
-        {
-          gameStartRow: newGridParams.gameStartRow,
-          gameEndRow: newGridParams.gameEndRow,
-          gameStartCol: newGridParams.gameStartCol,
-          gameEndCol: newGridParams.gameEndCol
-        }
-      );
-      
-      setMapData({
-        trees: levelConfig.trees.map((tree, index) => ({
-          ...tree,
-          id: `tree-${index}`,
-        })),
-        ponds: levelConfig.ponds,
-        grassGrid: levelConfig.grassGrid,
-      });
-      
-      const nextTrees = levelConfig.trees.map((tree, index) => ({
-        ...tree,
-        id: `tree-${index}`,
-      }));
-      setGameOver(null); setShowGameOverPopup(false);
-      setGameState({
-        trees: nextTrees,
-        bees: buildInitialBees(nextTrees, gridParams.cellSize),
-        selectedBeeIds: new Set(),
-        gameTime: 0,
-        isPlaying: true,
-        stars: 3,
-        haloEffects: [],
-        fireflies: [],
-      });
 
-      setLastClickedTreeId(null);
-      setLastClickTime(0);
+      applyLevelConfig(currentLevel, nextSubLevelIndex);
     } else {
       // Level complete, unlock next level
       setLevelProgress(prev => {
