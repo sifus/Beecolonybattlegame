@@ -234,10 +234,24 @@ export function useGameLoop({
                     bee.offsetY = undefined;
                   } else if (tree.owner === 'neutral' || tree.owner === bee.owner) {
                     const _cs = gridParams.cellSize;
+                    const _s = _cs / 80;
                     const _tbY = tree.y + _cs * 0.5 + _cs * 0.19;
-                    const _ttY = _tbY - 20 * (_cs / 80);
+                    const _ttY = _tbY - 20 * _s;
                     const _ocY = _ttY - _cs * (tree.maxHives === 2 ? 0.28 : 0.26);
-                    bee.angle = Math.atan2(bee.y - _ocY, bee.x - tree.x);
+                    const baseRadius = Math.max(
+                      (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+                      (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * _s
+                    );
+                    const radius = bee.orbitRadius ?? baseRadius;
+                    const arrivalAngle = Math.atan2(bee.y - _ocY, bee.x - tree.x);
+                    const incomingAngle = bee.angle;
+                    bee.x = tree.x + Math.cos(arrivalAngle) * radius;
+                    bee.y = _ocY + Math.sin(arrivalAngle) * radius;
+                    bee.angle = arrivalAngle;
+                    const tangentDot = Math.cos(incomingAngle) * (-Math.sin(arrivalAngle) * (bee.orbitDir ?? 1))
+                                     + Math.sin(incomingAngle) * (Math.cos(arrivalAngle) * (bee.orbitDir ?? 1));
+                    if (tangentDot < 0) bee.orbitDir = -(bee.orbitDir ?? 1);
+                    bee.displayAngle = arrivalAngle + Math.PI / 2 + (bee.orbitDir === -1 ? Math.PI : 0);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
@@ -246,10 +260,24 @@ export function useGameLoop({
                     tree.beeCount++;
                   } else {
                     const _cs = gridParams.cellSize;
+                    const _s = _cs / 80;
                     const _tbY = tree.y + _cs * 0.5 + _cs * 0.19;
-                    const _ttY = _tbY - 20 * (_cs / 80);
+                    const _ttY = _tbY - 20 * _s;
                     const _ocY = _ttY - _cs * (tree.maxHives === 2 ? 0.28 : 0.26);
-                    bee.angle = Math.atan2(bee.y - _ocY, bee.x - tree.x);
+                    const baseRadius = Math.max(
+                      (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+                      (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * _s
+                    );
+                    const radius = bee.orbitRadius ?? baseRadius;
+                    const arrivalAngle = Math.atan2(bee.y - _ocY, bee.x - tree.x);
+                    const incomingAngle = bee.angle;
+                    bee.x = tree.x + Math.cos(arrivalAngle) * radius;
+                    bee.y = _ocY + Math.sin(arrivalAngle) * radius;
+                    bee.angle = arrivalAngle;
+                    const tangentDot = Math.cos(incomingAngle) * (-Math.sin(arrivalAngle) * (bee.orbitDir ?? 1))
+                                     + Math.sin(incomingAngle) * (Math.cos(arrivalAngle) * (bee.orbitDir ?? 1));
+                    if (tangentDot < 0) bee.orbitDir = -(bee.orbitDir ?? 1);
+                    bee.displayAngle = arrivalAngle + Math.PI / 2 + (bee.orbitDir === -1 ? Math.PI : 0);
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.targetTreeId = null;
