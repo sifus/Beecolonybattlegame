@@ -145,6 +145,7 @@ export function useGameLoop({
 
                   bee.state = 'moving';
                   bee.targetTreeId = closestTree.id;
+                  bee.isDrifting = false;
                   bee.swarmX = undefined;
                   bee.swarmY = undefined;
                 }
@@ -553,6 +554,7 @@ export function useGameLoop({
 
                 bee.state = 'moving';
                 bee.targetTreeId = closestTree.id;
+                bee.isDrifting = false;
                 bee.swarmX = undefined;
                 bee.swarmY = undefined;
               }
@@ -814,6 +816,7 @@ export function useGameLoop({
 
           if (fallbackTree) {
             bee.targetTreeId = fallbackTree.id;
+            bee.isDrifting = false;
             bee.swarmX = undefined;
             bee.swarmY = undefined;
             bee.targetX = undefined;
