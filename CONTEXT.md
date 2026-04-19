@@ -1023,3 +1023,65 @@ RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abe
 - Le mettre à `true` dans le bloc `dist < 3` (dérive swarm)
 - Le mettre à `false` dans handleMouseUp quand l'utilisateur donne une destination
 - Vitesse cible dérive : `0.25 * cellSizeScale`
+
+---
+
+## Ce qui a été fait — 19 avril 2026 (session 10)
+
+### Commits de session
+| Hash | Description |
+|---|---|
+| TBD | feat: essaim abeilles — rayon serré 10-30px + vitesse dérive isDrifting 0.25 |
+| TBD | feat: clamping abeilles dans la grille + isDrifting vitesse dérive + essaim serré |
+| TBD | fix: touch boutons mobile + fond safe area + revert webkit-fill-available |
+
+### Essaim abeilles — comportement en attente sur la carte
+- Rayon de dérive swarm : 15–30px → **10–30px** (essaim serré)
+- Seuil déclenchement nouvelle cible : `dist < 5` → `dist < 3`
+- Vitesse dérive : introduit flag `isDrifting?: boolean` dans `src/types/game.ts`
+  - `isDrifting = true` dans le bloc `dist < 3` (useGameLoop.ts)
+  - `isDrifting = false` dans handleMouseUp quand l'utilisateur donne une destination (App.tsx)
+  - Vitesse dérive : `0.25 * cellSizeScale` (au lieu de `0.8`)
+  - Vitesse transit A→B : `0.8 * cellSizeScale` inchangée
+  - Bug corrigé : `isDrifting ? 0.25 : 0.8 * cellSizeScale` → parenthèses manquantes corrigées en `isDrifting ? 0.25 * cellSizeScale : 0.8 * cellSizeScale`
+  - Bug corrigé : `isDrifting` jamais remis à `false` sur assignation `targetTreeId` → ajout `bee.isDrifting = false` sur tous les sites d'assignation `targetTreeId` non-null dans useGameLoop.ts
+
+### Vitesse dérive swarm — historique des tentatives échouées
+- `!bee.targetTreeId && bee.swarmX !== null` → affectait le transit
+- `bee.swarmX !== null ? 0.25 : 0.8` → swarmX jamais remis à undefined quand l'abeille repart
+- Remettre swarmX à undefined sur chaque assignation targetTreeId → trop de sites, risque régression
+- **Solution retenue** : flag `isDrifting` dans le type Bee — propre et sans ambiguïté
+
+### Clamping abeilles dans la grille (App.tsx)
+- `clickX/clickY` sont en coordonnées plateau (marginLeft/marginTop déjà soustraits)
+- Clamping ajouté dans handleMouseUp branche "clic sur point vide" :
+  - `clampedClickX = Math.max(0, Math.min(gridParams.cols * gridParams.cellSize, clickX))`
+  - `clampedClickY = Math.max(0, Math.min(gridParams.rows * gridParams.cellSize, clickY))`
+- Limites dynamiques selon taille fenêtre : bug résiduel si fenêtre redimensionnée en cours de partie (DevTools) — non prioritaire pour iPhone
+
+### Bug limites grille — fenêtre redimensionnable (à traiter plus tard)
+- `screenW/screenH` dans useGameLoop.ts capturés une seule fois au démarrage
+- Symptôme : abeilles dépassent les bords si fenêtre change de taille (DevTools, bureau)
+- Non prioritaire pour iPhone (fenêtre fixe)
+- Fix futur : écouter `window.resize` et recalculer les limites, ou passer gridParams dynamiquement à chaque frame
+
+### Touch boutons mobile (GameUI.tsx)
+- `handleTouchEnd` dans StyledButton : suppression de la vérification de position (`elementFromPoint`)
+- La vérification était correcte sur la zone de jeu (App.tsx) mais pas sur les boutons UI
+- Nouveau comportement : `e.preventDefault()` + `onClick()` directement — tap toujours reconnu
+
+### PWA iOS — barre verte en bas
+- Symptôme : bande verte `#c2d040` visible en bas du menu quand la PWA s'ouvre directement en paysage
+- Tentatives échouées : `100dvh`, `100%`, `padding-bottom: env(safe-area-inset-bottom)`, `margin-bottom: calc(-1 * env(safe-area-inset-bottom))`
+- Cause probable : bug Safari — calcul hauteur viewport en paysage direct incorrect en PWA
+- Revenu à `-webkit-fill-available` (état d'origine)
+- **Non résolu** — disparaîtra en app Capacitor native
+
+### PWA iOS — home bar (barre switch app)
+- La home bar iOS intercepte les drags depuis le bas → peut réduire l'app accidentellement
+- Impossible à désactiver en PWA Safari
+- **Non traité** — disparaît en app Capacitor native (configurable via `Info.plist UIHomeIndicatorAutoHidden`)
+- Phase de test PWA uniquement, pas un bug de production
+
+### Décisions architecture
+- PWA Safari = phase de test uniquement — les bugs spécifiques PWA (home bar, hauteur viewport) ne seront pas traités, ils disparaissent en app Capacitor native
