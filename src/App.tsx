@@ -111,6 +111,7 @@ function createBee(
     orbitRadius,
     createdAt: undefined,
     displayAngle: angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0),
+    isDrifting: false,
   };
 }
 
