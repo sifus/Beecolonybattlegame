@@ -1085,3 +1085,41 @@ RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abe
 
 ### Décisions architecture
 - PWA Safari = phase de test uniquement — les bugs spécifiques PWA (home bar, hauteur viewport) ne seront pas traités, ils disparaissent en app Capacitor native
+
+### Audit iso jour/nuit perf
+- useGameLoop.ts : aucune logique conditionnelle nuit/jour — conforme à la règle "skin uniquement"
+- globalTimeOfDay utilisé uniquement via getWording() dans les hooks
+- GameBoard.tsx : conditions nuit purement visuelles (couleurs, opacités)
+- useSolarSystem.ts : intervalles pausés la nuit — voulu, économise 2 intervals
+- ✅ Audit propre — si mode nuit rame sur iPhone 13, c'est le coût SVG des lucioles/couleurs
+
+### Tâche iPhone 13 mode nuit — à explorer
+- Si mode nuit rame sur iPhone 13 : investiguer le coût de rendu SVG lucioles dans GameBoard
+- Piste : réduire le nombre de lucioles, simplifier les filtres SVG la nuit
+
+### UX boutons
+- Bouton Recommencer supprimé du HUD (haut gauche)
+- Bouton Recommencer ajouté dans la modal pause (paysage : colonne droite / portrait : entre Accueil et Continuer)
+- Touche Y = recommencer (mode test clavier)
+- Bouton pause masqué quand la modale est ouverte (évite la confusion play/pause)
+
+### Dette technique résolue
+- GameState.stars supprimé — champ mort (les étoiles sont dans Level/SubLevel)
+- state 'fighting' : déjà supprimé en session précédente, confirmé absent
+
+## Backlog session 11
+
+### Priorité haute
+- **Arrivée en orbite fluide** abeilles envoyées manuellement — commit c5d8228 annulé session 9, à reprendre proprement
+- **IA ennemie** : meilleure sélection de cibles, timing variable, gestion défensive
+
+### Priorité moyenne
+- **Limites grille dynamiques** : recalculer screenW/screenH au resize pour support bureau
+- **Mode nuit perf iPhone 13** : investiguer coût SVG lucioles si confirmé sur device
+
+### Roadmap modes de jeu
+- Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore)
+- Mode Partie Rapide — tableau des scores localStorage par difficulté
+- Mode Histoire — niveaux manuels, difficulté croissante
+- Orage : nuages orageux déciment abeilles et cassent ruches
+- Bûcheron : trébuche sur cailloux
