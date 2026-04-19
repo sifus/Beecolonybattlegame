@@ -1,4 +1,4 @@
-Bee Colony Battle Game — Arborescence du projet (mise à jour 17 avril 2026)
+Bee Colony Battle Game — Arborescence du projet (mise à jour 19 avril 2026)
 Exclus : node_modules, build, .git, .claude/worktrees, .DS_Store
 
 .
@@ -38,6 +38,7 @@ Exclus : node_modules, build, .git, .claude/worktrees, .DS_Store
     ├── components/
     │   ├── AmbientSound.tsx            # Sons ambiants (prairie, forêt…)
     │   ├── Bee.tsx                     # Rendu SVG d'une abeille (forme + filtres)
+    │   ├── BeeFilters.tsx              # Filtres SVG centralisés (glow, clipPath) — partagés par toutes les abeilles
     │   ├── GameBoard.tsx               # Grille de jeu (cellules, rochers, damier)
     │   ├── GameUI.tsx                  # HUD en jeu (compteurs, boutons pause)
     │   ├── LevelCompleteModal.tsx      # Modal fin de niveau
