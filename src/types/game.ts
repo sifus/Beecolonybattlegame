@@ -98,7 +98,6 @@ export interface GameState {
   selectedBeeIds: Set<string>; // IDs des abeilles sélectionnées
   gameTime: number; // Temps de jeu écoulé
   isPlaying: boolean; // Jeu en pause ou en cours
-  stars: number; // Étoiles gagnées (mode histoire)
   haloEffects?: HaloEffect[]; // Effets de halo lumineux actifs
   fireflies?: Firefly[]; // Lucioles d'ambiance (mode nuit uniquement)
 }
