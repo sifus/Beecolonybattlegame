@@ -901,6 +901,7 @@ export default function App() {
                     targetY: clickY + offsetY,
                     swarmX: clickX,
                     swarmY: clickY,
+                    isDrifting: false,
                     offsetX,
                     offsetY,
                     hoverCenterX: undefined,

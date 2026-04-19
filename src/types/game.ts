@@ -62,6 +62,7 @@ export interface Bee {
   bezierArrivalAngle?: number; // Angle d'arrivée pour tangente orbite
   swarmX?: number; // Centre fixe de nuée pour la dérive sur point vide
   swarmY?: number;
+  isDrifting?: boolean; // true quand l'abeille dérive aléatoirement autour de swarmX/Y
 }
 
 /**

@@ -145,6 +145,8 @@ export function useGameLoop({
 
                   bee.state = 'moving';
                   bee.targetTreeId = closestTree.id;
+                  bee.swarmX = undefined;
+                  bee.swarmY = undefined;
                 }
               }
             }
@@ -337,15 +339,16 @@ export function useGameLoop({
             const dy = effTargetY - bee.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < 5) {
+            if (dist < 3) {
               const centerX = bee.swarmX ?? effTargetX;
               const centerY = bee.swarmY ?? effTargetY;
               const driftAngle = Math.random() * Math.PI * 2;
-              const driftDist = 15 + Math.random() * 15;
+              const driftDist = 10 + Math.random() * 20;
               bee.targetX = centerX + Math.cos(driftAngle) * driftDist;
               bee.targetY = centerY + Math.sin(driftAngle) * driftDist;
+              bee.isDrifting = true;
             } else {
-              const speed = 0.8 * cellSizeScale;
+              const speed = bee.isDrifting ? 0.25 * cellSizeScale : 0.8 * cellSizeScale;
               const targetAngle = Math.atan2(dy, dx);
               const angleDiff = ((targetAngle - bee.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
               if (Math.abs(angleDiff) > Math.PI * 0.75) {
@@ -550,6 +553,8 @@ export function useGameLoop({
 
                 bee.state = 'moving';
                 bee.targetTreeId = closestTree.id;
+                bee.swarmX = undefined;
+                bee.swarmY = undefined;
               }
             } else {
               if (!bee.hoverCenterX) {
@@ -809,6 +814,8 @@ export function useGameLoop({
 
           if (fallbackTree) {
             bee.targetTreeId = fallbackTree.id;
+            bee.swarmX = undefined;
+            bee.swarmY = undefined;
             bee.targetX = undefined;
             bee.targetY = undefined;
           } else {
