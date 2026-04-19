@@ -879,6 +879,7 @@ export default function App() {
                     ...bee,
                     state: 'moving' as const,
                     targetTreeId: clickedTree.id,
+                    isDrifting: false,
                     targetX: undefined,
                     targetY: undefined,
                     offsetX,
@@ -1236,7 +1237,7 @@ export default function App() {
         setGameState(prev => {
           const updatedBees = prev.bees.map(bee => {
             if (!prev.selectedBeeIds.has(bee.id)) return bee;
-            return { ...bee, state: 'moving' as const, targetTreeId: treeId, targetX: undefined, targetY: undefined, treeId: null, bezierT: undefined, bezierStartX: undefined, bezierStartY: undefined, bezierP1x: undefined, bezierP1y: undefined, bezierTargetX: undefined, bezierTargetY: undefined };
+            return { ...bee, state: 'moving' as const, targetTreeId: treeId, isDrifting: false, targetX: undefined, targetY: undefined, treeId: null, bezierT: undefined, bezierStartX: undefined, bezierStartY: undefined, bezierP1x: undefined, bezierP1y: undefined, bezierTargetX: undefined, bezierTargetY: undefined };
           });
           const updatedTrees = prev.trees.map(t => {
             const leaving = prev.bees.filter(b => prev.selectedBeeIds.has(b.id) && b.treeId === t.id).length;
