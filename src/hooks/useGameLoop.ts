@@ -847,7 +847,7 @@ export function useGameLoop({
         const newBees: BeeType[] = [];
         const now = Date.now();
 
-        if (newState.gameTime < 2) return newState;
+        if (newState.gameTime < 1) return newState;
 
         if (newState.bees.length >= MAX_BEES) {
           return newState;
