@@ -411,8 +411,18 @@ export function useGameLoop({
           } else if (bee.state === 'building' && bee.buildingTreeId) {
             const targetTree = newState.trees.find(t => t.id === bee.buildingTreeId);
             if (!targetTree) {
-              bee.state = 'idle';
-              bee.treeId = bee.sourcetreeId ?? null;
+              const sourceTree = newState.trees.find(t => t.id === bee.sourcetreeId && !t.isCut);
+              const fallbackTree = sourceTree ?? newState.trees
+                .filter(t => t.owner === bee.owner && !t.isCut)
+                .sort((a, b) => (a.x - bee.x) ** 2 + (a.y - bee.y) ** 2 - ((b.x - bee.x) ** 2 + (b.y - bee.y) ** 2))[0];
+              if (fallbackTree) {
+                bee.state = 'moving';
+                bee.targetTreeId = fallbackTree.id;
+                bee.isDrifting = false;
+              } else {
+                bee.state = 'idle';
+                bee.treeId = null;
+              }
               bee.buildingTreeId = null;
               bee.sourcetreeId = null;
             } else {
