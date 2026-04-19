@@ -204,15 +204,35 @@ export function useGameLoop({
                 bee.state = 'idle';
                 bzTarget.beeCount++;
               } else {
-                bee.state = 'idle';
-                bee.targetTreeId = null;
+                const fallback207 = newState.trees
+                  .filter((t) => t.owner === bee.owner && !t.isCut)
+                  .sort((a, b) => (a.x - bee.x) ** 2 + (a.y - bee.y) ** 2 - ((b.x - bee.x) ** 2 + (b.y - bee.y) ** 2))[0];
+                if (fallback207) {
+                  bee.state = 'moving';
+                  bee.targetTreeId = fallback207.id;
+                  bee.isDrifting = false;
+                } else {
+                  bee.state = 'idle';
+                  bee.targetTreeId = null;
+                  bee.treeId = null;
+                }
               }
             }
           } else if (bee.state === 'moving' && bee.targetTreeId) {
             const target = newState.trees.find((t) => t.id === bee.targetTreeId);
             if (target && target.isCut) {
-              bee.state = 'idle';
-              bee.targetTreeId = null;
+              const fallback214 = newState.trees
+                .filter((t) => t.owner === bee.owner && !t.isCut)
+                .sort((a, b) => (a.x - bee.x) ** 2 + (a.y - bee.y) ** 2 - ((b.x - bee.x) ** 2 + (b.y - bee.y) ** 2))[0];
+              if (fallback214) {
+                bee.state = 'moving';
+                bee.targetTreeId = fallback214.id;
+                bee.isDrifting = false;
+              } else {
+                bee.state = 'idle';
+                bee.targetTreeId = null;
+                bee.treeId = null;
+              }
             } else if (target) {
               const offsetX = bee.offsetX || 0;
               const offsetY = bee.offsetY || 0;
