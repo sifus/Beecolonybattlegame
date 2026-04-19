@@ -193,19 +193,6 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
 
   return (
     <>
-      {/* Recommencer - Haut Gauche (masqué en mode tutoriel) */}
-      {!isTutorial && (
-        <div className={`absolute ${positioning} z-20`} style={{ pointerEvents: 'none' }}>
-          <StyledButton
-            onClick={onRestart}
-            onDragStart={onDragStart}
-            isDragging={isDragging}
-            hasSelection={hasSelection}
-            title="Recommencer"
-            icon={<RotateCcw className={`${iconSize} text-white`} strokeWidth={2.5} />}
-          />
-        </div>
-      )}
 
       {/* Pause - Haut Droite */}
       <div className={`absolute ${positioningRight} z-20`} style={{ pointerEvents: 'none' }}>
@@ -326,6 +313,23 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                     )}
 
                     <button
+                      onClick={() => { setShowPauseMenu(false); onRestart(); }}
+                      style={{
+                        padding: '14px 24px', borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                        boxShadow: '0 8px 16px rgba(217,119,6,0.4), inset 0 -3px 8px rgba(0,0,0,0.2), inset 0 3px 8px rgba(255,255,255,0.3)',
+                        border: '3px solid rgba(120,53,15,0.4)',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        fontSize: '16px', fontWeight: '700', color: '#78350f', cursor: 'pointer',
+                        outline: 'none', minHeight: '52px', touchAction: 'manipulation',
+                        userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <RotateCcw style={{ width: '20px', height: '20px', flexShrink: 0 }} strokeWidth={2.5} />
+                      <span>Recommencer</span>
+                    </button>
+
+                    <button
                       onClick={handleContinue}
                       style={{
                         padding: '14px 24px', borderRadius: '16px',
@@ -408,6 +412,23 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
                         <span>Accueil</span>
                       </button>
                     )}
+
+                    <button
+                      onClick={() => { setShowPauseMenu(false); onRestart(); }}
+                      style={{
+                        flex: '1', padding: '14px 24px', borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #FDB022 0%, #F59E0B 50%, #D97706 100%)',
+                        boxShadow: '0 8px 16px rgba(217,119,6,0.4), inset 0 -3px 8px rgba(0,0,0,0.2), inset 0 3px 8px rgba(255,255,255,0.3)',
+                        border: '3px solid rgba(120,53,15,0.4)',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        fontSize: '16px', fontWeight: '700', color: '#78350f', cursor: 'pointer',
+                        outline: 'none', minHeight: '52px', touchAction: 'manipulation',
+                        userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <RotateCcw style={{ width: '20px', height: '20px', flexShrink: 0 }} strokeWidth={2.5} />
+                      <span>Recommencer</span>
+                    </button>
 
                     <button
                       onClick={handleContinue}

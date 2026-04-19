@@ -546,6 +546,9 @@ export default function App() {
         );
         setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
       }
+      if (e.key === 'y' || e.key === 'Y') {
+        handleRestart();
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
