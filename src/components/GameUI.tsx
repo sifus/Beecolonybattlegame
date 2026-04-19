@@ -88,11 +88,7 @@ function StyledButton({ onClick, title, icon, className = '', onDragStart, isDra
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (isDragging || hasSelection) return;
-    // Vérifier que le doigt est encore au-dessus du bouton au moment du lâcher
-    const touch = e.changedTouches[0];
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!e.currentTarget.contains(el)) return;
+    e.preventDefault();
     onClick();
   };
 

@@ -36,11 +36,13 @@
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: none;
         -webkit-overscroll-behavior: none;
+        background-color: #c2d040;
       }
 
       @supports (-webkit-touch-callout: none) {
-        html, body {
-          height: -webkit-fill-available;
+        html, body, #root {
+          height: 100dvh;
+          min-height: 100dvh;
         }
       }
 
