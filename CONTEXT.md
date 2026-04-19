@@ -966,6 +966,30 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - **Limites grille dynamiques** : recalculer screenW/screenH au resize pour support bureau
 - **Mode nuit perf iPhone 13** : investiguer coût SVG lucioles si confirmé sur device
 
+### Nouveaux bugs confirmés (ajoutés fin session 10)
+
+**Abeilles — naissance ruche arbre double**
+- Les abeilles doivent naître depuis le trou de la ruche sur les arbres doubles aussi (actuellement OK sur arbre simple uniquement)
+
+**Lucioles — perf iPhone 17**
+- Les lucioles rament même sur iPhone 17 — investiguer et optimiser le rendu SVG lucioles en mode nuit
+- Piste : réduire nombre de lucioles, simplifier filtres SVG, ou passer les lucioles sur canvas
+
+**Capacitor — tests natifs iOS/Android**
+- Commencer les tests avec Capacitor pour voir le rendu exact sur iOS et Android natif
+- Priorité : valider que les bugs PWA (home bar, hauteur viewport) disparaissent bien en natif
+
+**Abeilles — vitesse après redimensionnement fenêtre mobile**
+- Si abeilles envoyées sur carte puis fenêtre réduite → à la reprise les abeilles sont en ligne et leur vitesse a chuté
+- Si on les sélectionne pour les envoyer ailleurs → elles prennent la vitesse isDrifting (0.25) au lieu de la vitesse transit (0.8)
+- Cause probable : isDrifting reste true après le redimensionnement, ou swarmX/swarmY corrompus
+- Lié au bug limites grille dynamiques (screenW/screenH capturés au démarrage)
+
+**Vitesse abeilles — stabilisation globale**
+- La gestion des vitesses (orbite / transit / dérive) est fragile et source de bugs récurrents
+- Faire un audit complet des états de vitesse et documenter les règles absolues
+- Envisager une refonte propre de la machine à états des abeilles
+
 ### Roadmap modes de jeu
 - Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore)
 - Mode Partie Rapide — tableau des scores localStorage par difficulté
