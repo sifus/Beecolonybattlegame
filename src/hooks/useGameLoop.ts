@@ -908,10 +908,10 @@ export function useGameLoop({
 
                   // Position du trou de la ruche selon le type
                   const hiveX = tree.maxHives === 2
-                    ? (tree.hiveCount >= 1 ? tree.x - 22 * s : tree.x + 14 * s)
+                    ? (i === 0 ? tree.x - 22 * s : tree.x + 14 * s)
                     : tree.x;
                   const hiveY = tree.maxHives === 2
-                    ? trunkTopY - (tree.hiveCount >= 1 ? 10 * s : 4 * s) + 8 * s
+                    ? trunkTopY - (i === 0 ? 10 * s : 4 * s) + 8 * s
                     : trunkTopY - 14 * s + 8 * s;
 
                   const spawnX = hiveX + (Math.random() - 0.5) * 4;
