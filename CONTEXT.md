@@ -982,7 +982,6 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 | Mode nuit rame iPhone 13 (audit iso jour/nuit) | **PAS FAIT** | Vérifier qu'aucun calcul ni boucle n'est actif uniquement la nuit |
 
 ### Gameplay — améliorations
-- **Délai premier spawn** : passer de 2s à 1s (actuellement `if (newState.gameTime < 2) return`)
 - **Essaim abeilles en attente** : mouvement aléatoire moins rapide + essaim plus éparpillé (rayon de dérive plus grand, actuellement 15–30px autour de swarmX/swarmY)
 - **Lag au clic** : présent sur Chrome, absent sur Safari iOS — non prioritaire pour cible iPhone. Ne pas prioriser le refactor BeesCanvas.
 - **Tentative BeesCanvas annulée** : approche canvas 2D viable techniquement mais trop de régressions. À reprendre en session dédiée si le lag devient un problème sur iPhone réel.
@@ -1034,6 +1033,7 @@ RÈGLE : state='idle' est RÉSERVÉ aux abeilles avec treeId non-null. Toute abe
 | TBD | feat: essaim abeilles — rayon serré 10-30px + vitesse dérive isDrifting 0.25 |
 | TBD | feat: clamping abeilles dans la grille + isDrifting vitesse dérive + essaim serré |
 | TBD | fix: touch boutons mobile + fond safe area + revert webkit-fill-available |
+| `04388cd` | fix: délai premier spawn 2s → 1s |
 
 ### Essaim abeilles — comportement en attente sur la carte
 - Rayon de dérive swarm : 15–30px → **10–30px** (essaim serré)
