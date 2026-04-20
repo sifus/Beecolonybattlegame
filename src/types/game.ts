@@ -63,6 +63,7 @@ export interface Bee {
   swarmX?: number; // Centre fixe de nuée pour la dérive sur point vide
   swarmY?: number;
   isDrifting?: boolean; // true quand l'abeille dérive aléatoirement autour de swarmX/Y
+  isAttacking?: boolean; // true quand l'abeille est en orbite sur un arbre ennemi (attaque en cours)
 }
 
 /**

@@ -205,7 +205,7 @@ export function useGameLoop({
                 bzTarget.beeCount++;
               } else {
                 const fallback207 = newState.trees
-                  .filter((t) => t.owner === bee.owner && !t.isCut)
+                  .filter((t) => t.owner !== 'neutral' && !t.isCut)
                   .sort((a, b) => (a.x - bee.x) ** 2 + (a.y - bee.y) ** 2 - ((b.x - bee.x) ** 2 + (b.y - bee.y) ** 2))[0];
                 if (fallback207) {
                   bee.state = 'moving';
@@ -222,7 +222,7 @@ export function useGameLoop({
             const target = newState.trees.find((t) => t.id === bee.targetTreeId);
             if (target && target.isCut) {
               const fallback214 = newState.trees
-                .filter((t) => t.owner === bee.owner && !t.isCut)
+                .filter((t) => t.owner !== 'neutral' && !t.isCut)
                 .sort((a, b) => (a.x - bee.x) ** 2 + (a.y - bee.y) ** 2 - ((b.x - bee.x) ** 2 + (b.y - bee.y) ** 2))[0];
               if (fallback214) {
                 bee.state = 'moving';
@@ -303,6 +303,7 @@ export function useGameLoop({
                     bee.displayAngle = arrivalAngle + Math.PI / 2 + (bee.orbitDir === -1 ? Math.PI : 0);
                     bee.state = 'idle';
                     bee.treeId = target.id;
+                    bee.isAttacking = true;
                     bee.targetTreeId = null;
                     bee.offsetX = undefined;
                     bee.offsetY = undefined;
@@ -831,7 +832,7 @@ export function useGameLoop({
         // Redirect post-victoire : abeilles idle sur un arbre dont elles ne sont plus owner
         newState.bees.forEach((bee) => {
           if (beesToRemove.has(bee.id)) return;
-          if (bee.state !== 'idle' || !bee.treeId) return;
+          if (bee.state !== 'idle' || !bee.treeId || bee.isAttacking === true) return;
           const occupiedTree = newState.trees.find(t => t.id === bee.treeId);
           if (!occupiedTree || occupiedTree.owner === bee.owner || occupiedTree.owner === 'neutral') return;
 
