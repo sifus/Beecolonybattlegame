@@ -277,6 +277,7 @@ export function useGameLoop({
                     bee.displayAngle = arrivalAngle + Math.PI / 2 + (bee.orbitDir === -1 ? Math.PI : 0);
                     bee.state = 'idle';
                     bee.treeId = target.id;
+                    bee.isAttacking = false;
                     bee.targetTreeId = null;
                     bee.offsetX = undefined;
                     bee.offsetY = undefined;
@@ -301,6 +302,7 @@ export function useGameLoop({
                                      + Math.sin(incomingAngle) * (Math.cos(arrivalAngle) * (bee.orbitDir ?? 1));
                     if (tangentDot < 0) bee.orbitDir = -(bee.orbitDir ?? 1);
                     bee.displayAngle = arrivalAngle + Math.PI / 2 + (bee.orbitDir === -1 ? Math.PI : 0);
+                    bee.angle = Math.random() * Math.PI * 2;
                     bee.state = 'idle';
                     bee.treeId = target.id;
                     bee.isAttacking = true;
@@ -848,6 +850,7 @@ export function useGameLoop({
           if (fallbackTree) {
             bee.targetTreeId = fallbackTree.id;
             bee.isDrifting = false;
+            bee.isAttacking = false;
             bee.swarmX = undefined;
             bee.swarmY = undefined;
             bee.targetX = undefined;

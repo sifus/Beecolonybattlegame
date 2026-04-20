@@ -956,39 +956,67 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - GameState.stars supprimé — champ mort (les étoiles sont dans Level/SubLevel)
 - state 'fighting' : déjà supprimé en session précédente, confirmé absent
 
-## Backlog session 11
+## Ce qui a été fait — 20 avril 2026 (session 11)
+
+### Machine à états abeilles — stabilisation complète
+
+**Règles absolues documentées :**
+- `state='idle'` sans `treeId` non-null = interdit en toute circonstance
+- `isDrifting=true` → vitesse 0.25 × cellSizeScale (dérive)
+- `isDrifting=false` → vitesse 0.8 × cellSizeScale (transit)
+- `isAttacking=true` → abeille en orbite sur arbre ennemi intentionnellement, jamais redirigée
+
+**Bugs corrigés :**
+- `idle` sans `treeId` (L207/L214 useGameLoop.ts) → redirect vers arbre joueur le plus proche, ou `dying` si aucun
+- `isDrifting` non remis à `false` sur clic arbre (App.tsx L881/L1239 handleMouseUp + handleTreeClick)
+- `sourcetreeId` null en fin de building (L394) → fallback arbre joueur le plus proche
+- `isDrifting: false` manquant dans `createBee()` → ajouté
+- Flag `isAttacking` ajouté dans `game.ts` + `useGameLoop.ts` : abeilles joueur ne sont plus redirigées pendant l'attaque d'un arbre ennemi
+- `isAttacking` remis à `false` sur arrivée arbre joueur/neutre et redirect post-victoire
+
+**Spawn arbre double — corrigé :**
+- Positions de naissance alignées sur Tree.tsx : `i=0` petite droite (`tree.x + 14*s`), `i=1` grosse gauche (`tree.x - 22*s`)
+- Rythme : petite ruche 1 abeille/3s, grosse ruche 1 abeille/3s + 1 abeille extra à mi-cycle (1.5s)
+- `shouldProduce` distingue arbre simple (level 1/2) et arbre double (toujours `now % 3000 < 1000`)
+- `shouldProduceExtra` indépendant pour grosse ruche (`i=1`, `now % 3000 >= 1500 && < 2500`)
+
+**Production arbre double — bilan :**
+- Arbre simple : 1 abeille/3s
+- Arbre double 1 ruche : 1 abeille/3s
+- Arbre double 2 ruches : ~5 abeilles/3s (petite 1/3s + grosse 2/3s + production niveau 2)
+
+**Post-conquête :**
+- Angle orbital aléatoire à l'arrivée sur arbre ennemi (`bee.angle = Math.random() * Math.PI * 2`)
+- Trajectoire d'entrée en orbite post-conquête encore abrupte — à améliorer avec Bézier (backlog)
+
+### Commits de session
+| Hash | Description |
+|---|---|
+| `650f0e5` | chore: PROJECT_TREE.txt — ajout BeeFilters.tsx, date 19 avril |
+| `98faa19` | fix: idle sans treeId — redirect arbre le plus proche (L207/L214) |
+| `3e3f788` | fix: isDrifting false sur clic arbre — handleMouseUp + handleTreeClick |
+| `02582e4` | fix: sourcetreeId null en fin de building — fallback arbre joueur |
+| `1377e52` | fix: isDrifting false dans createBee() |
+| `1db81a4` | fix: naissance abeilles arbre double — positions + rythme petite/grosse ruche |
+| `2c07bc3` | fix: isAttacking — abeilles restent sur arbre ennemi pendant combat + angle orbital aléatoire |
+
+---
+
+## Backlog session 12
 
 ### Priorité haute
-- **Arrivée en orbite fluide** abeilles envoyées manuellement — commit c5d8228 annulé session 9, à reprendre proprement
-- **IA ennemie** : meilleure sélection de cibles, timing variable, gestion défensive
+- **Lucioles perf iPhone 17** — rament même sur iPhone 17 (confirmé), optimiser SVG ou passer canvas
+- **Capacitor — tests natifs iOS/Android** — valider rendu exact + disparition bugs PWA (home bar, hauteur viewport)
+- **Abeilles figées au retour de fenêtre** — switch navigateur = abeilles stoppées, impossible de les réactiver
+- **Abeilles en ligne contre bord zone jouable** — régression à investiguer
+- **Z-index abeilles sous ruches** — abeilles doivent passer AU-DESSUS des ruches (joueur et ennemi)
 
 ### Priorité moyenne
-- **Limites grille dynamiques** : recalculer screenW/screenH au resize pour support bureau
-- **Mode nuit perf iPhone 13** : investiguer coût SVG lucioles si confirmé sur device
-
-### Nouveaux bugs confirmés (ajoutés fin session 10)
-
-**Abeilles — naissance ruche arbre double**
-- Les abeilles doivent naître depuis le trou de la ruche sur les arbres doubles aussi (actuellement OK sur arbre simple uniquement)
-
-**Lucioles — perf iPhone 17**
-- Les lucioles rament même sur iPhone 17 — investiguer et optimiser le rendu SVG lucioles en mode nuit
-- Piste : réduire nombre de lucioles, simplifier filtres SVG, ou passer les lucioles sur canvas
-
-**Capacitor — tests natifs iOS/Android**
-- Commencer les tests avec Capacitor pour voir le rendu exact sur iOS et Android natif
-- Priorité : valider que les bugs PWA (home bar, hauteur viewport) disparaissent bien en natif
-
-**Abeilles — vitesse après redimensionnement fenêtre mobile**
-- Si abeilles envoyées sur carte puis fenêtre réduite → à la reprise les abeilles sont en ligne et leur vitesse a chuté
-- Si on les sélectionne pour les envoyer ailleurs → elles prennent la vitesse isDrifting (0.25) au lieu de la vitesse transit (0.8)
-- Cause probable : isDrifting reste true après le redimensionnement, ou swarmX/swarmY corrompus
-- Lié au bug limites grille dynamiques (screenW/screenH capturés au démarrage)
-
-**Vitesse abeilles — stabilisation globale**
-- La gestion des vitesses (orbite / transit / dérive) est fragile et source de bugs récurrents
-- Faire un audit complet des états de vitesse et documenter les règles absolues
-- Envisager une refonte propre de la machine à états des abeilles
+- **Vitesse abeilles après resize mobile** — isDrifting reste true après réduction fenêtre → vitesse transit = vitesse dérive au retour
+- **Double clic construction** — prend-il en compte les abeilles en chemin ? Construction possible sans assez d'abeilles
+- **Trajectoire Bézier post-conquête** — même courbe d'entrée en orbite qu'à la naissance (abrupte actuellement)
+- **Nuit — lisibilité** — rendre la nuit plus claire + mieux différencier lac du damier nocturne
+- **IA ennemie** — meilleure sélection de cibles, timing variable, gestion défensive
 
 ### Roadmap modes de jeu
 - Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore)
@@ -996,3 +1024,7 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - Mode Histoire — niveaux manuels, difficulté croissante
 - Orage : nuages orageux déciment abeilles et cassent ruches
 - Bûcheron : trébuche sur cailloux
+
+### Dette technique
+- Limites grille dynamiques : screenW/screenH capturés au démarrage → recalculer au resize
+- Transition angulaire fluide post-conquête (angle abrupt, noté "plus tard")
