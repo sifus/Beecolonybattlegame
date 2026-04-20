@@ -895,7 +895,9 @@ export function useGameLoop({
             if (tree.owner !== 'neutral') {
               if (health > 0) {
                 const level = tree.hiveLevel[i] || 1;
-                const shouldProduce = level === 2 || (level === 1 && now % 3000 < 1000);
+                const shouldProduce = tree.maxHives === 1
+                  ? (level === 2 || (level === 1 && now % 3000 < 1000))
+                  : (now % 3000 < 1000);
 
                 if (shouldProduce) {
                   const orbitAngle = Math.random() * Math.PI * 2;
@@ -908,10 +910,10 @@ export function useGameLoop({
 
                   // Position du trou de la ruche selon le type
                   const hiveX = tree.maxHives === 2
-                    ? (i === 0 ? tree.x - 22 * s : tree.x + 14 * s)
+                    ? (i === 0 ? tree.x + 14 * s : tree.x - 22 * s)
                     : tree.x;
                   const hiveY = tree.maxHives === 2
-                    ? trunkTopY - (i === 0 ? 10 * s : 4 * s) + 8 * s
+                    ? trunkTopY - (i === 0 ? 4 * s : 10 * s) + 8 * s
                     : trunkTopY - 14 * s + 8 * s;
 
                   const spawnX = hiveX + (Math.random() - 0.5) * 4;
@@ -977,6 +979,68 @@ export function useGameLoop({
                     bezierArrivalAngle: arrivalAngle,
                     orbitDir: beeOrbitDir,
                     orbitRadius: beeOrbitRadius,
+                  });
+                  tree.beeCount++;
+                }
+
+                const shouldProduceExtra = i === 1 && level >= 1 && health > 0 && (now % 3000 >= 1500 && now % 3000 < 2500);
+                if (shouldProduceExtra) {
+                  const s2 = gridParams.cellSize / 80;
+                  const trunkBottomY2 = tree.y + gridParams.cellSize * 0.5;
+                  const trunkTopY2 = trunkBottomY2 - 20 * s2;
+                  const hiveX2 = tree.maxHives === 2 ? tree.x - 22 * s2 : tree.x;
+                  const hiveY2 = tree.maxHives === 2 ? trunkTopY2 - 10 * s2 + 8 * s2 : trunkTopY2 - 14 * s2 + 8 * s2;
+                  const spawnTrunkBottomY2 = tree.y + gridParams.cellSize * 0.5 + gridParams.cellSize * 0.19;
+                  const spawnTrunkTopY2 = spawnTrunkBottomY2 - 20 * s2;
+                  const orbitalCenterY2 = spawnTrunkTopY2 - gridParams.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
+                  const beeBaseRadius2 = Math.max(
+                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
+                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                  );
+                  const beeId2 = `bee-${tree.id}-${now}-extra-${Math.random()}`;
+                  const idHash2 = parseInt(beeId2.slice(-5), 36);
+                  const beeOrbitDir2 = idHash2 % 2 === 0 ? 1 : -1;
+                  const beeOrbitRadius2 = beeBaseRadius2 + ((idHash2 % 8) - 4);
+                  const orbitAngle2 = Math.random() * Math.PI * 2;
+                  const targetX2 = tree.x + Math.cos(orbitAngle2) * beeOrbitRadius2;
+                  const targetY2 = orbitalCenterY2 + Math.sin(orbitAngle2) * beeOrbitRadius2;
+                  const spawnX2 = hiveX2 + (Math.random() - 0.5) * 4;
+                  const spawnY2 = hiveY2 + (Math.random() - 0.5) * 4;
+                  let arrivalAngle2 = Math.atan2(spawnY2 - orbitalCenterY2, spawnX2 - tree.x);
+                  const side2 = Math.random() > 0.5 ? 1 : -1;
+                  if (arrivalAngle2 > -Math.PI * 0.75 && arrivalAngle2 < -Math.PI * 0.25) {
+                    arrivalAngle2 += side2 * Math.PI * 0.5;
+                  }
+                  const bezierTargetX2 = tree.x + Math.cos(arrivalAngle2) * beeOrbitRadius2;
+                  const bezierTargetY2 = orbitalCenterY2 + Math.sin(arrivalAngle2) * beeOrbitRadius2;
+                  const perpX2 = -Math.sin(arrivalAngle2) * side2;
+                  const perpY2 = Math.cos(arrivalAngle2) * side2;
+                  const p1x2 = (spawnX2 + bezierTargetX2) / 2 + perpX2 * beeOrbitRadius2 * 1.2;
+                  const p1y2 = (spawnY2 + bezierTargetY2) / 2 + perpY2 * beeOrbitRadius2 * 1.2;
+                  const spawnAngle2 = Math.atan2(bezierTargetY2 - spawnY2, bezierTargetX2 - spawnX2);
+                  newBees.push({
+                    id: beeId2,
+                    x: spawnX2,
+                    y: spawnY2,
+                    owner: tree.owner,
+                    treeId: null,
+                    targetTreeId: tree.id,
+                    state: 'moving',
+                    angle: spawnAngle2,
+                    offsetX: targetX2 - tree.x,
+                    offsetY: targetY2 - tree.y,
+                    createdAt: now,
+                    bezierStartX: spawnX2,
+                    bezierStartY: spawnY2,
+                    bezierP1x: p1x2,
+                    bezierP1y: p1y2,
+                    bezierTargetX: bezierTargetX2,
+                    bezierTargetY: bezierTargetY2,
+                    bezierT: 0,
+                    bezierSide: side2,
+                    bezierArrivalAngle: arrivalAngle2,
+                    orbitDir: beeOrbitDir2,
+                    orbitRadius: beeOrbitRadius2,
                   });
                   tree.beeCount++;
                 }
