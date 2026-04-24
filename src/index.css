@@ -1212,6 +1212,12 @@ html, body {
   }
 }
 
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  #root {
+    background-color: #F09A18;
+  }
+}
+
 @media screen and (width <= 1024px) and (orientation: portrait) {
   #root {
     visibility: hidden;
