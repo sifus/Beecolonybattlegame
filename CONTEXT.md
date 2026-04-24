@@ -1066,6 +1066,10 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 - Orage : nuages orageux déciment abeilles et cassent ruches
 - Bûcheron : trébuche sur cailloux
 
+### Debug / outils de test
+- Double tap 2 doigts = spawn 10 abeilles (debug, à supprimer avant release publique)
+- TODO: intégrer un Konami Code comme déclencheur debug alternatif (↑↑↓↓←→←→BA)
+
 ### Dette technique
 - Limites grille dynamiques : screenW/screenH capturés au démarrage → recalculer au resize
 - Transition angulaire fluide post-conquête (angle abrupt, noté "plus tard")
