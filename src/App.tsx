@@ -283,7 +283,11 @@ export default function App() {
       if (wasPlayingRef.current) {
         wasPlayingRef.current = false;
         setTimeout(() => {
-          setGameState(prev => ({ ...prev, isPlaying: true }));
+          setGameState(prev => ({
+            ...prev,
+            isPlaying: true,
+            bees: prev.bees.map(b => ({ ...b, isDrifting: false }))
+          }));
         }, 100);
       }
     }
