@@ -1,5 +1,29 @@
 # Bee Colony Battle Game — Contexte projet
 
+## Index technique — Où est codé quoi
+
+| Fonctionnalité | Fichier | Lignes approx. |
+|---|---|---|
+| Boucle de jeu 60fps | `src/hooks/useGameLoop.ts` | 63–617 |
+| Production abeilles (spawn) | `src/hooks/useGameLoop.ts` | 878–1062 |
+| Machine à états abeilles (idle/moving/bezier/building/dying) | `src/hooks/useGameLoop.ts` | 89–615 |
+| Combat abeilles (bee vs bee) | `src/hooks/useGameLoop.ts` | 619–860 |
+| IA ennemie | `src/utils/enemyAI.ts` | 1–416 (+ appel L1092 useGameLoop) |
+| Cercle de sélection — calcul état + refresh | `src/App.tsx` | 185–186, 579–584 |
+| Cercle de sélection — rendu SVG + compteur | `src/components/GameBoard.tsx` | 582–639 |
+| Orbite abeilles (centre + rayon) | `src/hooks/useGameLoop.ts` | 100–112, 182–196 |
+| Vitesse abeilles (transit 0.8× vs dérive 0.25×) | `src/hooks/useGameLoop.ts` | 316–377 |
+| Retour premier plan / visibilitychange | `src/App.tsx` | 265–293 |
+| Rendu SVG principal (GameBoard) | `src/components/GameBoard.tsx` | 1–846 |
+| Arbres + ruches (rendu) | `src/components/Tree.tsx` | 1–fin |
+| Abeilles (rendu) | `src/components/Bee.tsx` | 1–112 |
+| Système solaire (rayon, sparkles) | `src/hooks/useSolarSystem.ts` | 49–fin |
+| Paramètres grille (calculateGridParams) | `src/App.tsx` | 49–80 |
+| Constantes gameplay | `src/constants/gameRules.ts` | 1–fin |
+| Persistance localStorage | `src/utils/storage.ts` | 1–fin |
+
+---
+
 ## Nom du jeu
 **Bee Colony Battle Game** (alias *Rush*) — jeu de stratégie en temps réel où le joueur conquiert une forêt avec des colonies d'abeilles.
 
