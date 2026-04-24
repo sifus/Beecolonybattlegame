@@ -13,6 +13,8 @@ const config: CapacitorConfig = {
     preferredContentMode: 'mobile',
     limitsNavigationsToAppBoundDomains: true,
     orientation: 'landscape',
+    allowsLinkPreview: false,
+    scrollEnabled: false,
   },
   android: {
     orientation: 'landscape',

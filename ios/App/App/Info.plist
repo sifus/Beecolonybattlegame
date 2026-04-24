@@ -45,6 +45,6 @@
 	<key>UIHomeIndicatorAutoHidden</key>
 	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+	<false/>
 </dict>
 </plist>
