@@ -8,7 +8,6 @@ const config: CapacitorConfig = {
     androidScheme: 'https'
   },
   ios: {
-    contentInset: 'always',
     backgroundColor: '#F09A18',
     preferredContentMode: 'mobile',
     limitsNavigationsToAppBoundDomains: true,
