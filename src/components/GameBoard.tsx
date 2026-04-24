@@ -720,23 +720,7 @@ const GameBoardInner = function GameBoard({
           );
         })}
 
-        {/* Bees — normales (pas de halo de naissance actif) */}
-        {gameState.bees.map((bee) => {
-          if (bee.x < -50 || bee.x > gameWidth + 50 || bee.y < -50 || bee.y > gameHeight + 50) return null;
-          if (bee.createdAt && (Date.now() - bee.createdAt) < 800) return null;
-          return (
-            <Bee
-              key={bee.id}
-              bee={bee}
-              isSelected={gameState.selectedBeeIds.has(bee.id) && !(selectionStart && selectionCurrent)}
-              isBeingSelected={beingSelectedIds.has(bee.id)}
-              isNightMode={globalTimeOfDay === 'night'}
-              cellSize={gridParams.cellSize}
-            />
-          );
-        })}
-
-        {/* Trees - TOP LAYER (hives, indicators, compteurs) — au-dessus des abeilles */}
+        {/* Trees - TOP LAYER (hives, indicators, compteurs) — sous les abeilles */}
         {gameState.trees.map((tree) => {
           const playerBeesAtTree = gameState.bees.filter(
             b => b.owner === 'player' && (
@@ -755,6 +739,22 @@ const GameBoardInner = function GameBoard({
               cellSize={gridParams.cellSize}
               renderLayer="top"
               isNightMode={globalTimeOfDay === 'night'}
+            />
+          );
+        })}
+
+        {/* Bees — normales (pas de halo de naissance actif) */}
+        {gameState.bees.map((bee) => {
+          if (bee.x < -50 || bee.x > gameWidth + 50 || bee.y < -50 || bee.y > gameHeight + 50) return null;
+          if (bee.createdAt && (Date.now() - bee.createdAt) < 800) return null;
+          return (
+            <Bee
+              key={bee.id}
+              bee={bee}
+              isSelected={gameState.selectedBeeIds.has(bee.id) && !(selectionStart && selectionCurrent)}
+              isBeingSelected={beingSelectedIds.has(bee.id)}
+              isNightMode={globalTimeOfDay === 'night'}
+              cellSize={gridParams.cellSize}
             />
           );
         })}
