@@ -786,7 +786,6 @@ export default function App() {
     isDraggingRef.current = false;
     setSelectionStart(null);
     setSelectionCurrent(null);
-    setGameState(prev => ({ ...prev, selectedBeeIds: new Set() }));
     setIsDragging(false);
 
     // Ripple immédiat (visuel pur, pas de calcul lourd)
@@ -951,7 +950,7 @@ export default function App() {
               return tree;
             });
 
-            return { ...prev, bees: updatedBees, trees: updatedTrees };
+            return { ...prev, bees: updatedBees, trees: updatedTrees, selectedBeeIds: new Set() };
           });
 
           // Marquer qu'on vient d'envoyer des abeilles pour éviter de sélectionner dans handleTreeClick
