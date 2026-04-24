@@ -571,6 +571,15 @@ export default function App() {
     return () => window.removeEventListener('touchstart', handleFourFingerTouch);
   }, [gameState, gridParams]);
 
+  // Refresh du compteur de cercle pendant le drag — iOS peut bloquer les touchmove
+  useEffect(() => {
+    if (!isDragging) return;
+    const interval = setInterval(() => {
+      setSelectionCurrent(prev => prev ? { x: prev.x, y: prev.y } : prev);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isDragging]);
+
   // Fonction utilitaire pour convertir les coordonnées écran en coordonnées jeu
   // NOUVELLE VERSION : Plus simple car preserveAspectRatio="none" et dimensions fixes
   const getGameCoordinates = (clientX: number, clientY: number) => {
