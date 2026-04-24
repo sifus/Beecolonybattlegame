@@ -784,8 +784,6 @@ export default function App() {
     tapPosRef.current = null;
     dragStartPosRef.current = null;
     isDraggingRef.current = false;
-    setSelectionStart(null);
-    setSelectionCurrent(null);
     setIsDragging(false);
 
     // Ripple immédiat (visuel pur, pas de calcul lourd)
@@ -960,6 +958,12 @@ export default function App() {
           }, 100);
         }
       }
+
+      // Reset cercle après déplacement — même cycle de rendu que selectedBeeIds: new Set()
+      setTimeout(() => {
+        setSelectionStart(null);
+        setSelectionCurrent(null);
+      }, 0);
     }, 0);
   };
 
