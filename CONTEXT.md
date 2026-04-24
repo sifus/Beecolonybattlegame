@@ -1002,20 +1002,40 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 
 ---
 
-## Backlog session 12
+## Ce qui a été fait — 24 avril 2026 (session 12)
+
+### Commits de session
+- fix: barre verte portrait — fond body orange en portrait
+- fix: fond vert résiduel portrait — index.css #root + index.html fallback
+- fix: inversion logique fond — orange par défaut, vert uniquement en paysage
+- fix: manifest background_color + theme_color orange pour PWA
+- fix: compteur cercle sélection — refresh 100ms pendant drag sur iOS
+- fix: isDrifting reset au retour premier plan — vitesse transit restaurée
+- fix: gridParams via ref dans useGameLoop — cellSizeScale toujours à jour après resize/switch app
+- fix: gridParams gelé pendant la partie — rotation/resize sans effet sur le jeu
+- fix: reset swarmX/swarmY au resize — revert, remplacé par gel gridParams
+
+### Branche capacitor-native créée
+- capacitor.config.ts : appId com.rush.beecolony, appName Rush, orientation landscape, backgroundColor #F09A18
+- Info.plist : lock orientation paysage + UIHomeIndicatorAutoHidden true
+- cap doctor : iOS et Android ✅
+- Xcode en cours d'installation — build natif iPhone à faire dès qu'il est prêt
+
+---
+
+## Backlog session 13
 
 ### Priorité haute
-- **Lucioles perf iPhone 17** — rament même sur iPhone 17 (confirmé), optimiser SVG ou passer canvas
-- **Capacitor — tests natifs iOS/Android** — valider rendu exact + disparition bugs PWA (home bar, hauteur viewport)
-- **Abeilles figées au retour de fenêtre** — switch navigateur = abeilles stoppées, impossible de les réactiver
-- **Abeilles en ligne contre bord zone jouable** — régression à investiguer
-- **Z-index abeilles sous ruches** — abeilles doivent passer AU-DESSUS des ruches (joueur et ennemi)
+- **Tester build natif Xcode** — iPhone 17 et iPhone 13
+- **Vérifier disparition bugs PWA** — barre verte, home bar, hauteur viewport
+- **Vérifier orientation forcée paysage** — en natif iOS
+- **Merger capacitor-native dans main** — si build OK
 
 ### Priorité moyenne
-- **Vitesse abeilles après resize mobile** — isDrifting reste true après réduction fenêtre → vitesse transit = vitesse dérive au retour
-- **Double clic construction** — prend-il en compte les abeilles en chemin ? Construction possible sans assez d'abeilles
-- **Trajectoire Bézier post-conquête** — même courbe d'entrée en orbite qu'à la naissance (abrupte actuellement)
-- **Nuit — lisibilité** — rendre la nuit plus claire + mieux différencier lac du damier nocturne
+- **Z-index abeilles sous ruches** — abeilles doivent passer AU-DESSUS des ruches
+- **Double clic construction** — abeilles en chemin pas comptées
+- **Trajectoire Bézier post-conquête** — même courbe d'entrée en orbite qu'à la naissance
+- **Nuit — lisibilité** — mieux différencier lac du damier nocturne
 - **IA ennemie** — meilleure sélection de cibles, timing variable, gestion défensive
 
 ### Roadmap modes de jeu
