@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { GameState, Bee as BeeType } from '../types/game';
 import { LevelProgress } from '../types/levels';
 import { PondShape } from '../utils/mapGenerator';
@@ -58,6 +58,9 @@ export function useGameLoop({
   setDyingBees,
 }: UseGameLoopParams): void {
 
+  const gridParamsRef = useRef(gridParams);
+  useEffect(() => { gridParamsRef.current = gridParams; }, [gridParams]);
+
   // Game loop — 60 FPS : déplacements abeilles, combat, construction
   useEffect(() => {
     if (!gameState.isPlaying) return;
@@ -74,8 +77,8 @@ export function useGameLoop({
         const SCREEN_SAFE_MARGIN = 22;
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
-        const gameWidth  = gridParams.cols * gridParams.cellSize;
-        const gameHeight = gridParams.rows * gridParams.cellSize;
+        const gameWidth  = gridParamsRef.current.cols * gridParamsRef.current.cellSize;
+        const gameHeight = gridParamsRef.current.rows * gridParamsRef.current.cellSize;
         const marginLeft = Math.round((screenW - gameWidth) / 2);
         const marginTop  = Math.round((screenH - gameHeight) / 2);
         const minX = -marginLeft + SCREEN_SAFE_MARGIN;
@@ -83,7 +86,7 @@ export function useGameLoop({
         const minY = -marginTop + SCREEN_SAFE_MARGIN;
         const maxY =  screenH - marginTop - SCREEN_SAFE_MARGIN;
 
-        const cellSizeScale = gridParams.cellSize / 80;
+        const cellSizeScale = gridParamsRef.current.cellSize / 80;
 
         updatedBees.forEach((bee) => {
           if (bee.state === 'idle' && bee.treeId) {
@@ -98,21 +101,21 @@ export function useGameLoop({
 
               const baseRadius = Math.max(
                 (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
-                (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParamsRef.current.cellSize / 80)
               );
               const radius = bee.orbitRadius ?? baseRadius;
               bee.x = tree.x + Math.cos(bee.angle) * radius;
-              const s = gridParams.cellSize / 80;
-              const treeOffsetY = gridParams.cellSize * 0.19;
-              const trunkBottomY = tree.y + gridParams.cellSize * 0.5 + treeOffsetY;
+              const s = gridParamsRef.current.cellSize / 80;
+              const treeOffsetY = gridParamsRef.current.cellSize * 0.19;
+              const trunkBottomY = tree.y + gridParamsRef.current.cellSize * 0.5 + treeOffsetY;
               const trunkTopY = trunkBottomY - 20 * s;
-              const orbitCenterY = trunkTopY - gridParams.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
+              const orbitCenterY = trunkTopY - gridParamsRef.current.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
               bee.y = orbitCenterY + Math.sin(bee.angle) * radius;
               bee.displayAngle = bee.angle + Math.PI / 2 + (orbitDir === -1 ? Math.PI : 0);
               // Abeilles idle au-dessus d'un marais — meurent moins vite
               const idlePondIdx = mapData.ponds.findIndex(pond => {
-                const pw = pond.width * gridParams.cellSize;
-                const ph = pond.height * gridParams.cellSize;
+                const pw = pond.width * gridParamsRef.current.cellSize;
+                const ph = pond.height * gridParamsRef.current.cellSize;
                 const cx = pond.x + pw / 2;
                 const cy = pond.y + ph / 2;
                 return ((bee.x - cx) / (pw * 0.30)) ** 2 + ((bee.y - cy) / (ph * 0.30)) ** 2 <= 1;
@@ -179,14 +182,14 @@ export function useGameLoop({
               if (bzTarget && !bzTarget.isCut) {
                 const baseRadius = Math.max(
                   (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
-                  (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                  (bzTarget.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParamsRef.current.cellSize / 80)
                 );
                 const radius = bee.orbitRadius ?? baseRadius;
-                const s = gridParams.cellSize / 80;
-                const treeOffsetY = gridParams.cellSize * 0.19;
-                const trunkBottomY = bzTarget.y + gridParams.cellSize * 0.5 + treeOffsetY;
+                const s = gridParamsRef.current.cellSize / 80;
+                const treeOffsetY = gridParamsRef.current.cellSize * 0.19;
+                const trunkBottomY = bzTarget.y + gridParamsRef.current.cellSize * 0.5 + treeOffsetY;
                 const trunkTopY = trunkBottomY - 20 * s;
-                const orbitalCenterY = trunkTopY - gridParams.cellSize * (bzTarget.maxHives === 2 ? 0.28 : 0.26);
+                const orbitalCenterY = trunkTopY - gridParamsRef.current.cellSize * (bzTarget.maxHives === 2 ? 0.28 : 0.26);
                 const arrivalAngle = Math.atan2(bee.y - orbitalCenterY, bee.x - bzTarget.x);
                 bee.x = bzTarget.x + Math.cos(arrivalAngle) * radius;
                 bee.y = orbitalCenterY + Math.sin(arrivalAngle) * radius;
@@ -256,7 +259,7 @@ export function useGameLoop({
                     bee.offsetX = undefined;
                     bee.offsetY = undefined;
                   } else if (tree.owner === 'neutral' || tree.owner === bee.owner) {
-                    const _cs = gridParams.cellSize;
+                    const _cs = gridParamsRef.current.cellSize;
                     const _s = _cs / 80;
                     const _tbY = tree.y + _cs * 0.5 + _cs * 0.19;
                     const _ttY = _tbY - 20 * _s;
@@ -283,7 +286,7 @@ export function useGameLoop({
                     bee.offsetY = undefined;
                     tree.beeCount++;
                   } else {
-                    const _cs = gridParams.cellSize;
+                    const _cs = gridParamsRef.current.cellSize;
                     const _s = _cs / 80;
                     const _tbY = tree.y + _cs * 0.5 + _cs * 0.19;
                     const _ttY = _tbY - 20 * _s;
@@ -326,8 +329,8 @@ export function useGameLoop({
                 bee.y += Math.sin(bee.angle) * speed;
 
                 const pondIdx1 = mapData.ponds.findIndex(pond => {
-                  const pw = pond.width * gridParams.cellSize;
-                  const ph = pond.height * gridParams.cellSize;
+                  const pw = pond.width * gridParamsRef.current.cellSize;
+                  const ph = pond.height * gridParamsRef.current.cellSize;
                   const cx = pond.x + pw / 2;
                   const cy = pond.y + ph / 2;
                   return ((bee.x - cx) / (pw * 0.30)) ** 2 + ((bee.y - cy) / (ph * 0.30)) ** 2 <= 1;
@@ -385,8 +388,8 @@ export function useGameLoop({
               bee.y += Math.sin(bee.angle) * speed;
 
               const pondIdx2 = mapData.ponds.findIndex(pond => {
-                const pw = pond.width * gridParams.cellSize;
-                const ph = pond.height * gridParams.cellSize;
+                const pw = pond.width * gridParamsRef.current.cellSize;
+                const ph = pond.height * gridParamsRef.current.cellSize;
                 const cx = pond.x + pw / 2;
                 const cy = pond.y + ph / 2;
                 return ((bee.x - cx) / (pw * 0.30)) ** 2 + ((bee.y - cy) / (ph * 0.30)) ** 2 <= 1;
@@ -908,8 +911,8 @@ export function useGameLoop({
 
                   const beeId = `bee-${tree.id}-${now}-${Math.random()}`;
 
-                  const s = gridParams.cellSize / 80;
-                  const trunkBottomY = tree.y + gridParams.cellSize * 0.5;
+                  const s = gridParamsRef.current.cellSize / 80;
+                  const trunkBottomY = tree.y + gridParamsRef.current.cellSize * 0.5;
                   const trunkTopY = trunkBottomY - 20 * s;
 
                   // Position du trou de la ruche selon le type
@@ -926,13 +929,13 @@ export function useGameLoop({
                   // Courbe de Bézier quadratique : spawn → orbite
                   const idHash = parseInt(beeId.slice(-5), 36);
                   const beeOrbitDir = idHash % 2 === 0 ? 1 : -1;
-                  const spawnS = gridParams.cellSize / 80;
-                  const spawnTrunkBottomY = tree.y + gridParams.cellSize * 0.5 + gridParams.cellSize * 0.19;
+                  const spawnS = gridParamsRef.current.cellSize / 80;
+                  const spawnTrunkBottomY = tree.y + gridParamsRef.current.cellSize * 0.5 + gridParamsRef.current.cellSize * 0.19;
                   const spawnTrunkTopY = spawnTrunkBottomY - 20 * spawnS;
-                  const orbitalCenterY = spawnTrunkTopY - gridParams.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
+                  const orbitalCenterY = spawnTrunkTopY - gridParamsRef.current.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
                   const beeBaseRadius = Math.max(
                     (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
-                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParamsRef.current.cellSize / 80)
                   );
                   const beeRadiusVariation = ((idHash % 8) - 4);
                   const beeOrbitRadius = beeBaseRadius + beeRadiusVariation;
@@ -989,17 +992,17 @@ export function useGameLoop({
 
                 const shouldProduceExtra = i === 1 && level >= 1 && health > 0 && (now % 3000 >= 1500 && now % 3000 < 2500);
                 if (shouldProduceExtra) {
-                  const s2 = gridParams.cellSize / 80;
-                  const trunkBottomY2 = tree.y + gridParams.cellSize * 0.5;
+                  const s2 = gridParamsRef.current.cellSize / 80;
+                  const trunkBottomY2 = tree.y + gridParamsRef.current.cellSize * 0.5;
                   const trunkTopY2 = trunkBottomY2 - 20 * s2;
                   const hiveX2 = tree.maxHives === 2 ? tree.x - 22 * s2 : tree.x;
                   const hiveY2 = tree.maxHives === 2 ? trunkTopY2 - 10 * s2 + 8 * s2 : trunkTopY2 - 14 * s2 + 8 * s2;
-                  const spawnTrunkBottomY2 = tree.y + gridParams.cellSize * 0.5 + gridParams.cellSize * 0.19;
+                  const spawnTrunkBottomY2 = tree.y + gridParamsRef.current.cellSize * 0.5 + gridParamsRef.current.cellSize * 0.19;
                   const spawnTrunkTopY2 = spawnTrunkBottomY2 - 20 * s2;
-                  const orbitalCenterY2 = spawnTrunkTopY2 - gridParams.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
+                  const orbitalCenterY2 = spawnTrunkTopY2 - gridParamsRef.current.cellSize * (tree.maxHives === 2 ? 0.28 : 0.26);
                   const beeBaseRadius2 = Math.max(
                     (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO),
-                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParams.cellSize / 80)
+                    (tree.maxHives === 2 ? BEE_ORBIT_RADIUS_GROUP : BEE_ORBIT_RADIUS_SOLO) * (gridParamsRef.current.cellSize / 80)
                   );
                   const beeId2 = `bee-${tree.id}-${now}-extra-${Math.random()}`;
                   const idHash2 = parseInt(beeId2.slice(-5), 36);
@@ -1089,7 +1092,7 @@ export function useGameLoop({
 
     const interval = setInterval(() => {
       setGameState((prev) => {
-        return enemyAITick(prev, mapData, gridParams.cellSize);
+        return enemyAITick(prev, mapData, gridParamsRef.current.cellSize);
       });
     }, aiInterval);
 
