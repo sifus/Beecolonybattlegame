@@ -1,5 +1,6 @@
 {
-  "background_color": "#c2d040",
+  "background_color": "#F09A18",
+  "theme_color": "#F09A18",
   "icons": [
     {
       "src": "../icons/icon-48.webp",
