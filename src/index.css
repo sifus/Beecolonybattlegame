@@ -1173,14 +1173,8 @@ html, body {
   padding: 0;
   overflow: hidden;
   position: fixed;
-  background-color: #c2d040;
+  background-color: #F09A18;
   margin-bottom: calc(-1 * env(safe-area-inset-bottom));
-}
-
-@media (orientation: portrait) {
-  html, body {
-    background-color: #F09A18;
-  }
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -1203,18 +1197,14 @@ html, body {
     position: fixed;
     overflow: hidden;
   }
+}
 
+@media screen and (width <= 1024px) and (orientation: landscape) {
   #root {
     width: 100%;
     height: 100%;
     overflow: hidden;
     background-color: #c2d040;
-  }
-}
-
-@media screen and (max-width: 1024px) and (orientation: portrait) {
-  #root {
-    background-color: #F09A18;
   }
 }
 
