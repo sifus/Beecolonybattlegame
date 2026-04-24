@@ -205,7 +205,7 @@ export default function App() {
   const tapPosRef = useRef<{ x: number; y: number } | null>(null); // Position du tap pour le ripple
   const lastTouchEndRef = useRef(0); // Timestamp du dernier touchend — pour ignorer les mousedown synthétiques
   const lastTouchMoveRef = useRef(0);
-  const tripleTapRef = useRef<{ count: number, timer: ReturnType<typeof setTimeout> | null }>({ count: 0, timer: null });
+  const twoFingerTapRef = useRef<{ count: number, timer: ReturnType<typeof setTimeout> | null }>({ count: 0, timer: null });
 
   // Generate initial bees around trees (only on first mount)
   useEffect(() => {
@@ -709,24 +709,26 @@ export default function App() {
     setSelectionCurrent({ x, y });
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent<SVGSVGElement>) => {
     lastTouchEndRef.current = Date.now();
     handleMouseUp();
 
-    tripleTapRef.current.count++;
-    if (tripleTapRef.current.timer) clearTimeout(tripleTapRef.current.timer);
-    tripleTapRef.current.timer = setTimeout(() => {
-      if (tripleTapRef.current.count >= 3) {
-        const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
-        if (playerTree) {
-          const testBees = Array.from({ length: 10 }, (_, i) =>
-            createBee(`bee-test-${i}-${Date.now()}`, playerTree, gridParams.cellSize)
-          );
-          setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
+    if (e.changedTouches.length >= 2) {
+      twoFingerTapRef.current.count++;
+      if (twoFingerTapRef.current.timer) clearTimeout(twoFingerTapRef.current.timer);
+      twoFingerTapRef.current.timer = setTimeout(() => {
+        if (twoFingerTapRef.current.count >= 2) {
+          const playerTree = gameState.trees.find(t => t.owner === 'player' && t.isStartingTree);
+          if (playerTree) {
+            const testBees = Array.from({ length: 10 }, (_, i) =>
+              createBee(`bee-test-${i}-${Date.now()}`, playerTree, gridParams.cellSize)
+            );
+            setGameState(prev => ({ ...prev, bees: [...prev.bees, ...testBees] }));
+          }
         }
-      }
-      tripleTapRef.current.count = 0;
-    }, 400);
+        twoFingerTapRef.current.count = 0;
+      }, 400);
+    }
   };
 
   const handleTouchCancel = () => {
