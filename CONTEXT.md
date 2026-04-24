@@ -1029,38 +1029,35 @@ FIX APPLIQUÉ : quand dist < 5 sur targetX/Y, NE PAS passer en idle — relancer
 ## Ce qui a été fait — 24 avril 2026 (session 12)
 
 ### Commits de session
-- fix: barre verte portrait — fond body orange en portrait
-- fix: fond vert résiduel portrait — index.css #root + index.html fallback
 - fix: inversion logique fond — orange par défaut, vert uniquement en paysage
 - fix: manifest background_color + theme_color orange pour PWA
 - fix: compteur cercle sélection — refresh 100ms pendant drag sur iOS
 - fix: isDrifting reset au retour premier plan — vitesse transit restaurée
 - fix: gridParams via ref dans useGameLoop — cellSizeScale toujours à jour après resize/switch app
 - fix: gridParams gelé pendant la partie — rotation/resize sans effet sur le jeu
-- fix: reset swarmX/swarmY au resize — revert, remplacé par gel gridParams
+- fix: z-index abeilles au-dessus des ruches
+- fix: construction ruche — uniquement abeilles en orbite (idle)
+- fix: flash cercle sélection — reset sélection après déplacement abeilles
 
-### Branche capacitor-native créée
-- capacitor.config.ts : appId com.rush.beecolony, appName Rush, orientation landscape, backgroundColor #F09A18
-- Info.plist : lock orientation paysage + UIHomeIndicatorAutoHidden true
-- cap doctor : iOS et Android ✅
-- Xcode en cours d'installation — build natif iPhone à faire dès qu'il est prêt
+### Branche capacitor-native mergée dans main
+- Build natif iOS validé sur iPhone 17
+- Orientation paysage forcée — plus d'écran "tournez votre appareil"
+- Carte bord à bord sous dynamic island et home bar
+- Bouton pause dans la safe area via env(safe-area-inset-*)
+- UIRequiresFullScreen true — warning orientation supprimé
+- UIHomeIndicatorAutoHidden true
+- capacitor-native mergée et supprimée
 
 ---
 
 ## Backlog session 13
 
 ### Priorité haute
-- **Tester build natif Xcode** — iPhone 17 et iPhone 13
-- **Vérifier disparition bugs PWA** — barre verte, home bar, hauteur viewport
-- **Vérifier orientation forcée paysage** — en natif iOS
-- **Merger capacitor-native dans main** — si build OK
-
-### Priorité moyenne
-- **Z-index abeilles sous ruches** — abeilles doivent passer AU-DESSUS des ruches
-- **Double clic construction** — abeilles en chemin pas comptées
+- **Tester sur iPhone 13**
 - **Trajectoire Bézier post-conquête** — même courbe d'entrée en orbite qu'à la naissance
-- **Nuit — lisibilité** — mieux différencier lac du damier nocturne
-- **IA ennemie** — meilleure sélection de cibles, timing variable, gestion défensive
+- **IA ennemie améliorée** — meilleure sélection de cibles, timing variable, gestion défensive
+- **TestFlight setup** — nécessite compte Apple Developer $99/an
+- **Android** — sync Capacitor + test
 
 ### Roadmap modes de jeu
 - Mode Partie Rapide — sélection difficulté (Facile/Médium/Dur/Hardcore)
