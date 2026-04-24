@@ -296,9 +296,10 @@ export default function App() {
   // Maintenir gridParamsRef à jour à chaque render
   gridParamsRef.current = gridParams;
 
-  // Détecter les changements de taille d'écran — recalcule toujours, y compris pendant une partie
+  // Détecter les changements de taille d'écran — gelé pendant une partie
   useEffect(() => {
     const handleResize = () => {
+      if (currentScreen === 'story') return;
       const newParams = calculateGridParams(
         currentScreen === 'story' ? levelProgress.currentLevel : undefined,
         currentScreen === 'story' ? levelProgress.currentSubLevel : undefined
