@@ -1177,6 +1177,12 @@ html, body {
   margin-bottom: calc(-1 * env(safe-area-inset-bottom));
 }
 
+@media (orientation: portrait) {
+  html, body {
+    background-color: #F09A18;
+  }
+}
+
 @supports (-webkit-touch-callout: none) {
   html, body, #root {
     height: -webkit-fill-available;
