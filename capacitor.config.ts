@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.rushgame.app',
+  appId: 'com.rush.beecolony',
   appName: 'Rush',
   webDir: 'build',
   server: {
@@ -9,9 +9,13 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'always',
-    backgroundColor: '#c2d040',
+    backgroundColor: '#F09A18',
     preferredContentMode: 'mobile',
     limitsNavigationsToAppBoundDomains: true,
+    orientation: 'landscape',
+  },
+  android: {
+    orientation: 'landscape',
   },
   plugins: {
     SplashScreen: {
