@@ -1000,11 +1000,13 @@ export default function App() {
         b => b.owner === 'player' && b.state === 'idle' && b.treeId === treeId
       );
 
-      const movingBeesToTree = prev.bees.filter(
-        b => b.owner === 'player' && b.state === 'moving' && b.targetTreeId === treeId
-      );
+      // TODO: accepter aussi les abeilles moving vers cet arbre (abeilles en chemin)
+      // pour permettre de lancer la construction sans attendre l'orbite complète
+      // const movingBeesToTree = prev.bees.filter(
+      //   b => b.owner === 'player' && b.state === 'moving' && b.targetTreeId === treeId
+      // );
 
-      const eligibleBees = [...idleBeesAtTree, ...movingBeesToTree];
+      const eligibleBees = [...idleBeesAtTree];
 
       if (eligibleBees.length === 0) {
         toast.error("Aucune abeille disponible ne gravite autour de cet arbre");
