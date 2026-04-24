@@ -59,7 +59,15 @@ export function useGameLoop({
 }: UseGameLoopParams): void {
 
   const gridParamsRef = useRef(gridParams);
-  useEffect(() => { gridParamsRef.current = gridParams; }, [gridParams]);
+  useEffect(() => {
+    gridParamsRef.current = gridParams;
+    setGameState(prev => ({
+      ...prev,
+      bees: prev.bees.map(b =>
+        b.isDrifting ? { ...b, swarmX: undefined, swarmY: undefined } : b
+      )
+    }));
+  }, [gridParams]);
 
   // Game loop — 60 FPS : déplacements abeilles, combat, construction
   useEffect(() => {
