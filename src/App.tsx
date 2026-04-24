@@ -206,7 +206,6 @@ export default function App() {
   const lastTouchEndRef = useRef(0); // Timestamp du dernier touchend — pour ignorer les mousedown synthétiques
   const lastTouchMoveRef = useRef(0);
   const twoFingerDoubleTapRef = useRef<{ count: number, timer: ReturnType<typeof setTimeout> | null }>({ count: 0, timer: null });
-  const threeFingerDoubleTapRef = useRef<{ count: number, timer: ReturnType<typeof setTimeout> | null }>({ count: 0, timer: null });
 
   // Generate initial bees around trees (only on first mount)
   useEffect(() => {
@@ -699,18 +698,7 @@ export default function App() {
     lastTouchEndRef.current = Date.now();
     handleMouseUp();
 
-    const fingers = e.changedTouches.length;
-
-    if (fingers >= 3) {
-      threeFingerDoubleTapRef.current.count++;
-      if (threeFingerDoubleTapRef.current.timer) clearTimeout(threeFingerDoubleTapRef.current.timer);
-      threeFingerDoubleTapRef.current.timer = setTimeout(() => {
-        if (threeFingerDoubleTapRef.current.count >= 2) {
-          window.location.reload();
-        }
-        threeFingerDoubleTapRef.current.count = 0;
-      }, 400);
-    } else if (fingers >= 2) {
+    if (e.changedTouches.length >= 2) {
       twoFingerDoubleTapRef.current.count++;
       if (twoFingerDoubleTapRef.current.timer) clearTimeout(twoFingerDoubleTapRef.current.timer);
       twoFingerDoubleTapRef.current.timer = setTimeout(() => {
