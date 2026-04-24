@@ -195,7 +195,15 @@ export function GameUI({ isPlaying, onPause, onRestart, onHome, soundEnabled = t
     <>
 
       {/* Pause - Haut Droite */}
-      <div className={`absolute ${positioningRight} z-20`} style={{ pointerEvents: 'none', display: isPlaying ? 'block' : 'none' }}>
+      <div
+        className={`absolute ${positioningRight} z-20`}
+        style={{
+          pointerEvents: 'none',
+          display: isPlaying ? 'block' : 'none',
+          top: 'max(8px, env(safe-area-inset-top))',
+          right: 'max(8px, env(safe-area-inset-right))',
+        }}
+      >
         <StyledButton
           onClick={handlePauseClick}
           onDragStart={onDragStart}
