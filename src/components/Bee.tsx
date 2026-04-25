@@ -42,7 +42,6 @@ export function Bee({ bee, isSelected, isBeingSelected = false, isNightMode = fa
         <circle cx={bee.x} cy={bee.y} r={5}
           fill={isBeingSelected && !isSelected ? '#ffffff' : glowColor}
           opacity={isBeingSelected && !isSelected ? 0.5 : 0.25}
-          filter="url(#firefly-glow)"
         />
 
         {/* Corps de la luciole */}
